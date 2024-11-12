@@ -82,3 +82,8 @@ resource "aws_iam_role_policy_attachment" "ingestion_s3_write_policy_attachment"
   policy_arn = aws_iam_policy.ingestion_s3_write_policy.arn
 }
 
+# Attach ingestion cloudwatch policy to the ingestion role
+resource "aws_iam_role_policy_attachment" "ingestion_cw_policy_attachment" {
+  role       = aws_iam_role.ingestion_lambda_role.name
+  policy_arn = aws_iam_policy.ingestion_cw_policy.arn
+}
