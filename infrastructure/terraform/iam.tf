@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "s3_ingestion_policy_doc" {
 
     actions = ["s3:PutObject"]
 
-    resources = ["${aws_s3_bucket.ingestion_bucket.arn}/*"] # confirm - name taken from 'feature/task2.2-ingestion-s3-bucket' branch
+    resources = ["${aws_s3_bucket.ingestion_bucket.arn}/*"]
   }
 }
 
