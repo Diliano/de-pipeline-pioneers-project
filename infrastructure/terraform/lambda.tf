@@ -33,3 +33,14 @@ resource "aws_lambda_layer_version" "ingestion_layer" {
   s3_bucket           = aws_s3_bucket.code_bucket.bucket
   s3_key              = aws_s3_object.ingestion_layer_code.key
 }
+
+resource "aws_lambda_function" "ingestion_lambda" {
+  function_name = var.lambda_ingestion
+  s3_bucket     = aws_s3_bucket.code_bucket.bucket
+  s3_key        = aws_s3_object.ingestion_lambda_code.key
+  role          = aws_iam_role.ingestion_lambda_role.arn
+  handler       = "ingestion_lambda.lambda_handler" # arbitrary handler used
+  runtime       = var.python_runtime
+  layers        = [aws_lambda_layer_version.ingestion_layer.arn]
+}
+
