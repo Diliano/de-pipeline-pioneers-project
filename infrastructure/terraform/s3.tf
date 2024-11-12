@@ -29,3 +29,9 @@ resource "aws_s3_object" "ingestion_lambda_code" {
   source = data.archive_file.ingestion_lambda.output_path
 }
 
+# Ingestion lambda layer
+resource "aws_s3_object" "ingestion_layer_code" {
+  bucket = aws_s3_bucket.code_bucket.bucket
+  key    = "ingestion_lambda/ingestion_layer.zip"
+  source = data.archive_file.ingestion_layer.output_path
+}
