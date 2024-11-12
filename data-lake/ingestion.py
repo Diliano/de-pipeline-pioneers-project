@@ -9,7 +9,7 @@ logger = logging.getLogger()
 s3_client = boto3.client('s3')
 secrets_manager_client = boto3.client('secretsmanager')
 
-def retreive_credentials(secrets_manager_client):
+def retrieve_credentials(secrets_manager_client):
     try:
         secret = secrets_manager_client.get_secret_value(SecretId="nc-totesys-db-credentials")
         secret = json.loads(secret['SecretString'])
@@ -19,16 +19,16 @@ def retreive_credentials(secrets_manager_client):
 
 def connect_to_db():
     try:
-        creds = retreive_credentials(secrets_manager_client)
+        creds = retrieve_credentials(secrets_manager_client)
         USER = creds['USER']
         PASSWORD = creds['PASSWORD']
         DATABASE = creds['DATABASE']
-        HOST = creds ['HOST']
-        PORT = creds ['PORT']
+        HOST = creds['HOST']
+        PORT = creds['PORT']
 
         Connection(user=USER, database=DATABASE, password=PASSWORD, host=HOST, port=PORT)
     
-    except Exception as e:
+    except Exception:
         logger.error("Database connection failed", exc_info=True)
         raise
 
@@ -45,7 +45,7 @@ def fetch_tables():
         with connect_to_db() as db:
 
             for table_name in table_names:
-                query = f"SELECT * FROM {table_name};"
+                query = f"""SELECT * FROM {table_name};"""
                 try:
                     tables_data[table_name] = db.run(query)
                     logger.info(f"Fetched data from {table_name} successfully.")
