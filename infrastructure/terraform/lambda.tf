@@ -22,4 +22,14 @@ data "archive_file" "ingestion_layer" {
   output_path      = "${path.module}/../../ingestion/lambda-function/ingestion_layer.zip" # arbitrary filename used
 }
 
+# ========
+# CREATE
+# ========
 
+# Ingestion layer dependencies
+resource "aws_lambda_layer_version" "ingestion_layer" {
+  layer_name          = "ingestion_layer"
+  compatible_runtimes = [var.python_runtime]
+  s3_bucket           = aws_s3_bucket.code_bucket.bucket
+  s3_key              = aws_s3_object.ingestion_layer_code.key
+}
