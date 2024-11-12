@@ -60,3 +60,9 @@ resource "aws_iam_role" "ingestion_lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.ingestion_trust_policy.json
 }
 
+# Ingestion lambda - s3 write policy
+resource "aws_iam_policy" "ingestion_s3_write_policy" {
+  name_prefix = "s3-policy-${var.lambda_ingestion}-write"
+  policy      = data.aws_iam_policy_document.s3_ingestion_policy_doc.json
+}
+
