@@ -71,3 +71,14 @@ resource "aws_iam_policy" "ingestion_cw_policy" {
   name_prefix = "cw-policy-${var.lambda_ingestion}"
   policy      = data.aws_iam_policy_document.ingestion_cw_document.json
 }
+
+# ========
+# ATTACH
+# ========
+
+# Attach ingestion s3 write policy to the ingestion role
+resource "aws_iam_role_policy_attachment" "ingestion_s3_write_policy_attachment" {
+  role       = aws_iam_role.ingestion_lambda_role.name
+  policy_arn = aws_iam_policy.ingestion_s3_write_policy.arn
+}
+
