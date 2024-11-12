@@ -66,3 +66,8 @@ resource "aws_iam_policy" "ingestion_s3_write_policy" {
   policy      = data.aws_iam_policy_document.s3_ingestion_policy_doc.json
 }
 
+# Ingestion lambda cloudwatch policy
+resource "aws_iam_policy" "ingestion_cw_policy" {
+  name_prefix = "cw-policy-${var.lambda_ingestion}"
+  policy      = data.aws_iam_policy_document.ingestion_cw_document.json
+}
