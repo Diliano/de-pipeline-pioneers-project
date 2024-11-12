@@ -15,9 +15,11 @@ data "archive_file" "ingestion_lambda" {
 }
 
 # Ingestion layer dependencies
-data "archive_file" "layer" {
+data "archive_file" "ingestion_layer" {
   type             = "zip"
   output_file_mode = "0666"
   source_dir       = "${path.module}/../../ingestion/lambda-function/layer"               # suggested path
   output_path      = "${path.module}/../../ingestion/lambda-function/ingestion_layer.zip" # suggested filename
 }
+
+
