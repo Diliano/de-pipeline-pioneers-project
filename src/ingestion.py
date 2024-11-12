@@ -4,11 +4,13 @@ from datetime import datetime
 import boto3
 import json
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 s3_client = boto3.client('s3')
 secrets_manager_client = boto3.client('secretsmanager')
+BUCKET_NAME = os.getenv("S3_BUCKET_NAME") # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
 def retrieve_db_credentials(secrets_manager_client):
     try:
