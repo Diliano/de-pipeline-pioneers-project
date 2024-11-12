@@ -49,3 +49,14 @@ data "aws_iam_policy_document" "ingestion_cw_document" {
     resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.lambda_ingestion}:*"]
   }
 }
+
+# ========
+# CREATE
+# ========
+
+# Ingestion lambda role
+resource "aws_iam_role" "ingestion_lambda_role" {
+  name_prefix        = "role-${var.lambda_ingestion}"
+  assume_role_policy = data.aws_iam_policy_document.ingestion_trust_policy.json
+}
+
