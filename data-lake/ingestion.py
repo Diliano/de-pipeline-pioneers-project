@@ -3,43 +3,15 @@ import json
 from datetime import datetime
 from pg8000.native import Connection
 import logging
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 s3_client = boto3.client('s3')
 secrets_manager_client = boto3.client('secretsmanager')
 
-def create_secret(secrets_manager_client):
-
-    COHORT_ID = os.environ['Cohort_id']
-    USER = os.environ['User']
-    PASSWORD = os.environ['Password']
-    DATABASE = os.environ['Database']
-    HOST= os.environ['Host']
-    PORT = os.environ['Port']
-
-    secret = {'Cohort_id': COHORT_ID,
-              'User': USER,
-              'Password': PASSWORD,
-              'Database': DATABASE,
-              'Host': HOST,
-              'Port': PORT}
-    try:
-        secrets_manager_client.create_secret(
-            Name="Credentials",
-            SecretString=json.dumps(secret)
-        )
-
-    except Exception:
-        logger.error("Failed to create secret", exc_info=True)
-        raise
-
 def retreive_credentials(secrets_manager_client):
     try:
-        secret = secrets_manager_client.get_secret_value(SecretId="Credentials")
+        secret = secrets_manager_client.get_secret_value(SecretId="nc-totesys-db-credentials")
         secret = json.loads(secret['SecretString'])
         return secret
     except Exception:
@@ -48,11 +20,11 @@ def retreive_credentials(secrets_manager_client):
 def connect_to_db():
     try:
         creds = retreive_credentials(secrets_manager_client)
-        USER = creds['User']
-        PASSWORD = creds['Password']
-        DATABASE = creds['Database']
-        HOST = creds ['Host']
-        PORT = creds ['Port']
+        USER = creds['USER']
+        PASSWORD = creds['PASSWORD']
+        DATABASE = creds['DATABASE']
+        HOST = creds ['HOST']
+        PORT = creds ['PORT']
 
         Connection(user=USER, database=DATABASE, password=PASSWORD, host=HOST, port=PORT)
     
