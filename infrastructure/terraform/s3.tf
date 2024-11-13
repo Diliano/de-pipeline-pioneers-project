@@ -1,6 +1,6 @@
 resource "aws_s3_bucket" "data_bucket" {
   # S3 bucket for the data. 
-  bucket_prefix = "nc-${var.data_bucket_prefix}"
+  bucket_prefix = "nc-${var.ingestion_bucket_prefix}"
   tags = {
     Name = "DataBucket"
   }
