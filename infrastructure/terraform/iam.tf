@@ -72,6 +72,11 @@ resource "aws_iam_policy" "ingestion_cw_policy" {
   policy      = data.aws_iam_policy_document.ingestion_cw_document.json
 }
 
+# Ingestion lambda cloudwatch group
+resource "aws_cloudwatch_log_group" "ingestion_log_group" {
+  name = "/aws/lambda/${var.lambda_ingestion}"
+}
+
 # ========
 # ATTACH
 # ========
