@@ -55,20 +55,24 @@ def connect_to_db():
         logger.error("Database connection failed", exc_info=True)
         raise e
 
+
 def get_last_ingestion_timestamp():
     try:
-        response = s3_client.get_object(Bucket=BUCKET_NAME, Key=TIMESTAMP_FILE_KEY)
+        response = s3_client.get_object(
+            Bucket=BUCKET_NAME,
+            Key=TIMESTAMP_FILE_KEY
+        )
         # print("s3 response: ", response)
         # Reading content only if 'Body' exists and is not None
-        body = response.get('Body', '')
+        body = response.get("Body", "")
         if body:
-            last_ingestion_data = json.loads(body.read().decode('utf-8'))
+            last_ingestion_data = json.loads(body.read().decode("utf-8"))
 
             # Ensuring the 'timestamp' key exists in the json data
-            timestamp_str = last_ingestion_data.get('timestamp', '')
+            timestamp_str = last_ingestion_data.get("timestamp", "")
             if timestamp_str:
                 return datetime.fromisoformat(timestamp_str)
-            
+
             return datetime.now() - timedelta(days=1)
     except s3_client.exceptions.NoSuchKey:
         return datetime.now() - timedelta(days=1)
@@ -82,7 +86,9 @@ def update_last_ingestion_timestamp():
     s3_client.put_object(
         Bucket=BUCKET_NAME,
         Key=TIMESTAMP_FILE_KEY,
-        Body=json.dumps({"timestamp": current_timestamp}))
+        Body=json.dumps({"timestamp": current_timestamp}),
+    )
+
 
 def fetch_tables():
 
@@ -107,12 +113,19 @@ def fetch_tables():
 
         with connect_to_db() as db:
             for table_name in table_names:
-                query = f"SELECT * FROM {table_name} WHERE last_updated = :last_ingestion_timestamp;"
+                query = f"SELECT * FROM {table_name} WHERE last_updated = :s;"
                 try:
-                    tables_data[table_name] = db.run(query, last_ingestion_timestamp=last_ingestion_timestamp)
-                    logger.info(f"Fetched new data from {table_name} successfully.")
-                except Exception as err:
-                    logger.error(f"Failed to fetch data from {table_name}", exc_info=True)
+                    tables_data[table_name] = db.run(
+                        query, s=last_ingestion_timestamp
+                    )
+                    logger.info(
+                        f"Fetched new data from {table_name} successfully."
+                        )
+                except Exception:
+                    logger.error(
+                        f"Failed to fetch data from {table_name}",
+                        exc_info=True
+                    )
                     raise
 
         update_last_ingestion_timestamp()
@@ -136,17 +149,18 @@ def lambda_handler(event, context):
             )
             logger.info(
                 f"Successfully wrote {table_name} data to S3 key: {object_key}"
-                )
+            )
         except Exception:
             success = False
             logger.error("Failed to write data to S3", exc_info=True)
             # raise err
     if success:
         return {
-            "status": "Success", "message": "All data ingested successfully"
-            }
+            "status": "Success",
+            "message": "All data ingested successfully"
+        }
     else:
         return {
             "status": "Partial Failure",
             "message": "Some tables failed to ingest"
-            }
+        }
