@@ -1,6 +1,9 @@
 # from botocore.exceptions import ClientError
 from pg8000.native import Connection
-from datetime import datetime, timedelta
+from datetime import (
+    datetime,
+    timedelta,
+)
 import boto3
 import json
 import logging
@@ -14,6 +17,8 @@ TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 # BUCKET_NAME = os.getenv(
 #     "S3_BUCKET_NAME"
 # )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
+
+# For testing purposes
 BUCKET_NAME = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
 
 
@@ -53,9 +58,22 @@ def connect_to_db():
 def get_last_ingestion_timestamp():
     try:
         response = s3_client.get_object(Bucket=BUCKET_NAME, Key=TIMESTAMP_FILE_KEY)
-        last_ingestion_data = json.loads(response['Body'].read().decode('utf-8'))
-        return datetime.fromisoformat(last_ingestion_data['timestamp'])
+        print("s3 response: ", response)
+        # Reading content only if 'Body' exists and is not None
+        body = response.get('Body', '')
+        if body:
+            last_ingestion_data = json.loads(body.read().decode('utf-8'))
+
+            # Ensuring the 'timestamp' key exists in the json data
+            timestamp_str = last_ingestion_data.get('timestamp', '')
+            if timestamp_str:
+                return datetime.fromisoformat(timestamp_str)
+            
+            return datetime.now() - timedelta(days=1)
     except s3_client.exceptions.NoSuchKey:
+        return datetime.now() - timedelta(days=1)
+    except Exception as e:
+        logger.error(f"Unexpected error occurred: {e}")
         return datetime.now() - timedelta(days=1)
 
 
