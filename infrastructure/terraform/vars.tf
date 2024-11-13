@@ -1,9 +1,3 @@
-variable "data_bucket_prefix" {
-  type    = string
-  default = "pipeline-pioneers-data"
-}
-
-
 variable "code_bucket_prefix" {
   type    = string
   default = "pipeline-pioneers-code"
@@ -14,8 +8,15 @@ variable "lambda_ingestion" {
   default = "ingestion_lambda"
 }
 
-# lambda_transformation
-# lambda_loading
+variable "lambda_transform" {
+  type    = string
+  default = "transform_lambda"
+}
+
+variable "lambda_load" {
+  type    = string
+  default = "load_lambda"
+}
 
 variable "python_runtime" {
   type    = string
