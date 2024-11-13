@@ -8,8 +8,8 @@
 
 # Ingestion lambda scheduler
 resource "aws_cloudwatch_event_rule" "ingestion_scheduler" {
-  description         = "Trigger the ingestion lambda every 15 minutes"
-  schedule_expression = "rate(15 minutes)"
+  description         = "Trigger the ingestion lambda every 10 minutes"
+  schedule_expression = "rate(10 minutes)"
 }
 
 # Ingestion lambda scheduler target
