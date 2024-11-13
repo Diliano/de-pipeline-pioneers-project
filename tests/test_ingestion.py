@@ -33,7 +33,10 @@ SAMPLE_TABLES_DATA = {
 @pytest.fixture
 def mock_secrets_manager():
     with mock_aws():
-        secrets_client = boto3.client("secretsmanager", region_name="eu-west-2")
+        secrets_client = boto3.client(
+            "secretsmanager",
+            region_name="eu-west-2"
+        )
 
         # Create a mock secret
         secrets_client.create_secret(
@@ -71,7 +74,10 @@ def test_retrieve_db_credentials_success(mock_secrets_manager, caplog):
 def test_retrieve_db_credentials_error(caplog):
     with mock_aws():
         # Create the Secrets Manager client without creating the secret
-        secrets_client = boto3.client("secretsmanager", region_name="eu-west-2")
+        secrets_client = boto3.client(
+            "secretsmanager",
+            region_name="eu-west-2"
+        )
 
         with pytest.raises(Exception):
             retrieve_db_credentials(secrets_client)
@@ -81,7 +87,11 @@ def test_retrieve_db_credentials_error(caplog):
 
 @patch("src.ingestion.retrieve_db_credentials")
 @patch("src.ingestion.Connection")
-def test_connect_to_db_success(mock_connection, mock_retrieve_credentials, caplog):
+def test_connect_to_db_success(
+    mock_connection,
+    mock_retrieve_credentials,
+    caplog
+):
     # Mock the credentials returned by retrieve_db_credentials
     mock_retrieve_credentials.return_value = {
         "USER": "test-user",
@@ -109,7 +119,11 @@ def test_connect_to_db_success(mock_connection, mock_retrieve_credentials, caplo
 
 @patch("src.ingestion.retrieve_db_credentials")
 @patch("src.ingestion.Connection")
-def test_connect_to_db_failure(mock_connection, mock_retrieve_credentials, caplog):
+def test_connect_to_db_failure(
+    mock_connection,
+    mock_retrieve_credentials,
+    caplog
+):
     # Mock credentials retrieval to return valid credentials
     mock_retrieve_credentials.return_value = {
         "USER": "test-user",
@@ -165,7 +179,8 @@ def test_fetch_tables_success(mock_connect_to_db, caplog):
         "transaction",
     ]:
         assert result[table_name] == [sample_data]
-        assert f"Fetched new data from {table_name} successfully." in caplog.text
+        assertion_text = "Fetched new data from "
+        assert assertion_text + {table_name} + "successfully." in caplog.text
 
     # Ensuring that run was called for each table
     mock_db.run.assert_called()
@@ -243,11 +258,18 @@ def test_lambda_handler_success(
             Key=expected_key,
             Body=json.dumps(SAMPLE_TABLES_DATA[table_name]),
         )
-    assert result == {"status": "Success", "message": "All data ingested successfully"}
+    assert result == {
+        "status": "Success",
+        "message": "All data ingested successfully"
+    }
     assertion_key = "table1/table1_2023-01-01-00-00-00.json"
-    assert f"Successfully wrote table1 data to S3 key: {assertion_key}" in caplog.text
+    assert (
+        f"Successfully wrote table1 data to S3 key: {assertion_key}" in caplog.text
+    )
     assertion_key = "table2/table2_2023-01-01-00-00-00.json"
-    assert f"Successfully wrote table2 data to S3 key: {assertion_key}" in caplog.text
+    assert (
+        f"Successfully wrote table2 data to S3 key: {assertion_key}" in caplog.text
+    )
 
 
 @patch("src.ingestion.BUCKET_NAME", "test_bucket")
@@ -283,6 +305,7 @@ def test_lambda_handler_partial_failure(
     assert f"Successfully wrote table2 data to S3 key: {assertion_key}" in caplog.text
 
 
+# @pytest.mark.skip
 @mock_aws
 def test_get_last_ingestion_timestamp_valid_timestamp():
 
@@ -323,7 +346,8 @@ def test_get_last_ingestion_timestamp_no_file():
         result = get_last_ingestion_timestamp()
 
         expected_default_timestamp = datetime.now() - timedelta(days=1)
-        # Check if result is within a reasonable delta of the expected default timestamp
+        # Check if result is within a reasonable
+        # delta of the expected default timestamp
         assert abs((result - expected_default_timestamp).total_seconds()) < 5
 
 
@@ -358,6 +382,7 @@ def test_get_last_ingestion_timestamp_unexpected_error(caplog):
     assert "Unexpected error occurred:" in caplog.text
 
 
+@patch("src.ingestion.BUCKET_NAME", "test_bucket")
 @patch("src.ingestion.s3_client")
 def test_update_last_ingestion_timestamp(mock_s3_client):
     current_timestamp = datetime.now().isoformat()
@@ -371,5 +396,5 @@ def test_update_last_ingestion_timestamp(mock_s3_client):
     mock_s3_client.put_object.assert_called_once_with(
         Bucket="test_bucket",
         Key=TIMESTAMP_FILE_KEY,
-        Body=json.dumps({"timestamp": current_timestamp})
+        Body=json.dumps({"timestamp": current_timestamp}),
     )
