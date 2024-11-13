@@ -172,8 +172,10 @@ def test_fetch_tables_success(mock_connect_to_db, caplog):
         assert result[table_name] == [sample_data]
         assert f"Fetched data from {table_name} successfully." in caplog.text
 
-    mock_db.run.assert_called()  # Ensuring that run was called for each table
-    assert "Failed to fetch data" not in caplog.text  # Ensuring no errors were logged
+    # Ensuring that run was called for each table
+    mock_db.run.assert_called()
+    # Ensuring no errors were logged
+    assert "Failed to fetch data" not in caplog.text
 
 
 # @pytest.mark.skip
@@ -184,7 +186,8 @@ def test_fetch_tables_table_query_failure(mock_connect_to_db, caplog):
     mock_db = Mock()
     mock_connect_to_db.return_value.__enter__.return_value = mock_db
 
-    # Define a side effect function that raises an exception only for the "staff" table
+    # Define a side effect function that
+    # raises an exception only for the "staff" table
     def side_effect(query):
         if "staff" in query:
             raise Exception("Query failed")
@@ -242,13 +245,18 @@ def test_lambda_handler_success(
             Key=expected_key,
             Body=json.dumps(SAMPLE_TABLES_DATA[table_name]),
         )
-    assert result == {"status": "Success", "message": "All data ingested successfully"}
+    assert result == {
+        "status": "Success",
+        "message": "All data ingested successfully"
+        }
+    assertion_key = "table1/table1_2023-01-01-00-00-00.json"
     assert (
-        "Successfully wrote table1 data to S3 key: table1/table1_2023-01-01-00-00-00.json"
+        f"Successfully wrote table1 data to S3 key: {assertion_key}"
         in caplog.text
     )
+    assertion_key = "table2/table2_2023-01-01-00-00-00.json"
     assert (
-        "Successfully wrote table2 data to S3 key: table2/table2_2023-01-01-00-00-00.json"
+        f"Successfully wrote table2 data to S3 key: {assertion_key}"
         in caplog.text
     )
 
@@ -282,7 +290,8 @@ def test_lambda_handler_partial_failure(
 
     # Ensuring that an error was logged for the table that failed
     assert "Failed to write data to S3" in caplog.text
+    assertion_key = "table2/table2_2023-01-01-00-00-00.json"
     assert (
-        "Successfully wrote table2 data to S3 key: table2/table2_2023-01-01-00-00-00.json"
+        f"Successfully wrote table2 data to S3 key: {assertion_key}"
         in caplog.text
     )
