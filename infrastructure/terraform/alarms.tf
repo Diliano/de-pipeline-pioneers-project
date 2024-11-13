@@ -51,3 +51,13 @@ resource "aws_cloudwatch_metric_alarm" "ingestion_lambda_error_alarm" {
     FunctionName = aws_lambda_function.ingestion_lambda.function_name
   }
 }
+
+# ========
+# ATTACH
+# ========
+
+# Attach sns policy to cw alarm
+resource "aws_sns_topic_policy" "ingestion_alarm_sns_policy" {
+  arn    = aws_sns_topic.ingestion_alarm_topic.arn
+  policy = data.aws_iam_policy_document.ingestion_sns_publish_policy.json
+}
