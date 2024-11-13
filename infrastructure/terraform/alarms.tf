@@ -3,6 +3,23 @@
 # =======================================================
 
 # ========
+# DEFINE
+# ========
+
+# Ingestion lambda sns topic policy doc
+data "aws_iam_policy_document" "ingestion_sns_publish_policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["sns:Publish"]
+    resources = [aws_sns_topic.ingestion_alarm_topic.arn]
+    principals {
+      type        = "Service"
+      identifiers = ["cloudwatch.amazonaws.com"]
+    }
+  }
+}
+
+# ========
 # CREATE
 # ========
 
