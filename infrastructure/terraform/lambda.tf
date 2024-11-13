@@ -42,5 +42,11 @@ resource "aws_lambda_function" "ingestion_lambda" {
   handler       = "ingestion_lambda.lambda_handler" # arbitrary handler used
   runtime       = var.python_runtime
   layers        = [aws_lambda_layer_version.ingestion_layer.arn]
+
+  environment {
+    variables = {
+      "S3_BUCKET_NAME" = aws_s3_bucket.ingestion_bucket.bucket
+    }
+  }
 }
 
