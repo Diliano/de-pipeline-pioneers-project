@@ -10,16 +10,16 @@
 data "archive_file" "ingestion_lambda" {
   type             = "zip"
   output_file_mode = "0666"
-  source_file      = "${path.module}/../../src/ingestion.py"
-  output_path      = "${path.module}/../../packages/ingestion/ingestion.zip"
+  source_file      = "${path.module}/../../src/ingestion.py"                 # double check
+  output_path      = "${path.module}/../../packages/ingestion/ingestion.zip" # double check
 }
 
 # Ingestion layer dependencies
 data "archive_file" "ingestion_layer" {
   type             = "zip"
   output_file_mode = "0666"
-  source_dir       = "${path.module}/../../packages/layer"
-  output_path      = "${path.module}/../../packages/ingestion/ingestion_layer.zip"
+  source_dir       = "${path.module}/../../packages/layer"                         # double check
+  output_path      = "${path.module}/../../packages/ingestion/ingestion_layer.zip" # double check
 }
 
 # ========
@@ -39,7 +39,7 @@ resource "aws_lambda_function" "ingestion_lambda" {
   s3_bucket     = aws_s3_bucket.code_bucket.bucket
   s3_key        = aws_s3_object.ingestion_lambda_code.key
   role          = aws_iam_role.ingestion_lambda_role.arn
-  handler       = "ingestion.lambder_handler"
+  handler       = "ingestion.lambder_handler" # double check
   runtime       = var.python_runtime
   layers        = [aws_lambda_layer_version.ingestion_layer.arn]
 
