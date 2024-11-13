@@ -14,12 +14,12 @@ logger = logging.getLogger()
 s3_client = boto3.client("s3")
 secrets_manager_client = boto3.client("secretsmanager")
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
-# BUCKET_NAME = os.getenv(
-#     "S3_BUCKET_NAME"
-# )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
+BUCKET_NAME = os.getenv(
+    "S3_BUCKET_NAME"
+)  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
 # For testing purposes
-BUCKET_NAME = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+# BUCKET_NAME = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
 
 
 def retrieve_db_credentials(secrets_manager_client):
