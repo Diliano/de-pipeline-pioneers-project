@@ -58,7 +58,7 @@ def connect_to_db():
 def get_last_ingestion_timestamp():
     try:
         response = s3_client.get_object(Bucket=BUCKET_NAME, Key=TIMESTAMP_FILE_KEY)
-        print("s3 response: ", response)
+        # print("s3 response: ", response)
         # Reading content only if 'Body' exists and is not None
         body = response.get('Body', '')
         if body:
@@ -120,8 +120,8 @@ def fetch_tables():
         return tables_data
 
     except Exception as err:
-        logger.error("Failed to fetch data from tables", exc_info=True)
-        raise
+        logger.error("Database connection failed", exc_info=True)
+        raise err
 
 
 def lambda_handler(event, context):
