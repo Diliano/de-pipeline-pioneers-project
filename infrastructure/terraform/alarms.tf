@@ -35,3 +35,19 @@ resource "aws_sns_topic_subscription" "ingestion_alarm_email_subscription" {
   endpoint  = "" # Create an email for us all to use?
 }
 
+# Ingestion lambda error alarm
+resource "aws_cloudwatch_metric_alarm" "ingestion_lambda_error_alarm" {
+  alarm_name          = "IngestionLambdaErrorAlarm"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 600
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_description   = "Alarm for ingestion lambda function errors"
+  alarm_actions       = [aws_sns_topic.ingestion_alarm_topic.arn]
+  dimensions = {
+    FunctionName = aws_lambda_function.ingestion_lambda.function_name
+  }
+}
