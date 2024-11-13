@@ -12,17 +12,9 @@ resource "aws_cloudwatch_event_rule" "ingestion_scheduler" {
   schedule_expression = "rate(15 minutes)"
 }
 
-
-
-
-resource "aws_cloudwatch_event_target" "target_lambda" {
-  rule      = aws_cloudwatch_event_rule.scheduler.name
-  target_id = "QuoteHandlerLambda"
-  arn       = aws_lambda_function.quote_handler.arn
-}
-
-resource "aws_cloudwatch_event_target" "target_lambda" {
-  rule      = aws_cloudwatch_event_rule.scheduler.name
-  target_id = "QuoteHandlerLambda"
-  arn       = aws_lambda_function.quote_handler.arn
+# Ingestion lambda scheduler target
+resource "aws_cloudwatch_event_target" "target_ingestion_lambda" {
+  rule      = aws_cloudwatch_event_rule.ingestion_scheduler.name
+  target_id = "IngestionLambda"
+  arn       = aws_lambda_function.ingestion_lambda.arn
 }
