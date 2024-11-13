@@ -1,4 +1,4 @@
-from botocore.exceptions import ClientError
+# from botocore.exceptions import ClientError
 from pg8000.native import Connection
 from datetime import datetime
 import boto3
@@ -8,40 +8,61 @@ import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
-s3_client = boto3.client('s3')
-secrets_manager_client = boto3.client('secretsmanager')
-BUCKET_NAME = os.getenv("S3_BUCKET_NAME") # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
+s3_client = boto3.client("s3")
+secrets_manager_client = boto3.client("secretsmanager")
+BUCKET_NAME = os.getenv(
+    "S3_BUCKET_NAME"
+)  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
+
 
 def retrieve_db_credentials(secrets_manager_client):
     try:
-        secret = secrets_manager_client.get_secret_value(SecretId="nc-totesys-db-credentials")
-        secret = json.loads(secret['SecretString'])
+        secret = secrets_manager_client.get_secret_value(
+            SecretId="nc-totesys-db-credentials"
+        )
+        secret = json.loads(secret["SecretString"])
         return secret
     except Exception as err:
         logger.error(f"Unexpected error occurred {err}", exc_info=True)
         raise err
 
+
 def connect_to_db():
     try:
         creds = retrieve_db_credentials(secrets_manager_client)
-        USER = creds['USER']
-        PASSWORD = creds['PASSWORD']
-        DATABASE = creds['DATABASE']
-        HOST = creds ['HOST']
-        PORT = creds ['PORT']
+        USER = creds["USER"]
+        PASSWORD = creds["PASSWORD"]
+        DATABASE = creds["DATABASE"]
+        HOST = creds["HOST"]
+        PORT = creds["PORT"]
 
-        Connection(user=USER, database=DATABASE, password=PASSWORD, host=HOST, port=PORT)
-    
+        Connection(
+            user=USER,
+            database=DATABASE,
+            password=PASSWORD,
+            host=HOST,
+            port=PORT
+        )
+
     except Exception as e:
         logger.error("Database connection failed", exc_info=True)
-        raise
+        raise e
+
 
 def fetch_tables():
 
     table_names = [
-        "counterparty", "currency", "department", "design",
-        "staff", "sales_order", "address", "payment",
-        "purchase_order", "payment_type", "transaction"
+        "counterparty",
+        "currency",
+        "department",
+        "design",
+        "staff",
+        "sales_order",
+        "address",
+        "payment",
+        "purchase_order",
+        "payment_type",
+        "transaction",
     ]
     tables_data = {}
 
@@ -52,16 +73,22 @@ def fetch_tables():
                 query = f"SELECT * FROM {table_name};"
                 try:
                     tables_data[table_name] = db.run(query)
-                    logger.info(f"Fetched data from {table_name} successfully.")
+                    logger.info(
+                        f"Fetched data from {table_name} successfully."
+                        )
                 except Exception as e:
-                    logger.error(f"Failed to fetch data from {table_name}", exc_info=True)
-                    raise
+                    logger.error(
+                        f"Failed to fetch data from {table_name}",
+                        exc_info=True
+                    )
+                    raise e
 
             return tables_data
 
     except Exception:
-        logger.error(f"Failed to fetch data from table {table_name}", exc_info=True)
+        logger.error("Database connection failed", exc_info=True)
         raise
+
 
 def lambda_handler(event, context):
     tables = fetch_tables()
@@ -71,16 +98,21 @@ def lambda_handler(event, context):
         object_key = f"{table_name}/{table_name}_{timestamp}.json"
         try:
             s3_client.put_object(
-                Bucket=BUCKET_NAME,
-                Key=object_key,
-                Body=json.dumps(table_data)
+                Bucket=BUCKET_NAME, Key=object_key, Body=json.dumps(table_data)
             )
-            logger.info(f"Successfully wrote {table_name} data to S3 key: {object_key}")
+            logger.info(
+                f"Successfully wrote {table_name} data to S3 key: {object_key}"
+                )
         except Exception:
             success = False
             logger.error("Failed to write data to S3", exc_info=True)
-            raise
+            # raise err
     if success:
-        return {"status": "Success", "message": "All data ingested successfully"}
+        return {
+            "status": "Success", "message": "All data ingested successfully"
+            }
     else:
-        return {"status": "Partial Failure", "message": "Some tables failed to ingest"}
+        return {
+            "status": "Partial Failure",
+            "message": "Some tables failed to ingest"
+            }
