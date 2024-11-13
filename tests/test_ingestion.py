@@ -186,7 +186,7 @@ def test_fetch_tables_success(mock_connect_to_db, caplog):
     assert "Failed to fetch data" not in caplog.text
 
 
-@pytest.mark.skip
+# @pytest.mark.skip
 @patch("src.ingestion.connect_to_db")
 def test_fetch_tables_table_query_failure(mock_connect_to_db, caplog):
     caplog.set_level(logging.INFO)
@@ -196,7 +196,10 @@ def test_fetch_tables_table_query_failure(mock_connect_to_db, caplog):
 
     # Define a side effect function that
     # raises an exception only for the "staff" table
-    def side_effect(query):
+    def side_effect(*args, **kwargs):
+
+        # Simulate a failure for a specific table by raising an exception
+        query = args[0] if args else kwargs.get("query", "")
         if "staff" in query:
             raise Exception("Query failed")
         return [{"id": 1, "name": "Sample"}]
@@ -212,7 +215,7 @@ def test_fetch_tables_table_query_failure(mock_connect_to_db, caplog):
     mock_db.run.assert_called()  # Ensuring that run was called at least once
 
 
-@pytest.mark.skip
+# @pytest.mark.skip
 @patch("src.ingestion.connect_to_db")
 def test_fetch_tables_connection_failure(mock_connect_to_db, caplog):
     caplog.set_level(logging.INFO)
