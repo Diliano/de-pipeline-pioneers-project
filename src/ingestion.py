@@ -14,12 +14,12 @@ logger = logging.getLogger()
 s3_client = boto3.client("s3")
 secrets_manager_client = boto3.client("secretsmanager")
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
-BUCKET_NAME = os.getenv(
-    "S3_BUCKET_NAME"
-)  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
+# BUCKET_NAME = os.getenv(
+#     "S3_BUCKET_NAME"
+# )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
 # For testing purposes
-# BUCKET_NAME = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+BUCKET_NAME = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
 
 
 def retrieve_db_credentials(secrets_manager_client):
@@ -110,14 +110,17 @@ def fetch_tables():
 
     try:
         last_ingestion_timestamp = get_last_ingestion_timestamp()
+        print(last_ingestion_timestamp)
 
         with connect_to_db() as db:
             for table_name in table_names:
-                query = f"SELECT * FROM {table_name} WHERE last_updated = :s;"
+                query = f"SELECT * FROM {table_name} WHERE last_updated > :s;"
                 try:
-                    tables_data[table_name] = db.run(
+                    rows = db.run(
                         query, s=last_ingestion_timestamp
                     )
+                    column = [col['name'] for col in db.columns]
+                    tables_data[table_name]= [dict(zip(column, row)) for row in rows]
                     logger.info(
                         f"Fetched new data from {table_name} successfully."
                         )
@@ -129,7 +132,7 @@ def fetch_tables():
                     raise
 
         update_last_ingestion_timestamp()
-
+        print(tables_data)
         return tables_data
 
     except Exception as err:
@@ -164,3 +167,4 @@ def lambda_handler(event, context):
             "status": "Partial Failure",
             "message": "Some tables failed to ingest"
         }
+fetch_tables()
