@@ -2,7 +2,6 @@
 from pg8000.native import Connection
 from datetime import (
     datetime,
-    timedelta,
 )
 import boto3
 import json
@@ -82,7 +81,6 @@ def get_last_ingestion_timestamp():
             Bucket=S3_INGESTION_BUCKET,
             Key=TIMESTAMP_FILE_KEY
         )
-        # print("s3 response: ", response)
         # Reading content only if 'Body' exists and is not None
         body = response.get("Body", "")
         if body:
@@ -93,9 +91,9 @@ def get_last_ingestion_timestamp():
             if timestamp_str:
                 return datetime.fromisoformat(timestamp_str)
 
-            return datetime.now() - timedelta(days=1)
+            # return datetime.now() - timedelta(days=1)
     except s3_client.exceptions.NoSuchKey:
-        return datetime.now() - timedelta(days=1)
+        return "1970-01-01 00:00:00"
     except Exception as e:
         logger.error(f"Unexpected error occurred: {e}")
         raise
@@ -116,7 +114,6 @@ def fetch_tables():
 
     try:
         last_ingestion_timestamp = get_last_ingestion_timestamp()
-        print(last_ingestion_timestamp)
 
         with connect_to_db() as db:
             for table_name in TABLES:
@@ -126,7 +123,7 @@ def fetch_tables():
                         query, s=last_ingestion_timestamp
                     )
                     column = [col['name'] for col in db.columns]
-                    tables_data[table_name]= [dict(zip(column, row)) for row in rows]
+                    tables_data[table_name] = [dict(zip(column, row)) for row in rows]
                     logger.info(
                         f"Fetched new data from {table_name} successfully."
                         )
@@ -136,9 +133,7 @@ def fetch_tables():
                         exc_info=True
                     )
                     raise
-
         update_last_ingestion_timestamp()
-        print(tables_data)
         return tables_data
 
     except Exception as err:
@@ -153,8 +148,14 @@ def lambda_handler(event, context):
     for table_name, table_data in tables.items():
         object_key = f"{table_name}/{table_name}_{timestamp}.json"
         try:
+            if not table_data:
+                logger.info(f"Table {table_name} has not been updated")
+
             s3_client.put_object(
-                Bucket=S3_INGESTION_BUCKET, Key=object_key, Body=json.dumps(table_data)
+                Bucket=S3_INGESTION_BUCKET,
+                Key=object_key,
+                # default str important for json serialisation
+                Body=json.dumps(table_data, default=str)
             )
             logger.info(
                 f"Successfully wrote {table_name} data to S3 key: {object_key}"
