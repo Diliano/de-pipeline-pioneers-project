@@ -13,12 +13,12 @@ REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
 
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 
-# S3_INGESTION_BUCKET = os.getenv(
-#     "S3_BUCKET_NAME"
-# )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
+S3_INGESTION_BUCKET = os.getenv(
+    "S3_BUCKET_NAME"
+)  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
 # For testing purposes
-S3_INGESTION_BUCKET = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+# S3_INGESTION_BUCKET = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
 
 TABLES = [
     "counterparty",
@@ -120,32 +120,14 @@ def fetch_tables():
         with connect_to_db() as db:
             for table_name in TABLES:
                 query = f"SELECT * FROM {table_name} WHERE last_updated > :s"
-                # if last_ingestion_timestamp:
-                #     query += " WHERE last_updated > :s"
-
                 try:
                     print(query)
                     rows = db.run(
                             query, s=last_ingestion_timestamp
                         )
-                    # if last_ingestion_timestamp:
-                    #     rows = db.run(
-                    #         query, s=last_ingestion_timestamp
-                    #     )
-                    # else:
-                    #     rows = db.run(
-                    #         query
-                    #     )
-
-                    print(f"Query result for {table_name}: {rows}")
 
                     column = [col['name'] for col in db.columns]
-
-                    print(f"Columns for {table_name}: {column}")
                     tables_data[table_name] = [dict(zip(column, row)) for row in rows]
-
-                    print(f"Processed data for {table_name}: {tables_data[table_name]}")
-
                     logger.info(
                         f"Fetched new data from {table_name} successfully."
                         )
@@ -197,6 +179,3 @@ def lambda_handler(event, context):
             "status": "Partial Failure",
             "message": "Some tables failed to ingest"
         }
-    
-if __name__ == "__main__":
-    print(fetch_tables())
