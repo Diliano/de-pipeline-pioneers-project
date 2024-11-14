@@ -29,7 +29,7 @@ def read_data_from_s3(bucket_name, folder_name):
         logger.info(f"Checking for files in {folder_name}")
 
         if 'Contents' not in response:
-            print(f"No files found in folder: {folder_name}")
+            logger.info(f"No files found in folder: {folder_name}")
             return
         
         
@@ -37,7 +37,7 @@ def read_data_from_s3(bucket_name, folder_name):
         print(f"Files found:")
         for obj in response['Contents']:
             file_key = obj['Key']
-            print(f" - {file_key}")
+            logger.info(f" - {file_key}")
 
         for obj in response['Contents']:
             file_key = obj['Key']
@@ -48,14 +48,14 @@ def read_data_from_s3(bucket_name, folder_name):
 
                 df = pd.DataFrame(data)
 
-                print("---------------")
-                print(f"Data preview for {file_key}:")
-                print(f"{df.head()}")
+                logger.info("---------------")
+                logger.info(f"Data preview for {file_key}:")
+                logger.info(f"{df.head()}")
 
-                print(f"Dataframe info:")
-                print(f"{df.info()}")
+                logger.info(f"Dataframe info:")
+                logger.info(f"{df.info()}")
 
-                print("---------------")
+                logger.info("---------------")
     
 
             except json.JSONDecodeError:
@@ -68,19 +68,7 @@ def read_data_from_s3(bucket_name, folder_name):
     except Exception as e:
         logger.error(f"Error accessing the S3 bucket: {e}")
 
-# tables = [
-#     "counterparty",
-#     "currency",
-#     "department",
-#     "design",
-#     "staff",
-#     "sales_order",
-#     "address",
-#     "payment",
-#     "purchase_order",
-#     "payment_type",
-#     "transaction",
-# ]
 
-read_data_from_s3(
-    'nc-pipeline-pioneers-ingestion20241112120531000200000003', 'currency')
+
+# read_data_from_s3(
+#     'nc-pipeline-pioneers-ingestion20241112120531000200000003', 'ingestion/counterparty/')
