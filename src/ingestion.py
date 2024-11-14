@@ -139,6 +139,9 @@ def fetch_tables():
     except Exception as err:
         logger.error("Database connection failed", exc_info=True)
         raise err
+    finally:
+        if db:
+            db.close()
 
 
 def lambda_handler(event, context):
