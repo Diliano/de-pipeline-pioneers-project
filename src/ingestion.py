@@ -9,23 +9,43 @@ import json
 import logging
 import os
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
-s3_client = boto3.client("s3")
-secrets_manager_client = boto3.client("secretsmanager")
+SECRET_NAME = os.getenv("DB_SECRET_NAME")
+REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
+
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
-# BUCKET_NAME = os.getenv(
-#     "S3_BUCKET_NAME"
-# )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
+
+S3_INGESTION_BUCKET = os.getenv(
+    "S3_BUCKET_NAME"
+)  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
 # For testing purposes
-BUCKET_NAME = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+# S3_INGESTION_BUCKET = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+
+TABLES = [
+    "counterparty",
+    "currency",
+    "department",
+    "design",
+    "staff",
+    "sales_order",
+    "address",
+    "payment",
+    "purchase_order",
+    "payment_type",
+    "transaction",
+]
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
+
+s3_client = boto3.client("s3")
+secrets_manager_client = boto3.client("secretsmanager")
 
 
 def retrieve_db_credentials(secrets_manager_client):
     try:
         secret = secrets_manager_client.get_secret_value(
-            SecretId="nc-totesys-db-credentials"
+            SecretId=SECRET_NAME
         )
         secret = json.loads(secret["SecretString"])
         return secret
@@ -59,7 +79,7 @@ def connect_to_db():
 def get_last_ingestion_timestamp():
     try:
         response = s3_client.get_object(
-            Bucket=BUCKET_NAME,
+            Bucket=S3_INGESTION_BUCKET,
             Key=TIMESTAMP_FILE_KEY
         )
         # print("s3 response: ", response)
@@ -84,27 +104,13 @@ def get_last_ingestion_timestamp():
 def update_last_ingestion_timestamp():
     current_timestamp = datetime.now().isoformat()
     s3_client.put_object(
-        Bucket=BUCKET_NAME,
+        Bucket=S3_INGESTION_BUCKET,
         Key=TIMESTAMP_FILE_KEY,
         Body=json.dumps({"timestamp": current_timestamp}),
     )
 
 
 def fetch_tables():
-
-    table_names = [
-        "counterparty",
-        "currency",
-        "department",
-        "design",
-        "staff",
-        "sales_order",
-        "address",
-        "payment",
-        "purchase_order",
-        "payment_type",
-        "transaction",
-    ]
 
     tables_data = {}
 
@@ -113,7 +119,7 @@ def fetch_tables():
         print(last_ingestion_timestamp)
 
         with connect_to_db() as db:
-            for table_name in table_names:
+            for table_name in TABLES:
                 query = f"SELECT * FROM {table_name} WHERE last_updated > :s;"
                 try:
                     rows = db.run(
@@ -148,7 +154,7 @@ def lambda_handler(event, context):
         object_key = f"{table_name}/{table_name}_{timestamp}.json"
         try:
             s3_client.put_object(
-                Bucket=BUCKET_NAME, Key=object_key, Body=json.dumps(table_data)
+                Bucket=S3_INGESTION_BUCKET, Key=object_key, Body=json.dumps(table_data)
             )
             logger.info(
                 f"Successfully wrote {table_name} data to S3 key: {object_key}"
@@ -167,4 +173,3 @@ def lambda_handler(event, context):
             "status": "Partial Failure",
             "message": "Some tables failed to ingest"
         }
-fetch_tables()
