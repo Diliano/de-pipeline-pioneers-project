@@ -98,7 +98,7 @@ def get_last_ingestion_timestamp():
         return datetime.now() - timedelta(days=1)
     except Exception as e:
         logger.error(f"Unexpected error occurred: {e}")
-        return datetime.now() - timedelta(days=1)
+        raise
 
 
 def update_last_ingestion_timestamp():
@@ -162,7 +162,7 @@ def lambda_handler(event, context):
         except Exception:
             success = False
             logger.error("Failed to write data to S3", exc_info=True)
-            # raise err
+            # raise err # raising error here could cause a failure that halts it
     if success:
         return {
             "status": "Success",
