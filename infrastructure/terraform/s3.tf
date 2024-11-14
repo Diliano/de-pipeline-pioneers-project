@@ -7,7 +7,7 @@ resource "aws_s3_bucket" "data_bucket" {
 }
 
 resource "aws_s3_bucket" "processed_bucket" {
-  # S3 bucket for the data. 
+  # S3 bucket for the transformed data. 
   bucket_prefix = "nc-${var.transformation_bucket_prefix}"
   tags = {
     Name = "ProcessedBucket"
