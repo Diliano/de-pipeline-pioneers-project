@@ -32,7 +32,7 @@ resource "aws_sns_topic" "ingestion_alarm_topic" {
 resource "aws_sns_topic_subscription" "ingestion_alarm_email_subscription" {
   topic_arn = aws_sns_topic.ingestion_alarm_topic.arn
   protocol  = "email"
-  endpoint  = "" # Create an email for us all to use?
+  endpoint  = "dataengineering@northcoders.com" # Used as default for now
 }
 
 # Ingestion lambda error alarm
