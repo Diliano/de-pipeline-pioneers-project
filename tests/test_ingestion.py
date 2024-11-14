@@ -19,7 +19,7 @@ from src.ingestion import (
     TIMESTAMP_FILE_KEY,
     S3_INGESTION_BUCKET,
     SECRET_NAME,
-    TABLES
+    TABLES,
 )
 
 # Sample data
@@ -28,13 +28,13 @@ SAMPLE_TABLES_DATA = {
     "table2": [{"id": 2, "value": "test2"}],
 }
 
+
 # Defining a fixture
 @pytest.fixture
 def mock_secrets_manager():
     with mock_aws():
         secrets_client = boto3.client(
-            "secretsmanager",
-            region_name="eu-west-2"
+            "secretsmanager", region_name="eu-west-2"
         )
 
         # Create a mock secret
@@ -55,10 +55,7 @@ def mock_secrets_manager():
 
 
 # @pytest.mark.xfail
-def test_retrieve_db_credentials_success(
-        mock_secrets_manager,
-        caplog
-):
+def test_retrieve_db_credentials_success(mock_secrets_manager, caplog):
     result = retrieve_db_credentials(mock_secrets_manager)
 
     expected_secret = {
@@ -73,13 +70,13 @@ def test_retrieve_db_credentials_success(
         "Unexpected error occurred" not in caplog.text
     )  # Ensuring no error was logged
 
+
 # @pytest.mark.xfail
 def test_retrieve_db_credentials_error(caplog):
     with mock_aws():
         # Create the Secrets Manager client without creating the secret
         secrets_client = boto3.client(
-            "secretsmanager",
-            region_name="eu-west-2"
+            "secretsmanager", region_name="eu-west-2"
         )
 
         with pytest.raises(Exception):
@@ -92,9 +89,7 @@ def test_retrieve_db_credentials_error(caplog):
 @patch("src.ingestion.retrieve_db_credentials")
 @patch("src.ingestion.Connection")
 def test_connect_to_db_success(
-    mock_connection,
-    mock_retrieve_credentials,
-    caplog
+    mock_connection, mock_retrieve_credentials, caplog
 ):
     # Mock the credentials returned by retrieve_db_credentials
     mock_retrieve_credentials.return_value = {
@@ -125,9 +120,7 @@ def test_connect_to_db_success(
 @patch("src.ingestion.retrieve_db_credentials")
 @patch("src.ingestion.Connection")
 def test_connect_to_db_failure(
-    mock_connection,
-    mock_retrieve_credentials,
-    caplog
+    mock_connection, mock_retrieve_credentials, caplog
 ):
     # Mock credentials retrieval to return valid credentials
     mock_retrieve_credentials.return_value = {
@@ -160,22 +153,18 @@ def test_connect_to_db_failure(
 @patch("src.ingestion.get_last_ingestion_timestamp")
 @patch("src.ingestion.connect_to_db")
 def test_fetch_tables_success(
-    mock_connect_to_db,
-    mock_last_timestamp,
-    mock_update_timestamp,
-    caplog
+    mock_connect_to_db, mock_last_timestamp, mock_update_timestamp, caplog
 ):
     caplog.set_level(logging.INFO)
 
     mock_db = Mock()
     mock_connect_to_db.return_value.__enter__.return_value = mock_db
 
-
     # Define the data each table query should return
     mock_last_timestamp.return_value = "2024-11-13 15:48:34.623971"
     mock_db.run.return_value = [{1, "Sample data"}]
-    mock_db.columns = [{'name': 'id'}, {'name': 'data'}]
-    
+    mock_db.columns = [{"name": "id"}, {"name": "data"}]
+
     print("Mock db.run.return_value:", mock_db.run.return_value)
     print("Mock db.columns:", mock_db.columns)
 
@@ -183,14 +172,16 @@ def test_fetch_tables_success(
 
     print("fetch tables result:", result)
     expected_data = {
-        table_name: [{'id': 1, 'data': "Sample data"}] for table_name in TABLES
+        table_name: [{"id": 1, "data": "Sample data"}] for table_name in TABLES
     }
 
     print("Expected data ", expected_data)
     assert result == expected_data
 
     for table_name in TABLES:
-        assert f"Fetched new data from {table_name} successfully." in caplog.text
+        assert (
+            f"Fetched new data from {table_name} successfully." in caplog.text
+        )
     mock_update_timestamp.assert_called_once()
 
 
@@ -199,10 +190,7 @@ def test_fetch_tables_success(
 @patch("src.ingestion.get_last_ingestion_timestamp")
 @patch("src.ingestion.connect_to_db")
 def test_fetch_tables_table_query_failure(
-    mock_connect_to_db,
-    mock_last_timestamp,
-    mock_update_timestamp,
-    caplog
+    mock_connect_to_db, mock_last_timestamp, mock_update_timestamp, caplog
 ):
     caplog.set_level(logging.ERROR)
 
@@ -215,12 +203,12 @@ def test_fetch_tables_table_query_failure(
     def side_effect(query, s):
         if "staff" in query:
             raise Exception("Query failed for staff table")
-        
+
         # Successful query result for other tables
         return [[1, "Sample data"]]
 
     mock_db.run.side_effect = side_effect
-    mock_db.columns = [{'name': 'id'}, {'name': 'data'}]
+    mock_db.columns = [{"name": "id"}, {"name": "data"}]
 
     with pytest.raises(Exception, match="Query failed for staff table"):
         fetch_tables()
@@ -249,8 +237,7 @@ def test_fetch_tables_connection_failure(mock_connect_to_db, caplog):
 
 # @pytest.mark.xfail
 @patch(
-    "src.ingestion.S3_INGESTION_BUCKET",
-    "test_bucket"
+    "src.ingestion.S3_INGESTION_BUCKET", "test_bucket"
 )  # Mock S3_INGESTION_BUCKET directly in the module
 @patch("src.ingestion.fetch_tables")
 @patch("src.ingestion.s3_client")
@@ -277,15 +264,17 @@ def test_lambda_handler_success(
         )
     assert result == {
         "status": "Success",
-        "message": "All data ingested successfully"
+        "message": "All data ingested successfully",
     }
     assertion_key = "table1/table1_2023-01-01-00-00-00.json"
     assert (
-        f"Successfully wrote table1 data to S3 key: {assertion_key}" in caplog.text
+        f"Successfully wrote table1 data to S3 key: {assertion_key}"
+        in caplog.text
     )
     assertion_key = "table2/table2_2023-01-01-00-00-00.json"
     assert (
-        f"Successfully wrote table2 data to S3 key: {assertion_key}" in caplog.text
+        f"Successfully wrote table2 data to S3 key: {assertion_key}"
+        in caplog.text
     )
 
 
@@ -295,10 +284,7 @@ def test_lambda_handler_success(
 @patch("src.ingestion.s3_client")
 @patch("src.ingestion.datetime")
 def test_lambda_handler_partial_failure(
-    mock_datetime,
-    mock_s3_client,
-    mock_fetch_tables,
-    caplog
+    mock_datetime, mock_s3_client, mock_fetch_tables, caplog
 ):
     caplog.set_level(logging.INFO)
 
@@ -324,8 +310,9 @@ def test_lambda_handler_partial_failure(
     assert "Failed to write data to S3" in caplog.text
     assertion_key = "table2/table2_2023-01-01-00-00-00.json"
     assert (
-        f"Successfully wrote table2 data to S3 key: {assertion_key}" in caplog.text
-        )
+        f"Successfully wrote table2 data to S3 key: {assertion_key}"
+        in caplog.text
+    )
 
 
 # @pytest.mark.xfail
@@ -380,15 +367,11 @@ def test_get_last_ingestion_timestamp_missing_timestamp_key():
     s3_client = boto3.client("s3", region_name="eu-west-2")
     s3_client.create_bucket(
         Bucket=S3_INGESTION_BUCKET,
-        CreateBucketConfiguration={
-            "LocationConstraint": "eu-west-2"
-            },
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
     )
 
     s3_client.put_object(
-        Bucket=S3_INGESTION_BUCKET,
-        Key=TIMESTAMP_FILE_KEY,
-        Body=json.dumps({})
+        Bucket=S3_INGESTION_BUCKET, Key=TIMESTAMP_FILE_KEY, Body=json.dumps({})
     )
 
     with patch("src.ingestion.s3_client", s3_client):
@@ -401,22 +384,25 @@ def test_get_last_ingestion_timestamp_missing_timestamp_key():
 @mock_aws
 def test_get_last_ingestion_timestamp_unexpected_error(caplog):
     caplog.set_level(logging.INFO)
-    
+
     s3_client = boto3.client("s3", region_name="eu-west-2")
     s3_client.create_bucket(
         Bucket=S3_INGESTION_BUCKET,
-        CreateBucketConfiguration={
-            "LocationConstraint": "eu-west-2"
-        })
-    
-    with patch("src.ingestion.s3_client.get_object", side_effect=Exception("Unexpected error")), \
-         patch("src.ingestion.logger") as mock_logger:
-        
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+    )
+
+    with patch(
+        "src.ingestion.s3_client.get_object",
+        side_effect=Exception("Unexpected error"),
+    ), patch("src.ingestion.logger") as mock_logger:
+
         with pytest.raises(Exception, match="Unexpected error"):
             get_last_ingestion_timestamp()
 
         # Confirming that the error was logged
-        mock_logger.error.assert_called_once_with("Unexpected error occurred: Unexpected error")
+        mock_logger.error.assert_called_once_with(
+            "Unexpected error occurred: Unexpected error"
+        )
 
 
 # @pytest.mark.xfail
