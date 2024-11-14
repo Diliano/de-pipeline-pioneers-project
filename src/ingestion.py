@@ -148,7 +148,7 @@ def lambda_handler(event, context):
     timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     success = True
     for table_name, table_data in tables.items():
-        object_key = f"{table_name}/{table_name}_{timestamp}.json"
+        object_key = f"ingestion/{table_name}/{table_name}_{timestamp}.json"
         try:
             if not table_data:
                 logger.info(f"Table {table_name} has not been updated")
