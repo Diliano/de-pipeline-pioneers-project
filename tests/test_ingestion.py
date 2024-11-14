@@ -57,7 +57,7 @@ def mock_secrets_manager():
         yield secrets_client
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 def test_retrieve_db_credentials_success(mock_secrets_manager, caplog):
     result = retrieve_db_credentials(mock_secrets_manager)
 
@@ -73,7 +73,7 @@ def test_retrieve_db_credentials_success(mock_secrets_manager, caplog):
         "Unexpected error occurred" not in caplog.text
     )  # Ensuring no error was logged
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 def test_retrieve_db_credentials_error(caplog):
     with mock_aws():
         # Create the Secrets Manager client without creating the secret
@@ -88,7 +88,7 @@ def test_retrieve_db_credentials_error(caplog):
         assert "Unexpected error occurred" in caplog.text
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 @patch("src.ingestion.retrieve_db_credentials")
 @patch("src.ingestion.Connection")
 def test_connect_to_db_success(
@@ -121,7 +121,7 @@ def test_connect_to_db_success(
     )  # Ensuring no error was logged
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 @patch("src.ingestion.retrieve_db_credentials")
 @patch("src.ingestion.Connection")
 def test_connect_to_db_failure(
@@ -156,9 +156,9 @@ def test_connect_to_db_failure(
 
 
 # @pytest.mark.skip
-@patch("src.ingestion.connect_to_db")
-@patch("src.ingestion.get_last_ingestion_timestamp")
 @patch("src.ingestion.update_last_ingestion_timestamp")
+@patch("src.ingestion.get_last_ingestion_timestamp")
+@patch("src.ingestion.connect_to_db")
 def test_fetch_tables_success(mock_connect_to_db, mock_last_timestamp, mock_update_timestamp, caplog):
     caplog.set_level(logging.INFO)
 
@@ -190,35 +190,38 @@ def test_fetch_tables_success(mock_connect_to_db, mock_last_timestamp, mock_upda
 
 
 # @pytest.mark.skip
+@patch("src.ingestion.update_last_ingestion_timestamp")
+@patch("src.ingestion.get_last_ingestion_timestamp")
 @patch("src.ingestion.connect_to_db")
-def test_fetch_tables_table_query_failure(mock_connect_to_db, caplog):
-    caplog.set_level(logging.INFO)
+def test_fetch_tables_table_query_failure(mock_connect_to_db, mock_last_timestamp, mock_update_timestamp, caplog):
+    caplog.set_level(logging.ERROR)
 
     mock_db = Mock()
     mock_connect_to_db.return_value.__enter__.return_value = mock_db
+    mock_last_timestamp.return_value = "2024-11-13 15:48:34.623971"
 
-    # Define a side effect function that
-    # raises an exception only for the "staff" table
-    def side_effect(*args, **kwargs):
-
-        # Simulate a failure for a specific table by raising an exception
-        query = args[0] if args else kwargs.get("query", "")
+    # Define a side effect for mock_db.run
+    # to raise an error for one specific table
+    def side_effect(query, s):
         if "staff" in query:
-            raise Exception("Query failed")
-        return [{"id": 1, "name": "Sample"}]
+            raise Exception("Query failed for staff table")
+        
+        # Successful query result for other tables
+        return [[1, "Sample data"]]
 
-    # Apply the side effect to the mock database's run method
     mock_db.run.side_effect = side_effect
+    mock_db.columns = [{'name': 'id'}, {'name': 'data'}]
 
-    with pytest.raises(Exception, match="Query failed"):
+    with pytest.raises(Exception, match="Query failed for staff table"):
         fetch_tables()
 
-    # Check that an error was logged for the "staff" table
+    # Assert that the error was logged for the failing table
+    # and update_last_ingestion_timestamp was not called
     assert "Failed to fetch data from staff" in caplog.text
-    mock_db.run.assert_called()  # Ensuring that run was called at least once
+    mock_update_timestamp.assert_not_called()
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 # @pytest.mark.skip
 @patch("src.ingestion.connect_to_db")
 def test_fetch_tables_connection_failure(mock_connect_to_db, caplog):
@@ -234,7 +237,7 @@ def test_fetch_tables_connection_failure(mock_connect_to_db, caplog):
     assert "Database connection failed" in caplog.text
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 @patch(
     "src.ingestion.S3_INGESTION_BUCKET", "test_bucket"
 )  # Mock S3_INGESTION_BUCKET directly in the module
@@ -275,7 +278,7 @@ def test_lambda_handler_success(
     )
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 @patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
 @patch("src.ingestion.fetch_tables")
 @patch("src.ingestion.s3_client")
@@ -309,7 +312,7 @@ def test_lambda_handler_partial_failure(
     assert f"Successfully wrote table2 data to S3 key: {assertion_key}" in caplog.text
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 # @pytest.mark.skip
 @mock_aws
 def test_get_last_ingestion_timestamp_valid_timestamp():
@@ -334,7 +337,7 @@ def test_get_last_ingestion_timestamp_valid_timestamp():
         assert result == datetime.fromisoformat(valid_timestamp)
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 # @pytest.mark.skip
 @mock_aws
 def test_get_last_ingestion_timestamp_no_file():
@@ -354,7 +357,7 @@ def test_get_last_ingestion_timestamp_no_file():
         assert result == expected_default_timestamp
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 # @pytest.mark.skip
 @mock_aws
 def test_get_last_ingestion_timestamp_missing_timestamp_key():
@@ -377,7 +380,7 @@ def test_get_last_ingestion_timestamp_missing_timestamp_key():
         assert result == "1970-01-01 00:00:00"
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 # @pytest.mark.skip
 @mock_aws
 def test_get_last_ingestion_timestamp_unexpected_error(caplog):
@@ -400,7 +403,7 @@ def test_get_last_ingestion_timestamp_unexpected_error(caplog):
         mock_logger.error.assert_called_once_with("Unexpected error occurred: Unexpected error")
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 @patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
 @patch("src.ingestion.s3_client")
 def test_update_last_ingestion_timestamp(mock_s3_client):
