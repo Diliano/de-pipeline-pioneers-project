@@ -1,4 +1,4 @@
-# from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError
 from pg8000.native import Connection
 from datetime import (
     datetime,
@@ -14,11 +14,10 @@ REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 
 S3_INGESTION_BUCKET = os.getenv(
-    "S3_BUCKET_NAME"
+    "S3_BUCKET_NAME",
+    "nc-pipeline-pioneers-ingestion20241112120531000200000003"
 )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
-# For testing purposes
-# S3_INGESTION_BUCKET = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
 
 TABLES = [
     "counterparty",
@@ -43,9 +42,7 @@ secrets_manager_client = boto3.client("secretsmanager")
 
 def retrieve_db_credentials(secrets_manager_client):
     try:
-        secret = secrets_manager_client.get_secret_value(
-            SecretId=SECRET_NAME
-        )
+        secret = secrets_manager_client.get_secret_value(SecretId=SECRET_NAME)
         secret = json.loads(secret["SecretString"])
         return secret
     except Exception as err:
@@ -67,7 +64,7 @@ def connect_to_db():
             database=DATABASE,
             password=PASSWORD,
             host=HOST,
-            port=PORT
+            port=PORT,
         )
 
     except Exception as e:
@@ -78,8 +75,7 @@ def connect_to_db():
 def get_last_ingestion_timestamp():
     try:
         response = s3_client.get_object(
-            Bucket=S3_INGESTION_BUCKET,
-            Key=TIMESTAMP_FILE_KEY
+            Bucket=S3_INGESTION_BUCKET, Key=TIMESTAMP_FILE_KEY
         )
         # Reading content only if 'Body' exists and is not None
         body = response.get("Body", "")
@@ -91,9 +87,12 @@ def get_last_ingestion_timestamp():
             if timestamp_str:
                 return datetime.fromisoformat(timestamp_str)
 
-            # return datetime.now() - timedelta(days=1)
-    except s3_client.exceptions.NoSuchKey:
         return "1970-01-01 00:00:00"
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "NoSuchBucket":
+            return "1970-01-01 00:00:00"
+        elif e.response["Error"]["Code"] == "NoSuchKey":
+            return "1970-01-01 00:00:00"
     except Exception as e:
         logger.error(f"Unexpected error occurred: {e}")
         raise
@@ -109,28 +108,26 @@ def update_last_ingestion_timestamp():
 
 
 def fetch_tables():
-
     tables_data = {}
-
     try:
         last_ingestion_timestamp = get_last_ingestion_timestamp()
-
         with connect_to_db() as db:
             for table_name in TABLES:
-                query = f"SELECT * FROM {table_name} WHERE last_updated > :s;"
+                query = f"SELECT * FROM {table_name} WHERE last_updated > :s"
                 try:
-                    rows = db.run(
-                        query, s=last_ingestion_timestamp
-                    )
-                    column = [col['name'] for col in db.columns]
-                    tables_data[table_name] = [dict(zip(column, row)) for row in rows]
+                    rows = db.run(query, s=last_ingestion_timestamp)
+
+                    column = [col["name"] for col in db.columns]
+                    tables_data[table_name] = [
+                        dict(zip(column, row)) for row in rows
+                    ]
                     logger.info(
                         f"Fetched new data from {table_name} successfully."
-                        )
+                    )
                 except Exception:
                     logger.error(
                         f"Failed to fetch data from {table_name}",
-                        exc_info=True
+                        exc_info=True,
                     )
                     raise
         update_last_ingestion_timestamp()
@@ -139,14 +136,19 @@ def fetch_tables():
     except Exception as err:
         logger.error("Database connection failed", exc_info=True)
         raise err
+    finally:
+        if db:
+            db.close()
+            logger.info("Database connection closed")
 
 
 def lambda_handler(event, context):
+    logger.info("Ingestion lambda invoked, started data ingestion")
     tables = fetch_tables()
     timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     success = True
     for table_name, table_data in tables.items():
-        object_key = f"{table_name}/{table_name}_{timestamp}.json"
+        object_key = f"ingestion/{table_name}/{table_name}_{timestamp}.json"
         try:
             if not table_data:
                 logger.info(f"Table {table_name} has not been updated")
@@ -155,7 +157,7 @@ def lambda_handler(event, context):
                 Bucket=S3_INGESTION_BUCKET,
                 Key=object_key,
                 # default str important for json serialisation
-                Body=json.dumps(table_data, default=str)
+                Body=json.dumps(table_data, default=str),
             )
             logger.info(
                 f"Successfully wrote {table_name} data to S3 key: {object_key}"
@@ -163,14 +165,15 @@ def lambda_handler(event, context):
         except Exception:
             success = False
             logger.error("Failed to write data to S3", exc_info=True)
-            # raise err # raising error here could cause a failure that halts it
+            # raise err
+            # raising error here could cause a failure that halts it
     if success:
         return {
             "status": "Success",
-            "message": "All data ingested successfully"
+            "message": "All data ingested successfully",
         }
     else:
         return {
             "status": "Partial Failure",
-            "message": "Some tables failed to ingest"
+            "message": "Some tables failed to ingest",
         }
