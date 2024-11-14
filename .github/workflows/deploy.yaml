@@ -9,27 +9,34 @@ on:
         - develop
 
 jobs:
-    run-on: ubuntu-latest
+  test-list-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      S3_INGESTION_BUCKET: "test_bucket"
+      TIMESTAMP_FILE_KEY: "metadata/last_ingestion_timestamp.json"
+      AWS_REGION: "eu-west-2"
+
     steps:
-        - name: Checkout
-          uses: actions/checkout@v4 
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        - name: Set up python
-          uses: actions/setup-python@v5
-          with:
-          python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
 
-        - name: Install dependencies
-          run: |
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
     
-        - name: Run tests
-          run: |
-            pytest --disable-warnings --maxfail=1 --log-disable
+      - name: Run tests
+        run: |
+          pytest --disable-warnings --log-disable --maxfail=1 
     
-        - name: Lint code
-          run: flake8 .
+      - name: Lint code with flake8
+        run: flake8 .
         
-        # if we need to deploy to aws, insert here
-
+        # if we need to deploy to AWS, insert here
+      # - name: Deploy to aws lambda
