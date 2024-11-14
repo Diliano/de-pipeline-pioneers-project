@@ -1,24 +1,50 @@
 # from botocore.exceptions import ClientError
 from pg8000.native import Connection
-from datetime import datetime
+from datetime import (
+    datetime,
+)
 import boto3
 import json
 import logging
 import os
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
-s3_client = boto3.client("s3")
-secrets_manager_client = boto3.client("secretsmanager")
-BUCKET_NAME = os.getenv(
+SECRET_NAME = os.getenv("DB_SECRET_NAME", "nc-totesys-db-credentials")
+REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
+
+TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
+
+S3_INGESTION_BUCKET = os.getenv(
     "S3_BUCKET_NAME"
 )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
+
+# For testing purposes
+# S3_INGESTION_BUCKET = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+
+TABLES = [
+    "counterparty",
+    "currency",
+    "department",
+    "design",
+    "staff",
+    "sales_order",
+    "address",
+    "payment",
+    "purchase_order",
+    "payment_type",
+    "transaction",
+]
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
+
+s3_client = boto3.client("s3")
+secrets_manager_client = boto3.client("secretsmanager")
 
 
 def retrieve_db_credentials(secrets_manager_client):
     try:
         secret = secrets_manager_client.get_secret_value(
-            SecretId="nc-totesys-db-credentials"
+            SecretId=SECRET_NAME
         )
         secret = json.loads(secret["SecretString"])
         return secret
@@ -36,7 +62,7 @@ def connect_to_db():
         HOST = creds["HOST"]
         PORT = creds["PORT"]
 
-        Connection(
+        return Connection(
             user=USER,
             database=DATABASE,
             password=PASSWORD,
@@ -49,45 +75,70 @@ def connect_to_db():
         raise e
 
 
+def get_last_ingestion_timestamp():
+    try:
+        response = s3_client.get_object(
+            Bucket=S3_INGESTION_BUCKET,
+            Key=TIMESTAMP_FILE_KEY
+        )
+        # Reading content only if 'Body' exists and is not None
+        body = response.get("Body", "")
+        if body:
+            last_ingestion_data = json.loads(body.read().decode("utf-8"))
+
+            # Ensuring the 'timestamp' key exists in the json data
+            timestamp_str = last_ingestion_data.get("timestamp", "")
+            if timestamp_str:
+                return datetime.fromisoformat(timestamp_str)
+
+            # return datetime.now() - timedelta(days=1)
+    except s3_client.exceptions.NoSuchKey:
+        return "1970-01-01 00:00:00"
+    except Exception as e:
+        logger.error(f"Unexpected error occurred: {e}")
+        raise
+
+
+def update_last_ingestion_timestamp():
+    current_timestamp = datetime.now().isoformat()
+    s3_client.put_object(
+        Bucket=S3_INGESTION_BUCKET,
+        Key=TIMESTAMP_FILE_KEY,
+        Body=json.dumps({"timestamp": current_timestamp}),
+    )
+
+
 def fetch_tables():
 
-    table_names = [
-        "counterparty",
-        "currency",
-        "department",
-        "design",
-        "staff",
-        "sales_order",
-        "address",
-        "payment",
-        "purchase_order",
-        "payment_type",
-        "transaction",
-    ]
     tables_data = {}
 
     try:
-        with connect_to_db() as db:
+        last_ingestion_timestamp = get_last_ingestion_timestamp()
 
-            for table_name in table_names:
-                query = f"SELECT * FROM {table_name};"
+        with connect_to_db() as db:
+            for table_name in TABLES:
+                query = f"SELECT * FROM {table_name} WHERE last_updated > :s;"
                 try:
-                    tables_data[table_name] = db.run(query)
+                    rows = db.run(
+                        query, s=last_ingestion_timestamp
+                    )
+                    column = [col['name'] for col in db.columns]
+                    tables_data[table_name] = [dict(zip(column, row)) for row in rows]
                     logger.info(
-                        f"Fetched data from {table_name} successfully."
+                        f"Fetched new data from {table_name} successfully."
                         )
-                except Exception as e:
+                except Exception:
                     logger.error(
                         f"Failed to fetch data from {table_name}",
                         exc_info=True
                     )
-                    raise e
+                    raise
+        update_last_ingestion_timestamp()
+        return tables_data
 
-            return tables_data
-
-    except Exception:
+    except Exception as err:
         logger.error("Database connection failed", exc_info=True)
-        raise
+        raise err
 
 
 def lambda_handler(event, context):
@@ -97,22 +148,29 @@ def lambda_handler(event, context):
     for table_name, table_data in tables.items():
         object_key = f"{table_name}/{table_name}_{timestamp}.json"
         try:
+            if not table_data:
+                logger.info(f"Table {table_name} has not been updated")
+
             s3_client.put_object(
-                Bucket=BUCKET_NAME, Key=object_key, Body=json.dumps(table_data)
+                Bucket=S3_INGESTION_BUCKET,
+                Key=object_key,
+                # default str important for json serialisation
+                Body=json.dumps(table_data, default=str)
             )
             logger.info(
                 f"Successfully wrote {table_name} data to S3 key: {object_key}"
-                )
+            )
         except Exception:
             success = False
             logger.error("Failed to write data to S3", exc_info=True)
-            # raise err
+            # raise err # raising error here could cause a failure that halts it
     if success:
         return {
-            "status": "Success", "message": "All data ingested successfully"
-            }
+            "status": "Success",
+            "message": "All data ingested successfully"
+        }
     else:
         return {
             "status": "Partial Failure",
             "message": "Some tables failed to ingest"
-            }
+        }
