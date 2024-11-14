@@ -1,10 +1,8 @@
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 from moto import mock_aws
 from datetime import (
     datetime,
-    timedelta,
 )
-from unittest.mock import MagicMock
 import boto3
 import pytest
 import json
@@ -29,7 +27,6 @@ SAMPLE_TABLES_DATA = {
     "table1": [{"id": 1, "value": "test1"}],
     "table2": [{"id": 2, "value": "test2"}],
 }
-
 
 # Defining a fixture
 @pytest.fixture
@@ -58,7 +55,10 @@ def mock_secrets_manager():
 
 
 # @pytest.mark.xfail
-def test_retrieve_db_credentials_success(mock_secrets_manager, caplog):
+def test_retrieve_db_credentials_success(
+        mock_secrets_manager,
+        caplog
+):
     result = retrieve_db_credentials(mock_secrets_manager)
 
     expected_secret = {
@@ -159,7 +159,12 @@ def test_connect_to_db_failure(
 @patch("src.ingestion.update_last_ingestion_timestamp")
 @patch("src.ingestion.get_last_ingestion_timestamp")
 @patch("src.ingestion.connect_to_db")
-def test_fetch_tables_success(mock_connect_to_db, mock_last_timestamp, mock_update_timestamp, caplog):
+def test_fetch_tables_success(
+    mock_connect_to_db,
+    mock_last_timestamp,
+    mock_update_timestamp,
+    caplog
+):
     caplog.set_level(logging.INFO)
 
     mock_db = Mock()
@@ -193,7 +198,12 @@ def test_fetch_tables_success(mock_connect_to_db, mock_last_timestamp, mock_upda
 @patch("src.ingestion.update_last_ingestion_timestamp")
 @patch("src.ingestion.get_last_ingestion_timestamp")
 @patch("src.ingestion.connect_to_db")
-def test_fetch_tables_table_query_failure(mock_connect_to_db, mock_last_timestamp, mock_update_timestamp, caplog):
+def test_fetch_tables_table_query_failure(
+    mock_connect_to_db,
+    mock_last_timestamp,
+    mock_update_timestamp,
+    caplog
+):
     caplog.set_level(logging.ERROR)
 
     mock_db = Mock()
@@ -239,7 +249,8 @@ def test_fetch_tables_connection_failure(mock_connect_to_db, caplog):
 
 # @pytest.mark.xfail
 @patch(
-    "src.ingestion.S3_INGESTION_BUCKET", "test_bucket"
+    "src.ingestion.S3_INGESTION_BUCKET",
+    "test_bucket"
 )  # Mock S3_INGESTION_BUCKET directly in the module
 @patch("src.ingestion.fetch_tables")
 @patch("src.ingestion.s3_client")
@@ -284,7 +295,10 @@ def test_lambda_handler_success(
 @patch("src.ingestion.s3_client")
 @patch("src.ingestion.datetime")
 def test_lambda_handler_partial_failure(
-    mock_datetime, mock_s3_client, mock_fetch_tables, caplog
+    mock_datetime,
+    mock_s3_client,
+    mock_fetch_tables,
+    caplog
 ):
     caplog.set_level(logging.INFO)
 
@@ -309,7 +323,9 @@ def test_lambda_handler_partial_failure(
     # Ensuring that an error was logged for the table that failed
     assert "Failed to write data to S3" in caplog.text
     assertion_key = "table2/table2_2023-01-01-00-00-00.json"
-    assert f"Successfully wrote table2 data to S3 key: {assertion_key}" in caplog.text
+    assert (
+        f"Successfully wrote table2 data to S3 key: {assertion_key}" in caplog.text
+        )
 
 
 # @pytest.mark.xfail
