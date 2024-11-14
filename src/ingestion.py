@@ -1,4 +1,4 @@
-# from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError
 from pg8000.native import Connection
 from datetime import (
     datetime,
@@ -13,12 +13,12 @@ REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
 
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 
-S3_INGESTION_BUCKET = os.getenv(
-    "S3_BUCKET_NAME"
-)  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
+# S3_INGESTION_BUCKET = os.getenv(
+#     "S3_BUCKET_NAME"
+# )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
 # For testing purposes
-# S3_INGESTION_BUCKET = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+S3_INGESTION_BUCKET = "nc-pipeline-pioneers-ingestion20241112120531000200000003"
 
 TABLES = [
     "counterparty",
@@ -91,9 +91,12 @@ def get_last_ingestion_timestamp():
             if timestamp_str:
                 return datetime.fromisoformat(timestamp_str)
 
-            # return datetime.now() - timedelta(days=1)
-    except s3_client.exceptions.NoSuchKey:
         return "1970-01-01 00:00:00"
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchBucket':
+            return "1970-01-01 00:00:00"
+        elif e.response['Error']['Code'] == 'NoSuchKey':
+            return "1970-01-01 00:00:00"
     except Exception as e:
         logger.error(f"Unexpected error occurred: {e}")
         raise
@@ -109,21 +112,40 @@ def update_last_ingestion_timestamp():
 
 
 def fetch_tables():
-
     tables_data = {}
-
     try:
         last_ingestion_timestamp = get_last_ingestion_timestamp()
+        print(f"Last ingestion timestamp: {last_ingestion_timestamp}")
 
         with connect_to_db() as db:
             for table_name in TABLES:
-                query = f"SELECT * FROM {table_name} WHERE last_updated > :s;"
+                query = f"SELECT * FROM {table_name} WHERE last_updated > :s"
+                # if last_ingestion_timestamp:
+                #     query += " WHERE last_updated > :s"
+
                 try:
+                    print(query)
                     rows = db.run(
-                        query, s=last_ingestion_timestamp
-                    )
+                            query, s=last_ingestion_timestamp
+                        )
+                    # if last_ingestion_timestamp:
+                    #     rows = db.run(
+                    #         query, s=last_ingestion_timestamp
+                    #     )
+                    # else:
+                    #     rows = db.run(
+                    #         query
+                    #     )
+
+                    print(f"Query result for {table_name}: {rows}")
+
                     column = [col['name'] for col in db.columns]
+
+                    print(f"Columns for {table_name}: {column}")
                     tables_data[table_name] = [dict(zip(column, row)) for row in rows]
+
+                    print(f"Processed data for {table_name}: {tables_data[table_name]}")
+
                     logger.info(
                         f"Fetched new data from {table_name} successfully."
                         )
@@ -142,6 +164,7 @@ def fetch_tables():
 
 
 def lambda_handler(event, context):
+    logger.info("Ingestion lambda invoked, started data ingestion")
     tables = fetch_tables()
     timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     success = True
@@ -174,3 +197,6 @@ def lambda_handler(event, context):
             "status": "Partial Failure",
             "message": "Some tables failed to ingest"
         }
+    
+if __name__ == "__main__":
+    print(fetch_tables())
