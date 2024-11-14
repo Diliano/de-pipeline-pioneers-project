@@ -111,13 +111,10 @@ def fetch_tables():
     tables_data = {}
     try:
         last_ingestion_timestamp = get_last_ingestion_timestamp()
-        print(f"Last ingestion timestamp: {last_ingestion_timestamp}")
-
         with connect_to_db() as db:
             for table_name in TABLES:
                 query = f"SELECT * FROM {table_name} WHERE last_updated > :s"
                 try:
-                    print(query)
                     rows = db.run(query, s=last_ingestion_timestamp)
 
                     column = [col["name"] for col in db.columns]
@@ -142,6 +139,7 @@ def fetch_tables():
     finally:
         if db:
             db.close()
+            logger.info("Database connection closed")
 
 
 def lambda_handler(event, context):
