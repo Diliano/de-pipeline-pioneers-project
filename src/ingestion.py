@@ -9,7 +9,7 @@ import json
 import logging
 import os
 
-SECRET_NAME = os.getenv("DB_SECRET_NAME")
+SECRET_NAME = os.getenv("DB_SECRET_NAME", "nc-totesys-db-credentials")
 REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
 
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
