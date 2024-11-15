@@ -196,9 +196,9 @@ def test_fetch_tables_table_query_failure(
     mock_db = Mock()
     mock_connect_to_db.return_value.__enter__.return_value = mock_db
     mock_last_timestamp.return_value = "2024-11-13 15:48:34.623971"
-    
     # Define a side effect for mock_db.run
     # to raise an error for one specific table
+
     def side_effect(query, s):
         if "counterparty" in query:
             raise Exception("Query failed for counterparty table")
