@@ -100,3 +100,11 @@ check-coverage:
 
 ## Run all checks (code formatting, unit tests, and coverage)
 run-checks: run-bandit run-safety run-black run-flake8 run-test check-coverage
+
+
+# Clean Up
+#################################################################################
+
+## Remove virtual environment, coverage, pycache, and other generated files
+clean:
+	rm -rf venv .coverage .pytest_cache */__pycache__
