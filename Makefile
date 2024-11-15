@@ -67,3 +67,34 @@ coverage:
 
 ## Set up development tools (Black, Coverage)
 dev-setup: bandit safety black flake8 coverage
+
+
+# Code Quality Checks and Tests
+#################################################################################
+
+## Run Bandit for security checks
+run-bandit:
+	$(call execute_in_env, bandit -r -lll ./src ./tests)
+
+## Run Safety to check for known vulnerabilities in dependencies
+run-safety:
+	$(call execute_in_env, safety check -r ./requirements.txt --full-report)
+
+## Format code with Black
+run-black:
+	$(call execute_in_env, black ./src/*.py ./tests/*.py)
+
+## Run Flake8 to check code style
+run-flake8:
+	$(call execute_in_env, flake8 ./src ./tests)
+
+## Run the tests
+run-test:
+	$(call execute_in_env, PYTHONPATH=$(PYTHONPATH) pytest -v)
+
+## Run the coverage check
+check-coverage:
+	$(call execute_in_env, PYTHONPATH=$(PYTHONPATH) pytest --cov=src tests/)
+
+## Run all checks (code formatting, unit tests, and coverage)
+run-checks: run-bandit run-safety run-black run-flake8 run-test check-coverage
