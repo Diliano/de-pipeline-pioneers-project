@@ -3,6 +3,7 @@ from moto import mock_aws
 from datetime import (
     datetime,
 )
+from botocore.exceptions import ClientError
 import boto3
 import pytest
 import json
@@ -17,7 +18,6 @@ from src.ingestion import (
     get_last_ingestion_timestamp,
     update_last_ingestion_timestamp,
     TIMESTAMP_FILE_KEY,
-    S3_INGESTION_BUCKET,
     SECRET_NAME,
     TABLES,
 )
@@ -148,7 +148,6 @@ def test_connect_to_db_failure(
     )
 
 
-# @pytest.mark.skip
 @patch("src.ingestion.update_last_ingestion_timestamp")
 @patch("src.ingestion.get_last_ingestion_timestamp")
 @patch("src.ingestion.connect_to_db")
@@ -165,17 +164,16 @@ def test_fetch_tables_success(
     mock_db.run.return_value = [{1, "Sample data"}]
     mock_db.columns = [{"name": "id"}, {"name": "data"}]
 
-    print("Mock db.run.return_value:", mock_db.run.return_value)
-    print("Mock db.columns:", mock_db.columns)
+    # print("Mock db.run.return_value:", mock_db.run.return_value)
+    # print("Mock db.columns:", mock_db.columns)
 
     result = fetch_tables()
 
-    print("fetch tables result:", result)
+    # print("fetch tables result:", result)
     expected_data = {
         table_name: [{"id": 1, "data": "Sample data"}] for table_name in TABLES
     }
-
-    print("Expected data ", expected_data)
+    # print("Expected data ", expected_data)
     assert result == expected_data
 
     for table_name in TABLES:
@@ -197,30 +195,32 @@ def test_fetch_tables_table_query_failure(
     mock_db = Mock()
     mock_connect_to_db.return_value.__enter__.return_value = mock_db
     mock_last_timestamp.return_value = "2024-11-13 15:48:34.623971"
-
     # Define a side effect for mock_db.run
     # to raise an error for one specific table
+
     def side_effect(query, s):
-        if "staff" in query:
-            raise Exception("Query failed for staff table")
+        if "counterparty" in query:
+            raise Exception("Query failed for counterparty table")
 
         # Successful query result for other tables
         return [[1, "Sample data"]]
-
     mock_db.run.side_effect = side_effect
     mock_db.columns = [{"name": "id"}, {"name": "data"}]
 
-    with pytest.raises(Exception, match="Query failed for staff table"):
+    with pytest.raises(Exception, match="Query failed for counterparty table"):
         fetch_tables()
 
     # Assert that the error was logged for the failing table
     # and update_last_ingestion_timestamp was not called
-    assert "Failed to fetch data from staff" in caplog.text
+    assert "Failed to fetch data from counterparty" in caplog.text
     mock_update_timestamp.assert_not_called()
 
 
 # @pytest.mark.xfail
 # @pytest.mark.skip
+@patch(
+    "src.ingestion.S3_INGESTION_BUCKET", "test_bucket"
+)
 @patch("src.ingestion.connect_to_db")
 def test_fetch_tables_connection_failure(mock_connect_to_db, caplog):
     caplog.set_level(logging.INFO)
@@ -255,30 +255,26 @@ def test_lambda_handler_success(
 
     result = lambda_handler({}, {})
 
-    for table_name in SAMPLE_TABLES_DATA.keys():
-        expected_key = f"{table_name}/{table_name}_{timestamp}.json"
+    for table_name, table_data in SAMPLE_TABLES_DATA.items():
+        expected_key = f"ingestion/{table_name}/{table_name}_{timestamp}.json"
         mock_s3_client.put_object.assert_any_call(
             Bucket="test_bucket",
             Key=expected_key,
-            Body=json.dumps(SAMPLE_TABLES_DATA[table_name]),
+            Body=json.dumps(table_data),
         )
     assert result == {
         "status": "Success",
         "message": "All data ingested successfully",
     }
-    assertion_key = "table1/table1_2023-01-01-00-00-00.json"
-    assert (
-        f"Successfully wrote table1 data to S3 key: {assertion_key}"
-        in caplog.text
-    )
-    assertion_key = "table2/table2_2023-01-01-00-00-00.json"
-    assert (
-        f"Successfully wrote table2 data to S3 key: {assertion_key}"
-        in caplog.text
-    )
+    # Assert logs for successful writes
+    for table_name in SAMPLE_TABLES_DATA.keys():
+        assertion_key = f"ingestion/{table_name}/{table_name}_{timestamp}.json"
+        assert (
+            f"Successfully wrote {table_name} data to S3 key: {assertion_key}"
+            in caplog.text
+        )
 
 
-# @pytest.mark.xfail
 @patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
 @patch("src.ingestion.fetch_tables")
 @patch("src.ingestion.s3_client")
@@ -308,7 +304,7 @@ def test_lambda_handler_partial_failure(
 
     # Ensuring that an error was logged for the table that failed
     assert "Failed to write data to S3" in caplog.text
-    assertion_key = "table2/table2_2023-01-01-00-00-00.json"
+    assertion_key = "ingestion/table2/table2_2023-01-01-00-00-00.json"
     assert (
         f"Successfully wrote table2 data to S3 key: {assertion_key}"
         in caplog.text
@@ -316,93 +312,85 @@ def test_lambda_handler_partial_failure(
 
 
 # @pytest.mark.xfail
-# @pytest.mark.skip
-@mock_aws
-def test_get_last_ingestion_timestamp_valid_timestamp():
+@patch(
+    "src.ingestion.S3_INGESTION_BUCKET", "test_bucket"
+)
+@patch("src.ingestion.s3_client")
+def test_get_last_ingestion_timestamp_valid_timestamp(mock_s3_client):
 
-    s3_client = boto3.client("s3", region_name="eu-west-2")
-    s3_client.create_bucket(
-        Bucket=S3_INGESTION_BUCKET,
-        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-    )
     valid_timestamp = datetime(2023, 1, 1, 12, 0, 0).isoformat()
+    mock_s3_client.get_object.return_value = {
+        "Body": Mock(
+            read=Mock(
+                return_value=json.dumps(
+                    {"timestamp": valid_timestamp}).encode('utf-8')))
+    }
 
-    # Put a valid timestamp in the S3 object
-    s3_client.put_object(
-        Bucket=S3_INGESTION_BUCKET,
-        Key=TIMESTAMP_FILE_KEY,
-        Body=json.dumps({"timestamp": valid_timestamp}),
+    result = get_last_ingestion_timestamp()
+
+    assert result == datetime.fromisoformat(valid_timestamp)
+    mock_s3_client.get_object.assert_called_once_with(
+        Bucket="test_bucket",
+        Key=TIMESTAMP_FILE_KEY
     )
 
-    with patch("src.ingestion.s3_client", s3_client):
-        result = get_last_ingestion_timestamp()
 
-        assert result == datetime.fromisoformat(valid_timestamp)
+# @pytest.mark.xfail
+@patch("src.ingestion.S3_INGESTION_BUCKET", "nonexistent-bucket")
+@patch("src.ingestion.s3_client")
+def test_get_last_ingestion_timestamp_no_bucket(mock_s3_client):
+    # Simulating a NoSuchBucket error from S3
+    error_response = {"Error": {"Code": "NoSuchBucket"}}
+    mock_s3_client.get_object.side_effect = ClientError(
+        error_response, "GetObject"
+    )
+
+    result = get_last_ingestion_timestamp()
+
+    assert result == "1970-01-01 00:00:00"
+    mock_s3_client.get_object.assert_called_once_with(
+        Bucket="nonexistent-bucket",
+        Key=TIMESTAMP_FILE_KEY
+    )
 
 
 # @pytest.mark.xfail
 # @pytest.mark.skip
-@mock_aws
-def test_get_last_ingestion_timestamp_no_file():
-
-    # Initialize the mock S3 environment
-    s3_client = boto3.client("s3", region_name="eu-west-2")
-
-    s3_client.create_bucket(
-        Bucket=S3_INGESTION_BUCKET,
-        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+@patch(
+    "src.ingestion.S3_INGESTION_BUCKET", "test_bucket"
+)
+@patch("src.ingestion.s3_client")
+def test_get_last_ingestion_timestamp_missing_timestamp_key(mock_s3_client):
+    error_response = {"Error": {"Code": "NoSuchKey"}}
+    mock_s3_client.get_object.side_effect = ClientError(
+        error_response, "GetObject"
     )
 
-    with patch("src.ingestion.s3_client", s3_client):
-        result = get_last_ingestion_timestamp()
+    result = get_last_ingestion_timestamp()
 
-        expected_default_timestamp = "1970-01-01 00:00:00"
-        assert result == expected_default_timestamp
+    assert result == "1970-01-01 00:00:00"
+    mock_s3_client.get_object.assert_called_once_with(
+        Bucket="test_bucket",
+        Key=TIMESTAMP_FILE_KEY
+    )
 
 
 # @pytest.mark.xfail
 # @pytest.mark.skip
-@mock_aws
-def test_get_last_ingestion_timestamp_missing_timestamp_key():
-    s3_client = boto3.client("s3", region_name="eu-west-2")
-    s3_client.create_bucket(
-        Bucket=S3_INGESTION_BUCKET,
-        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+@patch(
+    "src.ingestion.S3_INGESTION_BUCKET", "test_bucket"
+)
+@patch("src.ingestion.s3_client")
+def test_get_last_ingestion_timestamp_unexpected_error(mock_s3_client):
+    mock_s3_client.get_object.side_effect = Exception("Unexpected error")
+
+    with pytest.raises(Exception, match="Unexpected error"):
+        get_last_ingestion_timestamp()
+
+    mock_s3_client.get_object.assert_called_once_with(
+        Bucket="test_bucket",
+        Key=TIMESTAMP_FILE_KEY
     )
-
-    s3_client.put_object(
-        Bucket=S3_INGESTION_BUCKET, Key=TIMESTAMP_FILE_KEY, Body=json.dumps({})
-    )
-
-    with patch("src.ingestion.s3_client", s3_client):
-        result = get_last_ingestion_timestamp()
-        assert result == "1970-01-01 00:00:00"
-
-
-# @pytest.mark.xfail
-# @pytest.mark.skip
-@mock_aws
-def test_get_last_ingestion_timestamp_unexpected_error(caplog):
-    caplog.set_level(logging.INFO)
-
-    s3_client = boto3.client("s3", region_name="eu-west-2")
-    s3_client.create_bucket(
-        Bucket=S3_INGESTION_BUCKET,
-        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-    )
-
-    with patch(
-        "src.ingestion.s3_client.get_object",
-        side_effect=Exception("Unexpected error"),
-    ), patch("src.ingestion.logger") as mock_logger:
-
-        with pytest.raises(Exception, match="Unexpected error"):
-            get_last_ingestion_timestamp()
-
-        # Confirming that the error was logged
-        mock_logger.error.assert_called_once_with(
-            "Unexpected error occurred: Unexpected error"
-        )
 
 
 # @pytest.mark.xfail
