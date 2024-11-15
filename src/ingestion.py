@@ -8,14 +8,8 @@ import json
 import logging
 import os
 
-SECRET_NAME = os.getenv(
-    "DB_SECRET_NAME",
-    "nc-totesys-db-credentials"
-)
-REGION_NAME = os.getenv(
-    "AWS_REGION",
-    "eu-west-2"
-)
+SECRET_NAME = os.getenv("DB_SECRET_NAME", "nc-totesys-db-credentials")
+REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
 
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 
@@ -45,13 +39,9 @@ TABLES = [
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-s3_client = boto3.client(
-    "s3",
-    region_name=REGION_NAME
-)
+s3_client = boto3.client("s3", region_name=REGION_NAME)
 secrets_manager_client = boto3.client(
-    "secretsmanager",
-    region_name=REGION_NAME
+    "secretsmanager", region_name=REGION_NAME
 )
 
 
@@ -128,7 +118,11 @@ def fetch_tables():
         last_ingestion_timestamp = get_last_ingestion_timestamp()
         with connect_to_db() as db:
             for table_name in TABLES:
-                query = f"SELECT * FROM {identifier(table_name)} WHERE last_updated > :s"
+                query = (
+                    "SELECT * FROM "
+                    + f"{identifier(table_name)}"
+                    + " WHERE last_updated > :s"
+                    )
                 try:
                     rows = db.run(query, s=last_ingestion_timestamp)
 
