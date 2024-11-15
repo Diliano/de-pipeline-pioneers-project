@@ -164,17 +164,17 @@ def test_fetch_tables_success(
     mock_db.run.return_value = [{1, "Sample data"}]
     mock_db.columns = [{"name": "id"}, {"name": "data"}]
 
-    print("Mock db.run.return_value:", mock_db.run.return_value)
-    print("Mock db.columns:", mock_db.columns)
+    # print("Mock db.run.return_value:", mock_db.run.return_value)
+    # print("Mock db.columns:", mock_db.columns)
 
     result = fetch_tables()
 
-    print("fetch tables result:", result)
+    # print("fetch tables result:", result)
     expected_data = {
         table_name: [{"id": 1, "data": "Sample data"}] for table_name in TABLES
     }
 
-    print("Expected data ", expected_data)
+    # print("Expected data ", expected_data)
     assert result == expected_data
 
     for table_name in TABLES:
@@ -196,25 +196,24 @@ def test_fetch_tables_table_query_failure(
     mock_db = Mock()
     mock_connect_to_db.return_value.__enter__.return_value = mock_db
     mock_last_timestamp.return_value = "2024-11-13 15:48:34.623971"
-
+    
     # Define a side effect for mock_db.run
     # to raise an error for one specific table
     def side_effect(query, s):
-        if "staff" in query:
-            raise Exception("Query failed for staff table")
+        if "counterparty" in query:
+            raise Exception("Query failed for counterparty table")
 
         # Successful query result for other tables
         return [[1, "Sample data"]]
-
     mock_db.run.side_effect = side_effect
     mock_db.columns = [{"name": "id"}, {"name": "data"}]
 
-    with pytest.raises(Exception, match="Query failed for staff table"):
+    with pytest.raises(Exception, match="Query failed for counterparty table"):
         fetch_tables()
 
     # Assert that the error was logged for the failing table
     # and update_last_ingestion_timestamp was not called
-    assert "Failed to fetch data from staff" in caplog.text
+    assert "Failed to fetch data from counterparty" in caplog.text
     mock_update_timestamp.assert_not_called()
 
 
