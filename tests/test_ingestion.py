@@ -148,7 +148,6 @@ def test_connect_to_db_failure(
     )
 
 
-# @pytest.mark.skip
 @patch("src.ingestion.update_last_ingestion_timestamp")
 @patch("src.ingestion.get_last_ingestion_timestamp")
 @patch("src.ingestion.connect_to_db")
