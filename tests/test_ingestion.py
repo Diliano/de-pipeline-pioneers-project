@@ -162,7 +162,7 @@ def test_fetch_tables_success(
     # Define the data each table query should return
     mock_last_timestamp.return_value = "2024-11-13 15:48:34.623971"
     mock_db.run.return_value = [{1, "Sample data"}]
-    mock_db.columns = [{"name": "data"}, {"name": "id"}]
+    mock_db.columns = [{"name": "id"}, {"name": "data"}]
 
     # print("Mock db.run.return_value:", mock_db.run.return_value)
     # print("Mock db.columns:", mock_db.columns)
@@ -173,7 +173,6 @@ def test_fetch_tables_success(
     expected_data = {
         table_name: [{"id": 1, "data": "Sample data"}] for table_name in TABLES
     }
-
     # print("Expected data ", expected_data)
     assert result == expected_data
 
