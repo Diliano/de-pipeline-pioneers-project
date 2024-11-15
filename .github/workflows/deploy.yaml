@@ -33,7 +33,7 @@ jobs:
     
         - name: Run tests
           run: |
-            pytest --disable-warnings --log-disable --maxfail=1
+            pytest --maxfail=1 --disable-warnings
     
         - name: Lint code
           run: flake8 .
