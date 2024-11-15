@@ -20,10 +20,13 @@ REGION_NAME = os.getenv(
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 
 S3_INGESTION_BUCKET = os.getenv(
-    "S3_BUCKET_NAME",
-    "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+    "S3_BUCKET_NAME"
 )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
+# FOR TESTING
+# S3_INGESTION_BUCKET = (
+#  "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+# )
 
 TABLES = [
     "counterparty",
@@ -160,7 +163,6 @@ def lambda_handler(event, context):
         try:
             if not table_data:
                 logger.info(f"Table {table_name} has not been updated")
-
             s3_client.put_object(
                 Bucket=S3_INGESTION_BUCKET,
                 Key=object_key,
