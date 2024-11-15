@@ -42,6 +42,7 @@ resource "aws_lambda_function" "ingestion_lambda" {
   handler       = "ingestion.lambder_handler"
   runtime       = var.python_runtime
   layers        = [aws_lambda_layer_version.ingestion_layer.arn]
+  timeout       = 60
 
   environment {
     variables = {
