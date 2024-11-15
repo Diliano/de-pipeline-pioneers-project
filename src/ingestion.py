@@ -1,5 +1,5 @@
 from botocore.exceptions import ClientError
-from pg8000.native import Connection
+from pg8000.native import Connection, identifier
 from datetime import (
     datetime,
 )
@@ -128,9 +128,9 @@ def fetch_tables():
         last_ingestion_timestamp = get_last_ingestion_timestamp()
         with connect_to_db() as db:
             for table_name in TABLES:
-                query = "SELECT * FROM %c WHERE last_updated > %s"
+                query = f"SELECT * FROM {identifier(table_name)} WHERE last_updated > :s"
                 try:
-                    rows = db.run(query, (table_name, last_ingestion_timestamp,))
+                    rows = db.run(query, s=last_ingestion_timestamp)
 
                     column = [col["name"] for col in db.columns]
                     tables_data[table_name] = [
