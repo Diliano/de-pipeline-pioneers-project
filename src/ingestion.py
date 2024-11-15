@@ -8,8 +8,14 @@ import json
 import logging
 import os
 
-SECRET_NAME = os.getenv("DB_SECRET_NAME", "nc-totesys-db-credentials")
-REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
+SECRET_NAME = os.getenv(
+    "DB_SECRET_NAME",
+    "nc-totesys-db-credentials"
+)
+REGION_NAME = os.getenv(
+    "AWS_REGION",
+    "eu-west-2"
+)
 
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 
@@ -36,8 +42,14 @@ TABLES = [
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-s3_client = boto3.client("s3")
-secrets_manager_client = boto3.client("secretsmanager")
+s3_client = boto3.client(
+    "s3",
+    region_name=REGION_NAME
+)
+secrets_manager_client = boto3.client(
+    "secretsmanager",
+    region_name=REGION_NAME
+)
 
 
 def retrieve_db_credentials(secrets_manager_client):
