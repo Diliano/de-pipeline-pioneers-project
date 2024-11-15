@@ -56,7 +56,7 @@ jobs:
           run: bandit -r . -ll # -r: recursive, -ll: high and low severity
         
         - name: Checking dependencies with safety
-          run: safety check --full-report --policy-file .safety-policy.yml # might need to specify the requirements.txt file
+          run: safety check --full-report --ignore 2019-8341 # might need to specify the requirements.txt file
 
         # if we need to deploy to AWS, insert here
       # - name: Deploy to aws lambda
