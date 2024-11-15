@@ -149,7 +149,7 @@ def lambda_handler(event, context):
     year = now.strftime("%Y")
     month = now.strftime("%m")
     day = now.strftime("%d")
-    timestamp = now.strftime("%H-%M-%S")
+    timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
     success = True
     for table_name, table_data in tables.items():
         object_key = f"{table_name}/{year}/{month}/{day}/{table_name}_{timestamp}.json"
