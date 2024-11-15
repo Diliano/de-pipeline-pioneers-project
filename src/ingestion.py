@@ -14,14 +14,14 @@ REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
 
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 
-# S3_INGESTION_BUCKET = os.getenv(
-#     "S3_BUCKET_NAME"
-# )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
+S3_INGESTION_BUCKET = os.getenv(
+    "S3_BUCKET_NAME"
+)  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
 # FOR TESTING
-S3_INGESTION_BUCKET = (
- "nc-pipeline-pioneers-ingestion20241112120531000200000003"
-)
+# S3_INGESTION_BUCKET = (
+#     "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+# )
 
 TABLES = [
     "counterparty",
@@ -120,10 +120,15 @@ def fetch_tables():
         with connect_to_db() as db:
             for table_name in TABLES:
                 query = (
-                    f"SELECT * FROM {table_name} WHERE last_updated > :s;"
+                    f"SELECT * FROM {table_name}"   # nosec B608
+                    + " WHERE last_updated > :s;"  # nosec B608
                     )
+                logger.debug(f"Executing query: {query}")
                 try:
-                    rows = db.run(query, s=last_ingestion_timestamp,)
+                    rows = db.run(
+                        query,
+                        s=last_ingestion_timestamp,
+                    )
 
                     column = [col["name"] for col in db.columns]
                     tables_data[table_name] = [
@@ -136,7 +141,7 @@ def fetch_tables():
                     logger.error(
                         f"Database error, fetching data {table_name}",
                         exc_info=True,
-                        )
+                    )
                     raise
                 except Exception:
                     logger.error(
