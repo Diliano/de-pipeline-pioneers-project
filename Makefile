@@ -31,6 +31,7 @@ endef
 create-environment:
 	@echo ">>> Creating environment for $(PROJECT_NAME)..."
 	( \
+		set -e; \
 		$(PYTHON_INTERPRETER) --version; \
 		$(PIP) install -q virtualenv; \
 		virtualenv venv --python=$(PYTHON_INTERPRETER); \
@@ -39,3 +40,30 @@ create-environment:
 ## Install project dependencies
 requirements: create-environment
 	$(call execute_in_env, $(PIP) install -r requirements.txt)
+
+
+# Development Setup
+#################################################################################
+
+## Install Bandit for security analysis
+bandit:
+	$(call execute_in_env, $(PIP) install bandit)
+
+## Install Safety for checking dependencies
+safety:
+	$(call execute_in_env, $(PIP) install safety)
+
+## Install Black for code formatting
+black:
+	$(call execute_in_env, $(PIP) install black)
+
+## Install Flake8 for linting
+flake8:
+	$(call execute_in_env, $(PIP) install flake8)
+
+## Install Coverage for code coverage analysis
+coverage:
+	$(call execute_in_env, $(PIP) install coverage)
+
+## Set up development tools (Black, Coverage)
+dev-setup: bandit safety black flake8 coverage
