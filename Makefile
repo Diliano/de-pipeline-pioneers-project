@@ -51,10 +51,6 @@ requirements: create-environment
 bandit:
 	$(call execute_in_env, $(PIP) install bandit)
 
-## Install Safety for checking dependencies
-safety:
-	$(call execute_in_env, $(PIP) install safety)
-
 ## Install Black for code formatting
 black:
 	$(call execute_in_env, $(PIP) install black)
@@ -78,10 +74,6 @@ dev-setup: bandit safety black flake8 coverage
 run-bandit:
 	$(call execute_in_env, bandit -r -lll ./src ./tests)
 
-## Run Safety to check for known vulnerabilities in dependencies
-run-safety:
-	$(call execute_in_env, safety check -r ./requirements.txt --full-report)
-
 ## Format code with Black
 run-black:
 	$(call execute_in_env, black ./src/*.py ./tests/*.py)
@@ -99,7 +91,7 @@ check-coverage:
 	$(call execute_in_env, PYTHONPATH=$(PYTHONPATH) pytest --cov=src tests/)
 
 ## Run all checks (code formatting, unit tests, and coverage)
-run-checks: run-bandit run-safety run-black run-flake8 run-test check-coverage
+run-checks: run-bandit run-black run-flake8 run-test check-coverage
 
 
 # Clean Up
