@@ -134,7 +134,7 @@ def fetch_tables():
                     )
                 except DatabaseError:
                     logger.error(
-                        f"Database error, fetching data {table_name}", 
+                        f"Database error, fetching data {table_name}",
                         exc_info=True,
                         )
                     raise
@@ -186,5 +186,3 @@ def lambda_handler(event, context):
             "status": "Partial Failure",
             "message": "Some tables failed to ingest",
         }
-
-fetch_tables()
