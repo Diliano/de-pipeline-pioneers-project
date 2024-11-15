@@ -30,12 +30,14 @@ endef
 ## Create the Python virtual environment
 create-environment:
 	@echo ">>> Creating environment for $(PROJECT_NAME)..."
-	( \
-		set -e; \
+	@set -e; \
+	if [ ! -d "venv" ]; then \
 		$(PYTHON_INTERPRETER) --version; \
 		$(PIP) install -q virtualenv; \
 		virtualenv venv --python=$(PYTHON_INTERPRETER); \
-	)
+	else \
+		echo "Virtual environment already exists, skipping creation."; \
+	fi
 
 ## Install project dependencies
 requirements: create-environment
