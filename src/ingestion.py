@@ -128,9 +128,9 @@ def fetch_tables():
         last_ingestion_timestamp = get_last_ingestion_timestamp()
         with connect_to_db() as db:
             for table_name in TABLES:
-                query = f"SELECT * FROM {table_name} WHERE last_updated > :s"
+                query = f"SELECT * FROM {table_name} WHERE last_updated > %s"
                 try:
-                    rows = db.run(query, s=last_ingestion_timestamp)
+                    rows = db.run(query, (last_ingestion_timestamp,))
 
                     column = [col["name"] for col in db.columns]
                     tables_data[table_name] = [
