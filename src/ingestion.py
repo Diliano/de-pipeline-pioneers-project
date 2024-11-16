@@ -120,12 +120,10 @@ def fetch_tables(tables: list = TABLES):
         with connect_to_db() as db:
             for table_name in tables:
                 query = (
-                    f"SELECT * FROM {table_name}"   # nosec B608
+                    f"SELECT * FROM {table_name}"  # nosec B608
                     + " WHERE last_updated > :s;"  # nosec B608
-                    )
-                logger.debug(
-                    f"Query for {table_name}: {query}"
                 )
+                logger.debug(f"Query for {table_name}: {query}")
                 try:
                     rows = db.run(
                         query,
@@ -155,26 +153,28 @@ def fetch_tables(tables: list = TABLES):
         return tables_data
 
     except Exception as err:
-        logger.error(
-            "Database connection failed",
-            exc_info=True)
+        logger.error("Database connection failed", exc_info=True)
         raise err
 
 
 def lambda_handler(event, context):
     logger.info("Ingestion lambda invoked, started data ingestion")
     tables = fetch_tables(TABLES)
+    failed_tables = []
     now = datetime.now()
     year = now.strftime("%Y")
     month = now.strftime("%m")
     day = now.strftime("%d")
-    timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
-    success = True
+    timestamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     for table_name, table_data in tables.items():
-        object_key = f"ingestion/{table_name}/{year}/{month}/{day}/{table_name}_{timestamp}.json"
+        prefix_time = f"{year}/{month}/{day}/{table_name}_{timestamp}"
+        object_key = (
+            f"ingestion/{table_name}/{prefix_time}.json"
+        )
         try:
             if not table_data:
                 logger.info(f"Table {table_name} has not been updated")
+                continue
             s3_client.put_object(
                 Bucket=S3_INGESTION_BUCKET,
                 Key=object_key,
@@ -185,11 +185,13 @@ def lambda_handler(event, context):
                 f"Successfully wrote {table_name} data to S3 key: {object_key}"
             )
         except Exception:
-            success = False
-            logger.error("Failed to write data to S3", exc_info=True)
+            failed_tables.append(table_name)
+            logger.error(
+                f"Failed to write {table_name} data to S3", exc_info=True
+            )
             # raise err
             # raising error here could cause a failure that halts it
-    if success:
+    if not failed_tables:
         return {
             "status": "Success",
             "message": "All data ingested successfully",
@@ -198,4 +200,5 @@ def lambda_handler(event, context):
         return {
             "status": "Partial Failure",
             "message": "Some tables failed to ingest",
+            "failed_tables": failed_tables,
         }
