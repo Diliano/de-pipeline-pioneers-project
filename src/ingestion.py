@@ -18,6 +18,10 @@ S3_INGESTION_BUCKET = os.getenv(
     "S3_BUCKET_NAME"
 )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
+# For testing
+# S3_INGESTION_BUCKET = (
+#     "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+# )
 
 TABLES = [
     "counterparty",
@@ -109,42 +113,44 @@ def update_last_ingestion_timestamp():
     )
 
 
-def fetch_tables():
+def fetch_tables(tables: list = TABLES):
     tables_data = {}
     try:
         last_ingestion_timestamp = get_last_ingestion_timestamp()
         with connect_to_db() as db:
-            for table_name in TABLES:
+            for table_name in tables:
                 query = (
                     f"SELECT * FROM {table_name}"   # nosec B608
                     + " WHERE last_updated > :s;"  # nosec B608
                     )
-                logger.debug(f"Executing query: {query}")
+                logger.debug(
+                    f"Query for {table_name}: {query}"
+                )
                 try:
                     rows = db.run(
                         query,
                         s=last_ingestion_timestamp,
                     )
-
-                    column = [col["name"] for col in db.columns]
-                    tables_data[table_name] = [
-                        dict(zip(column, row)) for row in rows
-                    ]
-                    logger.info(
-                        f"Fetched new data from {table_name} successfully."
-                    )
+                    if rows:
+                        column = [col["name"] for col in db.columns]
+                        tables_data[table_name] = [
+                            dict(zip(column, row)) for row in rows
+                        ]
+                        logger.info(
+                            f"Fetched new data from {table_name} successfully."
+                        )
+                    else:
+                        logger.info(f"No new data in {table_name}")
                 except DatabaseError:
                     logger.error(
                         f"Database error, fetching data {table_name}",
                         exc_info=True,
                     )
-                    raise
                 except Exception:
                     logger.error(
                         f"Failed to fetch data from {table_name}",
                         exc_info=True,
                     )
-                    raise
         update_last_ingestion_timestamp()
         return tables_data
 
@@ -155,7 +161,7 @@ def fetch_tables():
 
 def lambda_handler(event, context):
     logger.info("Ingestion lambda invoked, started data ingestion")
-    tables = fetch_tables()
+    tables = fetch_tables(TABLES)
     timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     success = True
     for table_name, table_data in tables.items():
