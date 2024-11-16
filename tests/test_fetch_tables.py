@@ -103,6 +103,8 @@ def test_fetch_tables_query_logging(
 
 
 # @pytest.mark.xfail
+@patch("src.ingestion.S3_INGESTION_BUCKET",
+       "test_bucket")
 @patch("src.ingestion.connect_to_db")
 def test_fetch_tables_connection_failure(
     mock_connect_to_db,
