@@ -1,87 +1,114 @@
-from unittest.mock import Mock, patch
-import logging
+from unittest.mock import MagicMock, patch
 from src.ingestion import (
     fetch_tables,
-    TABLES
 )
+import logging
 import pytest
 
 
-# @pytest.mark.skip
-@patch("src.ingestion.update_last_ingestion_timestamp")
-@patch("src.ingestion.get_last_ingestion_timestamp")
+@patch(
+    "src.ingestion.get_last_ingestion_timestamp"
+)
+@patch(
+    "src.ingestion.update_last_ingestion_timestamp"
+)
 @patch("src.ingestion.connect_to_db")
 def test_fetch_tables_success(
-    mock_connect_to_db, mock_last_timestamp, mock_update_timestamp, caplog
+    mock_connect_to_db,
+    mock_update_timestamp,
+    mock_get_timestamp,
+    expected_table_data,
+    mock_columns,
+    mock_tables,
+    mock_rows,
 ):
-    caplog.set_level(logging.INFO)
+    # Mocking the last ingestion timestamp
+    mock_get_timestamp.return_value = "2023-01-01 00:00:00"
 
-    mock_db = Mock()
+    # Mocking the database connection and query
+    mock_db = MagicMock()
+    mock_db.run.return_value = mock_rows
+    mock_db.columns = mock_columns
     mock_connect_to_db.return_value.__enter__.return_value = mock_db
 
-    # Define the data each table query should return
-    mock_last_timestamp.return_value = "2024-11-13 15:48:34.623971"
-    mock_db.run.return_value = [{1, "Sample data"}]
-    mock_db.columns = [{"name": "id"}, {"name": "data"}]
+    result = fetch_tables(mock_tables)
 
-    print("Mock db.run.return_value:", mock_db.run.return_value)
-    print("Mock db.columns:", mock_db.columns)
+    assert result == expected_table_data
 
-    result = fetch_tables()
+    expected_query = "SELECT * FROM table1 WHERE last_updated > :s;"
+    mock_db.run.assert_any_call(
+        expected_query,
+        s="2023-01-01 00:00:00"
+    )
+    
+    expected_query = "SELECT * FROM table2 WHERE last_updated > :s;"
+    mock_db.run.assert_any_call(
+        expected_query,
+        s="2023-01-01 00:00:00"
+    )
 
-    print("fetch tables result:", result)
-    expected_data = {
-        table_name: [{"id": 1, "data": "Sample data"}] for table_name in TABLES
-    }
-
-    print("Expected data ", expected_data)
-    assert result == expected_data
-
-    for table_name in TABLES:
-        assert (
-            f"Fetched new data from {table_name} successfully." in caplog.text
-        )
     mock_update_timestamp.assert_called_once()
 
 
-# @pytest.mark.skip
-@patch("src.ingestion.update_last_ingestion_timestamp")
-@patch("src.ingestion.get_last_ingestion_timestamp")
+@patch(
+    "src.ingestion.get_last_ingestion_timestamp"
+)
+@patch(
+    "src.ingestion.update_last_ingestion_timestamp"
+)
 @patch("src.ingestion.connect_to_db")
-def test_fetch_tables_table_query_failure(
-    mock_connect_to_db, mock_last_timestamp, mock_update_timestamp, caplog
+def test_fetch_tables_query_logging(
+    mock_connect_to_db,
+    mock_update_timestamp,
+    mock_get_timestamp,
+    mock_columns,
+    mock_tables,
+    caplog
 ):
     caplog.set_level(logging.ERROR)
+    mock_get_timestamp.return_value = "2023-01-01 00:00:00"
 
-    mock_db = Mock()
+    mock_db = MagicMock()
     mock_connect_to_db.return_value.__enter__.return_value = mock_db
-    mock_last_timestamp.return_value = "2024-11-13 15:48:34.623971"
 
-    # Define a side effect for mock_db.run
-    # to raise an error for one specific table
-    def side_effect(query, s):
-        if "staff" in query:
-            raise Exception("Query failed for staff table")
+    # Simulating a query failure for the first table
+    mock_db.columns = mock_columns
+    mock_db.run.side_effect = [
+        Exception(
+            "Query failed for table1"),
+            [[1, "mock_data"]]]
 
-        # Successful query result for other tables
-        return [[1, "Sample data"]]
+    result = fetch_tables(mock_tables)
 
-    mock_db.run.side_effect = side_effect
-    mock_db.columns = [{"name": "id"}, {"name": "data"}]
+    assert result == {
+        "table2": [{"id": 1, "data": "mock_data"}]
+    }
 
-    with pytest.raises(Exception, match="Query failed for staff table"):
-        fetch_tables()
+    assert "Failed to fetch data from table1" in caplog.text
 
-    # Assert that the error was logged for the failing table
-    # and update_last_ingestion_timestamp was not called
-    assert "Failed to fetch data from staff" in caplog.text
-    mock_update_timestamp.assert_not_called()
+    # Ensuring the query was attempted for both tables
+    expected_query_table1 = "SELECT * FROM table1 WHERE last_updated > :s;"
+    mock_db.run.assert_any_call(
+        expected_query_table1,
+        s="2023-01-01 00:00:00"
+    )
+
+    expected_query_table2 = "SELECT * FROM table2 WHERE last_updated > :s;"
+    mock_db.run.assert_any_call(
+        expected_query_table2,
+        s="2023-01-01 00:00:00"
+    )
+
+    mock_update_timestamp.assert_called_once()
 
 
 # @pytest.mark.xfail
-# @pytest.mark.skip
 @patch("src.ingestion.connect_to_db")
-def test_fetch_tables_connection_failure(mock_connect_to_db, caplog):
+def test_fetch_tables_connection_failure(
+    mock_connect_to_db,
+    caplog
+):
+    """ """
     caplog.set_level(logging.INFO)
 
     # Simulate an exception when attempting to connect to the database
