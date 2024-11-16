@@ -92,3 +92,121 @@ resource "aws_iam_role_policy_attachment" "ingestion_cw_policy_attachment" {
   role       = aws_iam_role.ingestion_lambda_role.name
   policy_arn = aws_iam_policy.ingestion_cw_policy.arn
 }
+
+# ==========================================
+# Transformation Lambda
+# ==========================================
+
+# ========
+# DEFINE
+# ========
+
+# Transformation lambda trust policy doc
+data "aws_iam_policy_document" "transformation_trust_policy" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+# Transformation lambda - s3 write policy doc
+data "aws_iam_policy_document" "s3_transformation_write_policy_doc" {
+  statement {
+    effect = "Allow"
+
+    actions = ["s3:PutObject"]
+
+    resources = ["${aws_s3_bucket.processed_bucket.arn}/*"]
+  }
+}
+
+# Transformation lambda - s3 read policy doc
+data "aws_iam_policy_document" "s3_transformation_read_policy_doc" {
+  statement {
+    effect = "Allow"
+
+    actions = ["s3:GetObject"]
+
+    resources = ["${aws_s3_bucket.ingestion_bucket.arn}/*"]
+  }
+}
+
+# Transformation lambda cloudwatch policy doc
+data "aws_iam_policy_document" "transformation_cw_document" {
+  statement {
+    effect = "Allow"
+
+    actions = ["logs:CreateLogGroup"]
+
+    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = ["logs:CreateLogStream", "logs:PutLogEvents"]
+
+    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.lambda_transform}:*"]
+  }
+}
+
+# ========
+# CREATE
+# ========
+
+# Transformation lambda role
+resource "aws_iam_role" "transformation_lambda_role" {
+  name_prefix        = "role-${var.lambda_transform}"
+  assume_role_policy = data.aws_iam_policy_document.transformation_trust_policy.json
+}
+
+# Transformation lambda - s3 write policy
+resource "aws_iam_policy" "transformation_s3_write_policy" {
+  name_prefix = "s3-policy-${var.lambda_transform}-write"
+  policy      = data.aws_iam_policy_document.s3_transformation_write_policy_doc.json
+}
+
+# Transformation lambda - s3 read policy
+resource "aws_iam_policy" "transformation_s3_read_policy" {
+  name_prefix = "s3-policy-${var.lambda_transform}-read"
+  policy      = data.aws_iam_policy_document.s3_transformation_read_policy_doc.json
+}
+
+# Transformation lambda cloudwatch policy
+resource "aws_iam_policy" "transformation_cw_policy" {
+  name_prefix = "cw-policy-${var.lambda_transform}"
+  policy      = data.aws_iam_policy_document.transformation_cw_document.json
+}
+
+# Transformation lambda cloudwatch group
+resource "aws_cloudwatch_log_group" "transformation_log_group" {
+  name = "/aws/lambda/${var.lambda_transform}"
+}
+
+# ========
+# ATTACH
+# ========
+
+# Attach transformation s3 write policy to the transformation role
+resource "aws_iam_role_policy_attachment" "transformation_s3_write_policy_attachment" {
+  role       = aws_iam_role.transformation_lambda_role.name
+  policy_arn = aws_iam_policy.transformation_s3_write_policy.arn
+}
+
+# Attach transformation s3 read policy to the transformation role
+resource "aws_iam_role_policy_attachment" "transformation_s3_read_policy_attachment" {
+  role       = aws_iam_role.transformation_lambda_role.name
+  policy_arn = aws_iam_policy.transformation_s3_read_policy.arn
+}
+
+# Attach transformation cloudwatch policy to the transformation role
+resource "aws_iam_role_policy_attachment" "transformation_cw_policy_attachment" {
+  role       = aws_iam_role.transformation_lambda_role.name
+  policy_arn = aws_iam_policy.transformation_cw_policy.arn
+}
