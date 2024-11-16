@@ -14,8 +14,7 @@ from src.ingestion import (
 def mock_secrets_manager():
     with mock_aws():
         secrets_client = boto3.client(
-            "secretsmanager",
-            region_name="eu-west-2"
+            "secretsmanager", region_name="eu-west-2"
         )
 
         # Create a mock secret
@@ -39,9 +38,7 @@ def mock_secrets_manager():
 def mock_s3_client():
     # mocking s3 client
     with mock_aws():
-        s3_client = boto3.client(
-            "s3",
-            region_name="eu-west-2")
+        s3_client = boto3.client("s3", region_name="eu-west-2")
         yield s3_client
 
 
@@ -58,37 +55,26 @@ def sample_table_data():
 def expected_table_data():
     # expected fetch tables data
     return {
-        "table1": [{
-            "id": 1,
-            "data": "value1"},
-            {"id": 2,
-            "data": "value2"}],
-        "table2": [
-            {"id": 1,
-            "data": "value1"},
-            {"id": 2,
-            "data": "value2"}],
-        }
+        "table1": [{"id": 1, "data": "value1"}, {"id": 2, "data": "value2"}],
+        "table2": [{"id": 1, "data": "value1"}, {"id": 2, "data": "value2"}],
+    }
 
 
 @pytest.fixture
 def mock_rows():
     # expected rows for fetch tables
-    return [
-        [1, "value1"],
-        [2, "value2"]
-    ]
+    return [[1, "value1"], [2, "value2"]]
 
 
 @pytest.fixture
 def mock_tables():
-    # expected tables for parameter for 
+    # expected tables for parameter for
     # fetch tables
     return ["table1", "table2"]
 
 
 @pytest.fixture
 def mock_columns():
-    # expected returned columns 
+    # expected returned columns
     # for fetch tables
     return [{"name": "id"}, {"name": "data"}]
