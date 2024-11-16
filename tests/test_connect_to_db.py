@@ -7,9 +7,7 @@ import pytest
 @patch("src.ingestion.retrieve_db_credentials")
 @patch("src.ingestion.Connection")
 def test_connect_to_db_success(
-    mock_connection,
-    mock_retrieve_credentials,
-    caplog
+    mock_connection, mock_retrieve_credentials, caplog
 ):
     # Mock the credentials returned by retrieve_db_credentials
     mock_retrieve_credentials.return_value = {
@@ -40,9 +38,7 @@ def test_connect_to_db_success(
 @patch("src.ingestion.retrieve_db_credentials")
 @patch("src.ingestion.Connection")
 def test_connect_to_db_failure(
-    mock_connection,
-    mock_retrieve_credentials,
-    caplog
+    mock_connection, mock_retrieve_credentials, caplog
 ):
     # Mock credentials retrieval to return valid credentials
     mock_retrieve_credentials.return_value = {

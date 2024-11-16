@@ -15,11 +15,7 @@ import json
 @patch("src.ingestion.s3_client")
 @patch("src.ingestion.datetime")
 def test_lambda_handler_success(
-    mock_datetime,
-    mock_s3_client,
-    mock_fetch_tables,
-    caplog,
-    sample_table_data
+    mock_datetime, mock_s3_client, mock_fetch_tables, caplog, sample_table_data
 ):
     caplog.set_level(logging.INFO)
 
@@ -51,18 +47,13 @@ def test_lambda_handler_success(
         )
 
 
-
 # @pytest.mark.xfail
 @patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
 @patch("src.ingestion.fetch_tables")
 @patch("src.ingestion.s3_client")
 @patch("src.ingestion.datetime")
 def test_lambda_handler_partial_failure(
-    mock_datetime,
-    mock_s3_client,
-    mock_fetch_tables,
-    caplog,
-    sample_table_data
+    mock_datetime, mock_s3_client, mock_fetch_tables, caplog, sample_table_data
 ):
     caplog.set_level(logging.INFO)
 

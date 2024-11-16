@@ -1,25 +1,18 @@
 from unittest.mock import patch
 from datetime import datetime
-from src.ingestion import (
-    get_last_ingestion_timestamp,
-    TIMESTAMP_FILE_KEY
-)
+from src.ingestion import get_last_ingestion_timestamp, TIMESTAMP_FILE_KEY
 import logging
 import pytest
 import json
 
 
 # @pytest.mark.xfail
-@patch("src.ingestion.S3_INGESTION_BUCKET",
-       "test_bucket")
-def test_get_last_ingestion_timestamp_valid_timestamp(
-    mock_s3_client
-):
+@patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
+def test_get_last_ingestion_timestamp_valid_timestamp(mock_s3_client):
     mock_s3_client.create_bucket(
         Bucket="test_bucket",
-        CreateBucketConfiguration={
-            "LocationConstraint": "eu-west-2"
-        },)
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+    )
     valid_timestamp = datetime(2023, 1, 1, 12, 0, 0).isoformat()
 
     # Put a valid timestamp in the S3 object
@@ -36,16 +29,12 @@ def test_get_last_ingestion_timestamp_valid_timestamp(
 
 
 # @pytest.mark.xfail
-@patch("src.ingestion.S3_INGESTION_BUCKET",
-       "test_bucket")
-def test_get_last_ingestion_timestamp_no_file(
-    mock_s3_client
-):
+@patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
+def test_get_last_ingestion_timestamp_no_file(mock_s3_client):
     mock_s3_client.create_bucket(
         Bucket="test_bucket",
-        CreateBucketConfiguration={
-            "LocationConstraint": "eu-west-2"
-            },)
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+    )
 
     with patch("src.ingestion.s3_client", mock_s3_client):
         result = get_last_ingestion_timestamp()
@@ -55,21 +44,15 @@ def test_get_last_ingestion_timestamp_no_file(
 
 
 # @pytest.mark.xfail
-@patch("src.ingestion.S3_INGESTION_BUCKET",
-       "test_bucket")
-def test_get_last_ingestion_timestamp_missing_timestamp_key(
-    mock_s3_client
-):
+@patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
+def test_get_last_ingestion_timestamp_missing_timestamp_key(mock_s3_client):
     mock_s3_client.create_bucket(
         Bucket="test_bucket",
-        CreateBucketConfiguration={
-            "LocationConstraint": "eu-west-2"
-            },)
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+    )
 
     mock_s3_client.put_object(
-        Bucket="test_bucket",
-        Key=TIMESTAMP_FILE_KEY,
-        Body=json.dumps({})
+        Bucket="test_bucket", Key=TIMESTAMP_FILE_KEY, Body=json.dumps({})
     )
 
     with patch("src.ingestion.s3_client", mock_s3_client):
@@ -78,20 +61,15 @@ def test_get_last_ingestion_timestamp_missing_timestamp_key(
 
 
 # @pytest.mark.xfail
-@patch("src.ingestion.S3_INGESTION_BUCKET",
-       "test_bucket")
-def test_get_last_ingestion_timestamp_unexpected_error(
-    mock_s3_client,
-    caplog
-):
+@patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
+def test_get_last_ingestion_timestamp_unexpected_error(mock_s3_client, caplog):
     caplog.set_level(logging.INFO)
 
     # s3_client = boto3.client("s3", region_name="eu-west-2")
     mock_s3_client.create_bucket(
         Bucket="test_bucket",
-        CreateBucketConfiguration={
-            "LocationConstraint": "eu-west-2"
-            },)
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+    )
 
     with patch(
         "src.ingestion.s3_client.get_object",

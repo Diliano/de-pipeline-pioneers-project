@@ -1,9 +1,6 @@
 from unittest.mock import patch
 from datetime import datetime
-from src.ingestion import (
-    update_last_ingestion_timestamp,
-    TIMESTAMP_FILE_KEY
-)
+from src.ingestion import update_last_ingestion_timestamp, TIMESTAMP_FILE_KEY
 import json
 
 

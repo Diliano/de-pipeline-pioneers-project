@@ -26,8 +26,7 @@ def test_retrieve_db_credentials_error(caplog):
     with mock_aws():
         # Create the Secrets Manager client without creating the secret
         secrets_client = boto3.client(
-            "secretsmanager",
-            region_name="eu-west-2"
+            "secretsmanager", region_name="eu-west-2"
         )
 
         with pytest.raises(Exception):
