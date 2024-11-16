@@ -14,10 +14,13 @@ REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 
 S3_INGESTION_BUCKET = os.getenv(
-    "S3_BUCKET_NAME",
-    "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+    "S3_BUCKET_NAME"
 )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
+# FOR TESTING only
+# S3_INGESTION_BUCKET = os.getenv(
+#     "nc-pipeline-pioneers-ingestion20241112120531000200000003"
+# )
 
 TABLES = [
     "counterparty",
