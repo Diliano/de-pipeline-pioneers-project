@@ -47,7 +47,7 @@ def sample_table_data():
     # Samples data
     return {
         "table1": [{"id": 1, "value": "test1"}],
-        "table2": [{"id": 2, "value": "test2"}],
+        "table2": [{"id": 2, "value": "test1"}],
     }
 
 
