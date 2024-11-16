@@ -155,7 +155,9 @@ def fetch_tables(tables: list = TABLES):
         return tables_data
 
     except Exception as err:
-        logger.error("Database connection failed", exc_info=True)
+        logger.error(
+            "Database connection failed",
+            exc_info=True)
         raise err
 
 
