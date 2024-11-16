@@ -34,6 +34,13 @@ def mock_secrets_manager():
 
         yield secrets_client
 
+@pytest.fixture
+def mock_s3_client():
+    with mock_aws():
+        s3_client = boto3.client(
+            "s3",
+            region_name="eu-west-2")
+        yield s3_client
 
 @pytest.fixture
 def sample_table_data():
