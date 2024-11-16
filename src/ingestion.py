@@ -163,7 +163,7 @@ def fetch_tables(tables: list = TABLES):
 
 def lambda_handler(event, context):
     logger.info("Ingestion lambda invoked, started data ingestion")
-    tables = fetch_tables()
+    tables = fetch_tables(TABLES)
     now = datetime.now()
     year = now.strftime("%Y")
     month = now.strftime("%m")
@@ -171,7 +171,7 @@ def lambda_handler(event, context):
     timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
     success = True
     for table_name, table_data in tables.items():
-        object_key = f"{table_name}/{year}/{month}/{day}/{table_name}_{timestamp}.json"
+        object_key = f"ingestion/{table_name}/{year}/{month}/{day}/{table_name}_{timestamp}.json"
         try:
             if not table_data:
                 logger.info(f"Table {table_name} has not been updated")
