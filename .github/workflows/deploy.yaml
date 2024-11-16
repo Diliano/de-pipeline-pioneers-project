@@ -1,0 +1,62 @@
+name: CI/CD Pioneer Pipeline
+
+on:
+    push:
+      branches:
+        - main
+    pull_request:
+      branches:
+        - develop
+
+jobs:
+  test-list-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      S3_INGESTION_BUCKET: "test_bucket"
+      TIMESTAMP_FILE_KEY: "metadata/last_ingestion_timestamp.json"
+      AWS_REGION: "eu-west-2"
+
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v4 
+
+        - name: Set up python
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.x'
+
+        - name: Install dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+        
+        - name: Set PYTHONPATH
+          run: |
+            echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
+            echo "PYTHONPATH=$PYTHONPATH:$(pwd)/test" >> $GITHUB_ENV
+        
+        - name: Configure AWS Credentials 
+          uses: aws-actions/configure-aws-credentials@v2
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ${{ secrets.AWS_REGION }}
+            run:
+              echo "AWS Credentials set"
+
+        - name: Run tests
+          run: |
+            pytest --maxfail=1 --disable-warnings
+    
+        - name: Lint code
+          run: flake8 .
+        
+        - name: Run bandit security checks
+          run: bandit -r . -ll # -r: recursive, -ll: high and low severity
+        
+        # - name: Checking dependencies with safety
+        #   run: safety check --ignore 2019-8341 # --full-report  # might need to specify the requirements.txt file
+
+        # if we need to deploy to AWS, insert here
+      # - name: Deploy to aws lambda
