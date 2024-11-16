@@ -1,5 +1,6 @@
 from botocore.exceptions import ClientError
 from pg8000.native import Connection
+from pg8000.exceptions import DatabaseError
 from datetime import (
     datetime,
 )
@@ -17,10 +18,6 @@ S3_INGESTION_BUCKET = os.getenv(
     "S3_BUCKET_NAME"
 )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
-# FOR TESTING only
-# S3_INGESTION_BUCKET = os.getenv(
-#     "nc-pipeline-pioneers-ingestion20241112120531000200000003"
-# )
 
 TABLES = [
     "counterparty",
@@ -39,8 +36,10 @@ TABLES = [
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-s3_client = boto3.client("s3")
-secrets_manager_client = boto3.client("secretsmanager")
+s3_client = boto3.client("s3", region_name=REGION_NAME)
+secrets_manager_client = boto3.client(
+    "secretsmanager", region_name=REGION_NAME
+)
 
 
 def retrieve_db_credentials(secrets_manager_client):
@@ -116,9 +115,16 @@ def fetch_tables():
         last_ingestion_timestamp = get_last_ingestion_timestamp()
         with connect_to_db() as db:
             for table_name in TABLES:
-                query = f"SELECT * FROM {table_name} WHERE last_updated > :s"
+                query = (
+                    f"SELECT * FROM {table_name}"   # nosec B608
+                    + " WHERE last_updated > :s;"  # nosec B608
+                    )
+                logger.debug(f"Executing query: {query}")
                 try:
-                    rows = db.run(query, s=last_ingestion_timestamp)
+                    rows = db.run(
+                        query,
+                        s=last_ingestion_timestamp,
+                    )
 
                     column = [col["name"] for col in db.columns]
                     tables_data[table_name] = [
@@ -127,6 +133,12 @@ def fetch_tables():
                     logger.info(
                         f"Fetched new data from {table_name} successfully."
                     )
+                except DatabaseError:
+                    logger.error(
+                        f"Database error, fetching data {table_name}",
+                        exc_info=True,
+                    )
+                    raise
                 except Exception:
                     logger.error(
                         f"Failed to fetch data from {table_name}",
@@ -139,10 +151,6 @@ def fetch_tables():
     except Exception as err:
         logger.error("Database connection failed", exc_info=True)
         raise err
-    finally:
-        if db:
-            db.close()
-            logger.info("Database connection closed")
 
 
 def lambda_handler(event, context):
@@ -155,7 +163,6 @@ def lambda_handler(event, context):
         try:
             if not table_data:
                 logger.info(f"Table {table_name} has not been updated")
-
             s3_client.put_object(
                 Bucket=S3_INGESTION_BUCKET,
                 Key=object_key,

@@ -64,7 +64,7 @@ coverage:
 	$(call execute_in_env, $(PIP) install coverage)
 
 ## Set up development tools (Black, Coverage)
-dev-setup: bandit safety black flake8 coverage
+dev-setup: bandit black flake8 coverage
 
 
 # Code Quality Checks and Tests
