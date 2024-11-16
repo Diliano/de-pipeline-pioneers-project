@@ -2,9 +2,7 @@ from moto import mock_aws
 import boto3
 import pytest
 from src.ingestion import retrieve_db_credentials
-from tests.test_ingestion import mock_secrets_manager
 
-#
 
 # @pytest.mark.xfail
 def test_retrieve_db_credentials_success(mock_secrets_manager, caplog):
@@ -28,7 +26,8 @@ def test_retrieve_db_credentials_error(caplog):
     with mock_aws():
         # Create the Secrets Manager client without creating the secret
         secrets_client = boto3.client(
-            "secretsmanager", region_name="eu-west-2"
+            "secretsmanager",
+            region_name="eu-west-2"
         )
 
         with pytest.raises(Exception):
