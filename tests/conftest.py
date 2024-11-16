@@ -33,3 +33,12 @@ def mock_secrets_manager():
         )
 
         yield secrets_client
+
+
+@pytest.fixture
+def sample_table_data():
+    # Samples data
+    return {
+        "table1": [{"id": 1, "value": "test1"}],
+        "table2": [{"id": 2, "value": "test2"}],
+    }
