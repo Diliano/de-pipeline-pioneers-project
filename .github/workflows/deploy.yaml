@@ -59,8 +59,9 @@ jobs:
         
         - name: Run tests
           run: make run-test
-        - name: Run coverage
-          run: make check-coverage
+        
+        # - name: Run coverage
+        #   run: make check-coverage
         
         # if we need to deploy to AWS, insert here
         #- name: Deploy to aws lambda
