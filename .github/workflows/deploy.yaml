@@ -36,6 +36,9 @@ jobs:
             echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
             echo "PYTHONPATH=$PYTHONPATH:$(pwd)/test" >> $GITHUB_ENV
         
+        - name: Install make
+          run: sudo apt-get install make
+          
         - name: Configure AWS Credentials 
           uses: aws-actions/configure-aws-credentials@v2
           with:
@@ -45,18 +48,20 @@ jobs:
             run:
               echo "AWS Credentials set"
 
+        - name: Setting up environment and installing requirements
+          run: make requirements
+          
+        - name: Run bandit checks
+          run: make run-bandit
+        
+        - name: Run flake8 checks
+          run: make run-flake8
+        
         - name: Run tests
-          run: |
-            pytest --maxfail=1 --disable-warnings
-    
-        - name: Lint code
-          run: flake8 .
+          run: make run-test
         
-        - name: Run bandit security checks
-          run: bandit -r . -ll # -r: recursive, -ll: high and low severity
+        # - name: Run coverage
+        #   run: make check-coverage
         
-        # - name: Checking dependencies with safety
-        #   run: safety check --ignore 2019-8341 # --full-report  # might need to specify the requirements.txt file
-
         # if we need to deploy to AWS, insert here
-      # - name: Deploy to aws lambda
+        #- name: Deploy to aws lambda
