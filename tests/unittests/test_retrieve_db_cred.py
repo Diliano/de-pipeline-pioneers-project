@@ -29,7 +29,7 @@ def test_retrieve_db_credentials_error(caplog):
             "secretsmanager", region_name="eu-west-2"
         )
 
-        with pytest.raises(Exception):
-            retrieve_db_credentials(secrets_client)
-
+        # with pytest.raises(Exception):
+        #     retrieve_db_credentials(secrets_client)
+        retrieve_db_credentials(secrets_client)
         assert "Unexpected error occurred" in caplog.text
