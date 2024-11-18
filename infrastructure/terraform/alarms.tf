@@ -35,6 +35,18 @@ resource "aws_sns_topic_subscription" "ingestion_alarm_email_subscription" {
   endpoint  = "ppteamemail@protonmail.com"
 }
 
+# Ingestion lambda cw error filter
+resource "aws_cloudwatch_log_metric_filter" "ingestion_lambda_error_filter" {
+  name           = "IngestionLambdaErrorFilter"
+  log_group_name = aws_cloudwatch_log_group.ingestion_log_group.name
+  metric_transformation {
+    name      = "IngestionLambdaErrorCount"
+    namespace = "IngestionLambda"
+    value     = "1"
+  }
+  pattern = "ERROR"
+}
+
 # Ingestion lambda error alarm
 resource "aws_cloudwatch_metric_alarm" "ingestion_lambda_error_alarm" {
   alarm_name          = "IngestionLambdaErrorAlarm"
