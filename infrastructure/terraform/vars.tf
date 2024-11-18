@@ -32,3 +32,8 @@ variable "transformation_bucket_prefix" {
   type    = string
   default = "pipeline-pioneers-processed"
 }
+
+variable "transformation_code_bucket_prefix" {
+  type    = string
+  default = "pipeline-pioneers-transformation-code"
+}
