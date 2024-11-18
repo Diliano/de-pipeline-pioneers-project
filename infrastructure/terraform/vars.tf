@@ -28,7 +28,7 @@ variable "ingestion_bucket_prefix" {
   default = "pipeline-pioneers-ingestion"
 }
 
-variable "transformation_bucket_prefix" {
+variable "processed_bucket_prefix" {
   type    = string
   default = "pipeline-pioneers-processed"
 }
