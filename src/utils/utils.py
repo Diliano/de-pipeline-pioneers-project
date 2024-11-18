@@ -13,7 +13,7 @@ from src.ingestion import (
     SECRET_NAME,
     TABLES,
     TIMESTAMP_FILE_KEY,
-    S3_INGESTION_BUCKET
+    S3_INGESTION_BUCKET,
 )
 
 
@@ -25,7 +25,7 @@ def retrieve_db_credentials(secrets_manager_client):
     except Exception as err:
         logger.error(f"Unexpected error occurred {err}", exc_info=True)
         # raise err
-    
+
 
 def connect_to_db():
     try:
@@ -45,7 +45,7 @@ def connect_to_db():
         )
 
     except Exception as e:
-        logger.error("Database connection failed", exc_info=True)
+        logger.error(f"Database connection failed: {e}", exc_info=True)
         # raise e
 
 
