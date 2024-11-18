@@ -7,6 +7,7 @@ from src.utils.utils import (
     update_last_ingestion_timestamp,
 )
 
+
 # @pytest.mark.xfail
 @patch("src.utils.utils.S3_INGESTION_BUCKET", "test_bucket")
 @patch("src.ingestion.s3_client.put_object")

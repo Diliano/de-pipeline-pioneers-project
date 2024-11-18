@@ -1,8 +1,10 @@
 from moto import mock_aws
 import boto3
+
 # import pytest
 
 from src.utils.utils import retrieve_db_credentials
+
 
 # @pytest.mark.xfail
 def test_retrieve_db_credentials_success(mock_secrets_manager, caplog):

@@ -1,8 +1,10 @@
 from unittest.mock import MagicMock, patch
 import logging
+
 # import pytest
 
 from src.utils.utils import fetch_tables
+
 
 @patch("src.utils.utils.get_last_ingestion_timestamp")
 @patch("src.utils.utils.update_last_ingestion_timestamp")

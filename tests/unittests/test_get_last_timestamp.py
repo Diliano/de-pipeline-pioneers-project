@@ -2,12 +2,14 @@ from unittest.mock import patch
 from datetime import datetime
 from src.ingestion import TIMESTAMP_FILE_KEY
 import logging
+
 # import pytest
 import json
 
 from src.utils.utils import (
     get_last_ingestion_timestamp,
 )
+
 
 # @pytest.mark.xfail
 @patch("src.utils.utils.S3_INGESTION_BUCKET", "test_bucket")

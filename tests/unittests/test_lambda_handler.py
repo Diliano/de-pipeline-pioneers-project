@@ -3,7 +3,7 @@ from datetime import datetime
 from src.ingestion import (
     lambda_handler,
 )
-import pytest
+# import pytest
 
 
 # @pytest.mark.xfail
