@@ -3,7 +3,7 @@ from src.ingestion import (
     fetch_tables,
 )
 import logging
-import pytest
+# import pytest
 
 
 @patch("src.ingestion.get_last_ingestion_timestamp")
