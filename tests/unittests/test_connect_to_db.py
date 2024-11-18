@@ -1,7 +1,7 @@
 from unittest.mock import patch
 from src.ingestion import connect_to_db
 import logging
-import pytest
+# import pytest
 
 
 # @pytest.mark.xfail
@@ -41,7 +41,7 @@ def test_connect_to_db_success(
 def test_connect_to_db_failure(
     mock_connection, mock_retrieve_credentials, caplog
 ):
-    
+
     caplog.set_level(logging.ERROR)
     # Mock credentials retrieval to return valid credentials
     mock_retrieve_credentials.return_value = {
@@ -56,7 +56,7 @@ def test_connect_to_db_failure(
 
     # with pytest.raises(Exception, match="Connection error"):
     #     connect_to_db()
-    
+
     connect_to_db()
     # Check that an error was logged
     assert "Database connection failed" in caplog.text
