@@ -52,16 +52,13 @@ resource "aws_cloudwatch_metric_alarm" "ingestion_lambda_error_alarm" {
   alarm_name          = "IngestionLambdaErrorAlarm"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
-  metric_name         = "Errors"
-  namespace           = "AWS/Lambda"
+  metric_name         = aws_cloudwatch_log_metric_filter.ingestion_lambda_error_filter.metric_transformation[0].name
+  namespace           = aws_cloudwatch_log_metric_filter.ingestion_lambda_error_filter.metric_transformation[0].namespace
   period              = 600
   statistic           = "Sum"
   threshold           = 1
-  alarm_description   = "Alarm for ingestion lambda function errors"
+  alarm_description   = "Alarm for ingestion lambda logged errors"
   alarm_actions       = [aws_sns_topic.ingestion_alarm_topic.arn]
-  dimensions = {
-    FunctionName = aws_lambda_function.ingestion_lambda.function_name
-  }
 }
 
 # ========
