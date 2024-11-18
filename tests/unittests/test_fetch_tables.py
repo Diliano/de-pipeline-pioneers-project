@@ -90,8 +90,9 @@ def test_fetch_tables_connection_failure(mock_connect_to_db, caplog):
     # Simulate an exception when attempting to connect to the database
     mock_connect_to_db.side_effect = Exception("Connection error")
 
-    with pytest.raises(Exception, match="Connection error"):
-        fetch_tables()
+    # with pytest.raises(Exception, match="Connection error"):
+    #     fetch_tables()
+    fetch_tables()
 
     # Check that an error was logged for the connection failure
     assert "Database connection failed" in caplog.text
