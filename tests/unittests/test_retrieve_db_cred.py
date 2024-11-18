@@ -1,7 +1,9 @@
 from moto import mock_aws
 import boto3
+
 # import pytest
-from src.ingestion import retrieve_db_credentials
+
+from src.utils.utils import retrieve_db_credentials
 
 
 # @pytest.mark.xfail

@@ -1,14 +1,14 @@
 from unittest.mock import MagicMock, patch
-from src.ingestion import (
-    fetch_tables,
-)
 import logging
+
 # import pytest
 
+from src.utils.utils import fetch_tables
 
-@patch("src.ingestion.get_last_ingestion_timestamp")
-@patch("src.ingestion.update_last_ingestion_timestamp")
-@patch("src.ingestion.connect_to_db")
+
+@patch("src.utils.utils.get_last_ingestion_timestamp")
+@patch("src.utils.utils.update_last_ingestion_timestamp")
+@patch("src.utils.utils.connect_to_db")
 def test_fetch_tables_success(
     mock_connect_to_db,
     mock_update_timestamp,
@@ -40,9 +40,9 @@ def test_fetch_tables_success(
     mock_update_timestamp.assert_called_once()
 
 
-@patch("src.ingestion.get_last_ingestion_timestamp")
-@patch("src.ingestion.update_last_ingestion_timestamp")
-@patch("src.ingestion.connect_to_db")
+@patch("src.utils.utils.get_last_ingestion_timestamp")
+@patch("src.utils.utils.update_last_ingestion_timestamp")
+@patch("src.utils.utils.connect_to_db")
 def test_fetch_tables_query_logging(
     mock_connect_to_db,
     mock_update_timestamp,
@@ -82,7 +82,7 @@ def test_fetch_tables_query_logging(
 
 # @pytest.mark.xfail
 @patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
-@patch("src.ingestion.connect_to_db")
+@patch("src.utils.utils.connect_to_db")
 def test_fetch_tables_connection_failure(mock_connect_to_db, caplog):
     """ """
     caplog.set_level(logging.INFO)
