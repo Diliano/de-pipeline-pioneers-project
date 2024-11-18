@@ -3,10 +3,11 @@ from datetime import datetime
 from src.ingestion import (
     lambda_handler,
 )
+import pytest
 
 
 # @pytest.mark.xfail
-@patch("src.ingestion.fetch_tables")
+@patch("src.utils.utils.fetch_tables")
 @patch("src.ingestion.s3_client.put_object")
 @patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
 @patch("src.ingestion.datetime")
@@ -47,7 +48,7 @@ def test_lambda_handler_success(
 
 
 # @pytest.mark.xfail
-@patch("src.ingestion.fetch_tables")
+@patch("src.utils.utils.fetch_tables")
 @patch("src.ingestion.s3_client.put_object")
 @patch("src.ingestion.datetime")
 def test_lambda_handler_partial_failure(
@@ -83,7 +84,7 @@ def test_lambda_handler_partial_failure(
 
 
 # @pytest.mark.xfail
-@patch("src.ingestion.fetch_tables")
+@patch("src.utils.utils.fetch_tables")
 @patch("src.ingestion.s3_client.put_object")
 @patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
 @patch("src.ingestion.datetime")
