@@ -75,6 +75,7 @@ resource "aws_s3_object" "transformation_lambda_code" {
   bucket = aws_s3_bucket.transformation_code_bucket.bucket
   key    = "transformation_lambda/transformation_lambda.zip"
   source = data.archive_file.transformation_lambda.output_path
+  etag   = data.archive_file.transformation_lambda.output_base64sha256
 }
 
 # Transformation lambda layer
@@ -82,4 +83,5 @@ resource "aws_s3_object" "transformation_layer_code" {
   bucket = aws_s3_bucket.transformation_code_bucket.bucket
   key    = "ingestion_lambda/transformation_layer.zip"
   source = data.archive_file.transformation_layer.output_path
+  etag   = data.archive_file.transformation_layer.output_base64sha256
 }
