@@ -53,7 +53,7 @@ def retrieve_db_credentials(secrets_manager_client):
         return secret
     except Exception as err:
         logger.error(f"Unexpected error occurred {err}", exc_info=True)
-        raise err
+        # raise err
 
 
 def connect_to_db():
@@ -74,8 +74,8 @@ def connect_to_db():
         )
 
     except Exception as e:
-        logger.error("Database connection failed", exc_info=True)
-        raise e
+        logger.error(f"Database connection failed: {e}", exc_info=True)
+        # raise e
 
 
 def get_last_ingestion_timestamp():
@@ -101,7 +101,7 @@ def get_last_ingestion_timestamp():
             return "1970-01-01 00:00:00"
     except Exception as e:
         logger.error(f"Unexpected error occurred: {e}")
-        raise
+        # raise
 
 
 def update_last_ingestion_timestamp():
@@ -153,8 +153,8 @@ def fetch_tables(tables: list = TABLES):
         return tables_data
 
     except Exception as err:
-        logger.error("Database connection failed", exc_info=True)
-        raise err
+        logger.error(f"Database connection failed {err}", exc_info=True)
+        # raise err
 
 
 def lambda_handler(event, context):

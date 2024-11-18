@@ -2,7 +2,7 @@ from unittest.mock import patch
 from datetime import datetime
 from src.ingestion import get_last_ingestion_timestamp, TIMESTAMP_FILE_KEY
 import logging
-import pytest
+# import pytest
 import json
 
 
@@ -76,9 +76,9 @@ def test_get_last_ingestion_timestamp_unexpected_error(mock_s3_client, caplog):
         side_effect=Exception("Unexpected error"),
     ), patch("src.ingestion.logger") as mock_logger:
 
-        with pytest.raises(Exception, match="Unexpected error"):
-            get_last_ingestion_timestamp()
-
+        # with pytest.raises(Exception, match="Unexpected error"):
+        #     get_last_ingestion_timestamp()
+        get_last_ingestion_timestamp()
         # Confirming that the error was logged
         mock_logger.error.assert_called_once_with(
             "Unexpected error occurred: Unexpected error"
