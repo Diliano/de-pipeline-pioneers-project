@@ -32,17 +32,20 @@ resource "aws_lambda_layer_version" "ingestion_layer" {
   compatible_runtimes = [var.python_runtime]
   s3_bucket           = aws_s3_bucket.ingestion_code_bucket.bucket
   s3_key              = aws_s3_object.ingestion_layer_code.key
+  source_code_hash    = data.archive_file.ingestion_layer.output_base64sha256
 }
 
+# Ingestion lambda
 resource "aws_lambda_function" "ingestion_lambda" {
-  function_name = var.lambda_ingestion
-  s3_bucket     = aws_s3_bucket.ingestion_code_bucket.bucket
-  s3_key        = aws_s3_object.ingestion_lambda_code.key
-  role          = aws_iam_role.ingestion_lambda_role.arn
-  handler       = "ingestion.lambda_handler"
-  runtime       = var.python_runtime
-  layers        = [aws_lambda_layer_version.ingestion_layer.arn]
-  timeout       = 60
+  function_name    = var.lambda_ingestion
+  s3_bucket        = aws_s3_bucket.ingestion_code_bucket.bucket
+  s3_key           = aws_s3_object.ingestion_lambda_code.key
+  role             = aws_iam_role.ingestion_lambda_role.arn
+  handler          = "ingestion.lambda_handler"
+  runtime          = var.python_runtime
+  layers           = [aws_lambda_layer_version.ingestion_layer.arn]
+  timeout          = 60
+  source_code_hash = data.archive_file.ingestion_lambda.output_base64sha256
 
   environment {
     variables = {

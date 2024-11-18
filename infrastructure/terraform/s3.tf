@@ -51,6 +51,7 @@ resource "aws_s3_object" "ingestion_lambda_code" {
   bucket = aws_s3_bucket.ingestion_code_bucket.bucket
   key    = "ingestion_lambda/ingestion_lambda.zip"
   source = data.archive_file.ingestion_lambda.output_path
+  etag   = data.archive_file.ingestion_lambda.output_base64sha256
 }
 
 # Ingestion lambda layer
@@ -58,6 +59,7 @@ resource "aws_s3_object" "ingestion_layer_code" {
   bucket = aws_s3_bucket.ingestion_code_bucket.bucket
   key    = "ingestion_lambda/ingestion_layer.zip"
   source = data.archive_file.ingestion_layer.output_path
+  etag   = data.archive_file.ingestion_layer.output_base64sha256
 }
 
 # ==========================================
