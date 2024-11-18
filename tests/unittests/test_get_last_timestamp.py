@@ -2,7 +2,7 @@ from unittest.mock import patch
 from datetime import datetime
 from src.ingestion import get_last_ingestion_timestamp, TIMESTAMP_FILE_KEY
 import logging
-import pytest
+# import pytest
 import json
 
 
