@@ -1,6 +1,6 @@
 from moto import mock_aws
 import boto3
-import pytest
+# import pytest
 from src.ingestion import retrieve_db_credentials
 
 
