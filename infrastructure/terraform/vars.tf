@@ -1,8 +1,3 @@
-variable "code_bucket_prefix" {
-  type    = string
-  default = "pipeline-pioneers-code"
-}
-
 variable "lambda_ingestion" {
   type    = string
   default = "ingestion_lambda"
@@ -26,6 +21,11 @@ variable "python_runtime" {
 variable "ingestion_bucket_prefix" {
   type    = string
   default = "pipeline-pioneers-ingestion"
+}
+
+variable "ingestion_code_bucket_prefix" {
+  type    = string
+  default = "pipeline-pioneers-code"
 }
 
 variable "processed_bucket_prefix" {

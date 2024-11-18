@@ -19,11 +19,11 @@ resource "aws_s3_bucket" "processed_bucket" {
   }
 }
 
-resource "aws_s3_bucket" "code_bucket" {
-  # S3 bucket for the lambda code. 
-  bucket_prefix = "nc-${var.code_bucket_prefix}"
+resource "aws_s3_bucket" "ingestion_code_bucket" {
+  # S3 bucket for the ingestion lambda code. 
+  bucket_prefix = "nc-${var.ingestion_code_bucket_prefix}"
   tags = {
-    Name = "CodeBucket"
+    Name = "IngestionCodeBucket"
   }
 }
 
@@ -45,14 +45,14 @@ resource "aws_s3_bucket" "transformation_code_bucket" {
 
 # Ingestion lambda code
 resource "aws_s3_object" "ingestion_lambda_code" {
-  bucket = aws_s3_bucket.code_bucket.bucket
+  bucket = aws_s3_bucket.ingestion_code_bucket.bucket
   key    = "ingestion_lambda/ingestion_lambda.zip"
   source = data.archive_file.ingestion_lambda.output_path
 }
 
 # Ingestion lambda layer
 resource "aws_s3_object" "ingestion_layer_code" {
-  bucket = aws_s3_bucket.code_bucket.bucket
+  bucket = aws_s3_bucket.ingestion_code_bucket.bucket
   key    = "ingestion_lambda/ingestion_layer.zip"
   source = data.archive_file.ingestion_layer.output_path
 }

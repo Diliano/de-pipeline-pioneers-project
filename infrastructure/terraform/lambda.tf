@@ -30,13 +30,13 @@ data "archive_file" "ingestion_layer" {
 resource "aws_lambda_layer_version" "ingestion_layer" {
   layer_name          = "ingestion_layer"
   compatible_runtimes = [var.python_runtime]
-  s3_bucket           = aws_s3_bucket.code_bucket.bucket
+  s3_bucket           = aws_s3_bucket.ingestion_code_bucket.bucket
   s3_key              = aws_s3_object.ingestion_layer_code.key
 }
 
 resource "aws_lambda_function" "ingestion_lambda" {
   function_name = var.lambda_ingestion
-  s3_bucket     = aws_s3_bucket.code_bucket.bucket
+  s3_bucket     = aws_s3_bucket.ingestion_code_bucket.bucket
   s3_key        = aws_s3_object.ingestion_lambda_code.key
   role          = aws_iam_role.ingestion_lambda_role.arn
   handler       = "ingestion.lambda_handler"
