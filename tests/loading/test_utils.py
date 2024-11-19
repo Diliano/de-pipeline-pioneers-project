@@ -23,7 +23,7 @@ def mock_s3(aws_credentials):
         yield boto3.client("s3", region_name="eu-west-2")
 
 
-def test_read_file_list(mock_s3):
+def test_read_file_list(mock_s3, caplog):
     # Arrange
     bucket_name = "processed-bucket"
     json_key = "processed/file_list.json"
@@ -45,9 +45,10 @@ def test_read_file_list(mock_s3):
     file_paths = read_file_list(mock_s3, bucket_name, json_key)
     # Assert
     assert file_paths == json_content["files"]
+    assert "Read file list:" in caplog.text
 
 
-def test_exception_given_missing_bucket(mock_s3):
+def test_exception_given_missing_bucket(mock_s3, caplog):
     # Arrange
     bucket_name = "nonexistent-bucket"
     json_key = "file_list.json"
@@ -56,9 +57,10 @@ def test_exception_given_missing_bucket(mock_s3):
         read_file_list(mock_s3, bucket_name, json_key)
 
     assert "NoSuchBucket" in str(excinfo.value)
+    assert "Error reading file list from S3" in caplog.text
 
 
-def test_exception_given_missing_key(mock_s3):
+def test_exception_given_missing_key(mock_s3, caplog):
     # Arrange
     bucket_name = "processed-bucket"
     json_key = "missing_file_list.json"
@@ -72,3 +74,4 @@ def test_exception_given_missing_key(mock_s3):
         read_file_list(mock_s3, bucket_name, json_key)
 
     assert "NoSuchKey" in str(excinfo.value)
+    assert "Error reading file list from S3" in caplog.text
