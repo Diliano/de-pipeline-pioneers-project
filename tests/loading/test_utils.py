@@ -56,3 +56,19 @@ def test_exception_given_missing_bucket(mock_s3):
         read_file_list(mock_s3, bucket_name, json_key)
 
     assert "NoSuchBucket" in str(excinfo.value)
+
+
+def test_exception_given_missing_key(mock_s3):
+    # Arrange
+    bucket_name = "processed-bucket"
+    json_key = "missing_file_list.json"
+
+    mock_s3.create_bucket(
+        Bucket=bucket_name,
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+    )
+    # Act + Assert
+    with pytest.raises(ClientError) as excinfo:
+        read_file_list(mock_s3, bucket_name, json_key)
+
+    assert "NoSuchKey" in str(excinfo.value)
