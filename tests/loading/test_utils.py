@@ -4,6 +4,7 @@ from moto import mock_aws
 import boto3
 import json
 import os
+from botocore.exceptions import ClientError
 
 
 @pytest.fixture(scope="function")
@@ -44,3 +45,14 @@ def test_read_file_list(mock_s3):
     file_paths = read_file_list(mock_s3, bucket_name, json_key)
     # Assert
     assert file_paths == json_content["files"]
+
+
+def test_exception_given_missing_bucket(mock_s3):
+    # Arrange
+    bucket_name = "nonexistent-bucket"
+    json_key = "file_list.json"
+    # Act + Assert
+    with pytest.raises(ClientError) as excinfo:
+        read_file_list(mock_s3, bucket_name, json_key)
+
+    assert "NoSuchBucket" in str(excinfo.value)

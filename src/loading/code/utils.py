@@ -1,6 +1,7 @@
 import boto3
 import json
 import logging
+from botocore.exceptions import ClientError
 
 
 logger = logging.getLogger()
@@ -15,6 +16,6 @@ def read_file_list(s3_client, bucket_name, key):
         file_paths = json_content.get("files", [])
         logger.info(f"Read file list: {file_paths}")
         return file_paths
-    except Exception as e:
+    except ClientError as e:
         logger.error(f"Error reading file list from S3: {e}", exc_info=True)
         raise
