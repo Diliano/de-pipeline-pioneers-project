@@ -180,13 +180,6 @@ def lambda_handler(event, context):
             logger.warning(f"Skipping file with invalid format: {s3_key}")
             continue
 
-    # for table_name, data in table_data.items():
-    #     logger.info(f"Processing table: {table_name}")
-    #     last_processed_timestamp = load_last_processed_timestamp(table_name)
-
-    #     logger.info("Saving transformed data from into processed bucket")
-    #     process_and_save_table(table_name, data, last_processed_timestamp)
-
     # Creating dimensions and fact tables independently
     # dim_counterparty
     # dim_currency
@@ -196,6 +189,8 @@ def lambda_handler(event, context):
     # dim_payment_type
 
     # fact_sales_order based on (transactions, dim_date)
+    
+    # NOT NEEDED FOR THE MVP
     # fact_purchase_orders based on (transactions, dim_date)
     # fact_payment based on (payments, dim_date, payment_types)
     logger.info("Transformation process completed")
