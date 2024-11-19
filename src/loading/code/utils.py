@@ -19,3 +19,6 @@ def read_file_list(s3_client, bucket_name, key):
     except ClientError as e:
         logger.error(f"Error reading file list from S3: {e}", exc_info=True)
         raise
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        raise
