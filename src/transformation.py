@@ -2,8 +2,7 @@ from datetime import datetime
 from io import BytesIO
 import logging
 import boto3
-
-import pandas as pd
+# import pandas as pd
 import json
 import os
 
@@ -19,7 +18,7 @@ S3_PROCESSED_BUCKET = os.getenv("S3_PROCESSED_BUCKET")
 
 
 def load_data_from_s3(key):
-    """"""
+    """ """
     response = s3_client.get_object(Bucket=S3_INGESTION_BUCKET, Key=key)
     logger.info(f"s3 replied with response {response}")
     if "Body" in response:
@@ -34,7 +33,7 @@ def create_dim_date(date_data):
     ARGS
         dates
     returns
-        a reformatted 
+        a reformatted
     """
     pass
 
@@ -86,6 +85,11 @@ def transform_dim_payment_type(payment_type_data):
     pass
 
 
+def transform_dim_department():
+    """ """
+    pass
+
+
 def transform_fact_sales_order(transactions, dim_date):
     """
     Transforms sales transactions into fact_sales_order.
@@ -109,7 +113,7 @@ def transform_fact_payment(payments, dim_date, payment_types):
 
 def transform_data(data):
     """"""
-    df = pd.DataFrame(data=data)
+    # df = pd.DataFrame(data=data)
 
     # return {
     #     "fact_sales_order": fact_sales_order,
@@ -148,23 +152,58 @@ def save_transformed_data(dataframes):
             )
 
 
+TRANSFORMATION_FUNCTIONS = {
+    "counterparty": transform_dim_counterparty,
+    "currency": transform_dim_currency,
+    "department": transform_dim_department,
+    "design": transform_dim_design,
+    "staff": transform_dim_staff,
+    "payment": transform_dim_payment_type,
+    "transaction": transform_dim_transaction,
+}
+
+
 def lambda_handler(event, context):
     """Lambda handler function."""
-    logger.info("Starting transformation process")
+    logger.info("Received event: %s", json.dumps(event))
+
+    # table_data = {}
 
     # Assuming event contains the S3 object key of the ingested data
     for record in event["Records"]:
         s3_key = record["s3"]["object"]["key"]
         logger.info(f"Processing file: {s3_key}")
 
-        raw_data = load_data_from_s3(s3_key)
+        table_name = s3_key.split("/")[1]
+        if table_name in TRANSFORMATION_FUNCTIONS:
+            # print(TRANSFORMATION_FUNCTIONS[table_name])
+            logger.warning(f"Skipping file with invalid format: {s3_key}")
+            continue
 
-        logger.info(f"Transforming raw data from {s3_key}")
-        transformed_data = transform_data(raw_data)
+    # for table_name, data in table_data.items():
+    #     logger.info(f"Processing table: {table_name}")
+    #     last_processed_timestamp = load_last_processed_timestamp(table_name)
 
-        # Save transformed data back to S3 in processed format
-        logger.info("Saving transformed data from into processed bucket")
-        save_transformed_data(transformed_data)
+    #     logger.info("Saving transformed data from into processed bucket")
+    #     process_and_save_table(table_name, data, last_processed_timestamp)
 
+    # Creating dimensions and fact tables independently
+    # dim_counterparty
+    # dim_currency
+    # dim_staff
+    # dim_design
+    # dim_location
+    # dim_payment_type
+
+    # fact_sales_order based on (transactions, dim_date)
+    # fact_purchase_orders based on (transactions, dim_date)
+    # fact_payment based on (payments, dim_date, payment_types)
     logger.info("Transformation process completed")
     return {"statusCode": 200, "body": "Transformation complete"}
+
+
+# For testing purposes
+if __name__ == "__main__":
+    with open("src/event_payload.json") as f:
+        event = json.load(f)
+    lambda_handler(event, None)
