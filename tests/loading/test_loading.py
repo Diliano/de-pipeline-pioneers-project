@@ -37,7 +37,9 @@ def test_loading_lambda_reads_file_list(mock_s3):
         Bucket=bucket_name,
         CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
     )
-    mock_s3.put_object(Bucket=bucket_name, Key=json_key, Body=json.dumps(json_content))
+    mock_s3.put_object(
+        Bucket=bucket_name, Key=json_key, Body=json.dumps(json_content)
+    )
 
     os.environ["PROCESSED_BUCKET_NAME"] = bucket_name
     os.environ["FILE_LIST_KEY"] = json_key

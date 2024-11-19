@@ -13,7 +13,9 @@ def lambda_handler(event, context):
     PROCESSED_BUCKET_NAME = os.environ.get("PROCESSED_BUCKET_NAME")
     FILE_LIST_KEY = os.environ.get("FILE_LIST_KEY")
     try:
-        response = s3_client.get_object(Bucket=PROCESSED_BUCKET_NAME, Key=FILE_LIST_KEY)
+        response = s3_client.get_object(
+            Bucket=PROCESSED_BUCKET_NAME, Key=FILE_LIST_KEY
+        )
         content = response["Body"].read()
         json_content = json.loads(content)
 
