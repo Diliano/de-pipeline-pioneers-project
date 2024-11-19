@@ -61,6 +61,23 @@ resource "aws_cloudwatch_metric_alarm" "ingestion_lambda_error_alarm" {
   alarm_actions       = [aws_sns_topic.ingestion_alarm_topic.arn]
 }
 
+# Ingestion lambda missed invocation alarm
+resource "aws_cloudwatch_metric_alarm" "ingestion_lambda_missed_invocation_alarm" {
+  alarm_name          = "IngestionLambdaMissedInvocationAlarm"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Invocations"
+  namespace           = "AWS/Lambda"
+  period              = 600
+  statistic           = "Minimum"
+  threshold           = 1
+  alarm_description   = "Alarm for missed invocations of the ingestion lambda function"
+  alarm_actions       = [aws_sns_topic.ingestion_alarm_topic.arn]
+  dimensions = {
+    FunctionName = aws_lambda_function.ingestion_lambda.function_name
+  }
+}
+
 # ========
 # ATTACH
 # ========
