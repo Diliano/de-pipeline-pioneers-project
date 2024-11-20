@@ -36,7 +36,9 @@ def mock_processed_bucket(mock_s3):
 
 
 class TestReadFileList:
-    def test_read_file_list(self, mock_s3, mock_processed_bucket, caplog):
+    def test_successfully_reads_file_list(
+        self, mock_s3, mock_processed_bucket, caplog
+    ):
         # Arrange
         json_key = f"{mock_processed_bucket}/file_list.json"
         json_content = {
@@ -101,7 +103,9 @@ class TestReadFileList:
 
 
 class TestProcessParquetFiles:
-    def test_process_parquet_files(self, mock_s3, mock_processed_bucket):
+    def test_successfully_process_parquet_files(
+        self, mock_s3, mock_processed_bucket
+    ):
         # Arrange
         parquet_key1 = "table1/file1.parquet"
         parquet_key2 = "table2/file2.parquet"
