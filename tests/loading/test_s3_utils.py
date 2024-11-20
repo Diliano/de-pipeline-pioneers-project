@@ -57,7 +57,7 @@ class TestReadFileList:
         assert file_paths == json_content["files"]
         assert "Read file list" in caplog.text
 
-    def test_exception_given_missing_bucket(self, mock_s3, caplog):
+    def test_clienterror_given_missing_bucket(self, mock_s3, caplog):
         # Arrange
         bucket_name = "nonexistent-bucket"
         json_key = "file_list.json"
@@ -68,7 +68,7 @@ class TestReadFileList:
         assert "NoSuchBucket" in str(excinfo.value)
         assert "Error reading file list from S3" in caplog.text
 
-    def test_exception_given_missing_key(
+    def test_clienterror_given_missing_key(
         self, mock_s3, mock_processed_bucket, caplog
     ):
         # Arrange
@@ -81,7 +81,7 @@ class TestReadFileList:
         assert "NoSuchKey" in str(excinfo.value)
         assert "Error reading file list from S3" in caplog.text
 
-    def test_handles_non_clienterror_exceptions(
+    def test_handles_general_exceptions(
         self, mock_s3, mock_processed_bucket, caplog
     ):
         # Arrange
