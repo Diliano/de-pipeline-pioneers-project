@@ -104,24 +104,24 @@ def transform_dim_currency(currency_data):
         logger.warning("No currency data provided.")
         return None
 
-    dim_curreny = pd.DataFrame(currency_data)
+    dim_currency = pd.DataFrame(currency_data)
 
     if not all(
-        col in dim_curreny.columns
+        col in dim_currency.columns
         for col in ["currency_code", "currency_name"]
     ):
         logger.warning("Currency data missing required columns.")
         return None
 
-    dim_curreny["currency_id"] = range(1, len(dim_curreny) + 1)
+    dim_currency["currency_id"] = range(1, len(dim_currency) + 1)
 
-    dim_curreny = dim_curreny[
+    dim_currency = dim_currency[
         ["currency_id", "currency_code", "currency_name"]
     ]
 
-    dim_curreny.drop_duplicates(inplace=True)
+    dim_currency.drop_duplicates(inplace=True)
 
-    return dim_curreny
+    return dim_currency
 
 
 def transform_dim_staff(staff_data):
