@@ -114,7 +114,7 @@ def transform_dim_currency(currency_data):
 
     dim_currency = pd.DataFrame(
         currency_data,
-        columns=["currency_id", "currency_code", "created_at", "last_updated"],
+        columns=["currency_id", "currency_code"],
     )
 
     dim_currency["currency_name"] = (
