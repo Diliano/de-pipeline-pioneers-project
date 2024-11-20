@@ -123,15 +123,19 @@ def transform_dim_design(design_data):
     # Convert data types
     # dim_design['design_id'] = dim_design['design_id'].astype(int)
     # dim_design['design_name'] = dim_design['design_name'].astype('string')
-    # dim_design['file_location'] = dim_design['file_location'].astype('string')
+    # dim_design['file_location'] = (
+    #     dim_design['file_location'].astype('string')
+    # )
     # dim_design['file_name'] = dim_design['file_name'].astype('string')
 
-    dim_design = dim_design[[
-        'design_id',
-        'design_name',
-        'file_location',
-        'file_name',
-    ]]
+    dim_design = dim_design[
+        [
+            "design_id",
+            "design_name",
+            "file_location",
+            "file_name",
+        ]
+    ]
     return dim_design
 
 
