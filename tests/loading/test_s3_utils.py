@@ -1,4 +1,4 @@
-from loading.code.s3_utils import read_file_list
+from src.loading.code.s3_utils import read_file_list
 import pytest
 from moto import mock_aws
 import boto3
