@@ -90,9 +90,9 @@ def transform_dim_counterparty(counterparty_data, address_data):
             "created_at",
             "last_updated",
             "commercial_contact",
-            "delivery_contact"
+            "delivery_contact",
         ],
-        inplace=True
+        inplace=True,
     )
     dim_address = dim_address.rename(
         columns={
@@ -102,7 +102,7 @@ def transform_dim_counterparty(counterparty_data, address_data):
             "city": "counterparty_legal_city",
             "postal_code": "counterparty_legal_postal_code",
             "country": "counterparty_legal_country",
-            "phone": "counterparty_legal_phone_number"
+            "phone": "counterparty_legal_phone_number",
         }
     )
     merged_df = pd.merge(
@@ -110,7 +110,7 @@ def transform_dim_counterparty(counterparty_data, address_data):
         dim_address,
         left_on="legal_address_id",
         right_on="address_id",
-        how="inner"
+        how="inner",
     )
     merged_df.drop(columns=["legal_address_id", "address_id"], inplace=True)
 
@@ -201,7 +201,6 @@ def transform_dim_staff(staff_data, department_data):
             "email_address",
         ]
     ]
-
 
     return dim_staff
 
