@@ -155,3 +155,15 @@ class TestProcessParquetFiles:
         assert len(data_frames) == 0
         assert "Error accessing Parquet file from S3" in caplog.text
         assert "NoSuchBucket" in caplog.text
+
+    def test_clienterror_given_missing_key(
+        self, mock_s3, mock_processed_bucket, caplog
+    ):
+        # Arrange
+        file_path = f"s3://{mock_processed_bucket}/missing_file.parquet"
+        # Act
+        data_frames = process_parquet_files(mock_s3, [file_path])
+        # Assert
+        assert len(data_frames) == 0
+        assert "Error accessing Parquet file from S3" in caplog.text
+        assert "NoSuchKey" in caplog.text
