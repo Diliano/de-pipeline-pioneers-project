@@ -167,3 +167,21 @@ class TestProcessParquetFiles:
         assert len(data_frames) == 0
         assert "Error accessing Parquet file from S3" in caplog.text
         assert "NoSuchKey" in caplog.text
+
+    def test_handles_general_exceptions(
+        self, mock_s3, mock_processed_bucket, caplog
+    ):
+        # Arrange
+        file_path = f"s3://{mock_processed_bucket}/corrupted_file.parquet"
+        corrupted_content = b"not-a-parquet-file"
+
+        mock_s3.put_object(
+            Bucket=mock_processed_bucket,
+            Key="corrupted_file.parquet",
+            Body=corrupted_content,
+        )
+        # Act
+        data_frames = process_parquet_files(mock_s3, [file_path])
+        # Assert
+        assert len(data_frames) == 0
+        assert "Error processing file" in caplog.text
