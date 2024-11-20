@@ -30,19 +30,22 @@ data "archive_file" "ingestion_layer" {
 resource "aws_lambda_layer_version" "ingestion_layer" {
   layer_name          = "ingestion_layer"
   compatible_runtimes = [var.python_runtime]
-  s3_bucket           = aws_s3_bucket.code_bucket.bucket
+  s3_bucket           = aws_s3_bucket.ingestion_code_bucket.bucket
   s3_key              = aws_s3_object.ingestion_layer_code.key
+  source_code_hash    = data.archive_file.ingestion_layer.output_base64sha256
 }
 
+# Ingestion lambda
 resource "aws_lambda_function" "ingestion_lambda" {
-  function_name = var.lambda_ingestion
-  s3_bucket     = aws_s3_bucket.code_bucket.bucket
-  s3_key        = aws_s3_object.ingestion_lambda_code.key
-  role          = aws_iam_role.ingestion_lambda_role.arn
-  handler       = "ingestion.lambda_handler"
-  runtime       = var.python_runtime
-  layers        = [aws_lambda_layer_version.ingestion_layer.arn]
-  timeout       = 60
+  function_name    = var.lambda_ingestion
+  s3_bucket        = aws_s3_bucket.ingestion_code_bucket.bucket
+  s3_key           = aws_s3_object.ingestion_lambda_code.key
+  role             = aws_iam_role.ingestion_lambda_role.arn
+  handler          = "ingestion.lambda_handler"
+  runtime          = var.python_runtime
+  layers           = [aws_lambda_layer_version.ingestion_layer.arn]
+  timeout          = 60
+  source_code_hash = data.archive_file.ingestion_lambda.output_base64sha256
 
   environment {
     variables = {
@@ -85,16 +88,19 @@ resource "aws_lambda_layer_version" "transformation_layer" {
   compatible_runtimes = [var.python_runtime]
   s3_bucket           = aws_s3_bucket.transformation_code_bucket.bucket
   s3_key              = aws_s3_object.transformation_layer_code.key
+  source_code_hash    = data.archive_file.transformation_layer.output_base64sha256
 }
 
+# Transformation lambda
 resource "aws_lambda_function" "transformation_lambda" {
-  function_name = var.lambda_transform
-  s3_bucket     = aws_s3_bucket.transformation_code_bucket.bucket
-  s3_key        = aws_s3_object.transformation_lambda_code.key
-  role          = aws_iam_role.transformation_lambda_role.arn
-  handler       = "transformation.lambda_handler"
-  runtime       = var.python_runtime
-  layers        = [aws_lambda_layer_version.transformation_layer.arn]
+  function_name    = var.lambda_transform
+  s3_bucket        = aws_s3_bucket.transformation_code_bucket.bucket
+  s3_key           = aws_s3_object.transformation_lambda_code.key
+  role             = aws_iam_role.transformation_lambda_role.arn
+  handler          = "transformation.lambda_handler"
+  runtime          = var.python_runtime
+  layers           = [aws_lambda_layer_version.transformation_layer.arn]
+  source_code_hash = data.archive_file.transformation_lambda.output_base64sha256
 
   environment {
     variables = {
