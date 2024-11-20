@@ -165,7 +165,33 @@ def transform_dim_design(design_data):
     """
     Transforms design data into dim_design.
     """
-    pass
+    dim_design = pd.DataFrame(design_data)
+    dim_design.drop(columns=["created_at", "last_updated"], inplace=True)
+    dim_design = dim_design.rename(
+        columns={
+            "design_id": "design_id",
+            "design_name": "design_name",
+            "file_location": "file_location",
+            "file_name": "file_name",
+        }
+    )
+    # Convert data types
+    # dim_design['design_id'] = dim_design['design_id'].astype(int)
+    # dim_design['design_name'] = dim_design['design_name'].astype('string')
+    # dim_design['file_location'] = (
+    #     dim_design['file_location'].astype('string')
+    # )
+    # dim_design['file_name'] = dim_design['file_name'].astype('string')
+
+    dim_design = dim_design[
+        [
+            "design_id",
+            "design_name",
+            "file_location",
+            "file_name",
+        ]
+    ]
+    return dim_design
 
 
 def transform_dim_transaction(transaction_data):
@@ -206,6 +232,28 @@ def transform_fact_sales_order(sales_order):
             "agreed_delivery_location_id": "agreed_delivery_location_id",
         }
     )
+
+    # Convert data types
+    fact_sales_order["sales_order_id"] = fact_sales_order[
+        "sales_order_id"
+    ].astype(int)
+    fact_sales_order["sales_staff_id"] = fact_sales_order[
+        "sales_staff_id"
+    ].astype(int)
+    fact_sales_order["counterparty_id"] = fact_sales_order[
+        "counterparty_id"
+    ].astype(int)
+    fact_sales_order["units_sold"] = fact_sales_order["units_sold"].astype(int)
+    fact_sales_order["unit_price"] = fact_sales_order["unit_price"].astype(
+        float
+    )
+    fact_sales_order["currency_id"] = fact_sales_order["currency_id"].astype(
+        int
+    )
+    fact_sales_order["design_id"] = fact_sales_order["design_id"].astype(int)
+    fact_sales_order["agreed_delivery_location_id"] = fact_sales_order[
+        "agreed_delivery_location_id"
+    ].astype(int)
 
     # Converting to pd.datetime first
     fact_sales_order["created_date"] = pd.to_datetime(
@@ -356,11 +404,8 @@ if __name__ == "__main__":
     # with open("src/event_payload.json") as f:
     #     event = json.load(f)
     # lambda_handler(event, None)
-    with open("department.json", "r") as file1, open(
-        "staff.json", "r"
-    ) as file2:
-        data1 = json.loads(file1.read())
-        data2 = json.loads(file2.read())
+    with open("design.json") as f:
+        data = json.loads(f.read())
 
     # print(address_data[0]['created_at'], address_data[0]['last_updated'])
     # dates = list(pd.DataFrame(address_data)['created_at'])
@@ -371,8 +416,9 @@ if __name__ == "__main__":
     # dim_address = transform_dim_location(address_data)
     # print(dim_address)
     # fact_sales_order = transform_fact_sales_order(data)
-    # print(fact_sales_order.head())
-    # with open("sales_order.txt", mode="w") as f:
-    #     f.write(str(fact_sales_order.head()))
-    dim_staff = transform_dim_staff(data2, data1)
-    print(dim_staff.head())
+    # print(fact_sales_order.dtypes)
+
+    dim_design = transform_dim_design(data)
+    print(dim_design.dtypes)
+    with open("testing_data.txt", mode="w") as f:
+        f.write(str(dim_design.head()))
