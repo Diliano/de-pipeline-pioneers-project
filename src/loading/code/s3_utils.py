@@ -50,6 +50,7 @@ def process_parquet_files(s3_client, file_paths):
                 f"Error accessing Parquet file from S3: {file_path}: {e}",
                 exc_info=True,
             )
+            continue
         except Exception as e:
             logger.error(
                 f"Error processing file: {file_path}: {e}", exc_info=True
