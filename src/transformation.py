@@ -89,34 +89,48 @@ def transform_dim_currency(currency_data):
     Transforms raw currency data into dim_currency.
 
     ARGS:
-    currency_data: List of dictionaries containing currency information.
-    [
-        {"currency_code": "USD", "currency_name": "US Dollar"},
-        {"currency_code": "EUR", "currency_name": "Euro"},
-        {"currency_code": "GBP", "currency_name": "British Pound"}
+    currency_data = [
+        [1, 'GBP', datetime(2022, 11, 3, 14, 20, 49, 962000),
+        datetime(2022, 11, 3, 14, 20, 49, 962000)],
+        [2, 'USD', datetime(2022, 11, 3, 14, 20, 49, 962000),
+          datetime(2022, 11, 3, 14, 20, 49, 962000)],
+        [3, 'EUR', datetime(2022, 11, 3, 14, 20, 49, 962000),
+          datetime(2022, 11, 3, 14, 20, 49, 962000)]
     ]
 
     RETURNS:
     DataFrame for dim_currency.
     """
+    CURRENCY_MAPPING = {
+        "USD": "US Dollar",
+        "EUR": "Euro",
+        "GBP": "British Pound",
+        "JPY": "Japanese Yen",
+    }
 
     if not currency_data:
         logger.warning("No currency data provided.")
         return None
 
-    dim_currency = pd.DataFrame(currency_data)
+    dim_currency = pd.DataFrame(
+        currency_data,
+        columns=["currency_id", "currency_code", "created_at", "updated_at"],
+    )
 
-    if not all(
-        col in dim_currency.columns
-        for col in ["currency_code", "currency_name"]
-    ):
-        logger.warning("Currency data missing required columns.")
-        return None
-
-    dim_currency["currency_id"] = range(1, len(dim_currency) + 1)
+    dim_currency["currency_name"] = (
+        dim_currency["currency_code"]
+        .map(CURRENCY_MAPPING)
+        .fillna("Unknown Currency")
+    )
 
     dim_currency = dim_currency[
-        ["currency_id", "currency_code", "currency_name"]
+        [
+            "currency_id",
+            "currency_code",
+            "currency_name",
+            "created_at",
+            "updated_at",
+        ]
     ]
 
     dim_currency.drop_duplicates(inplace=True)
