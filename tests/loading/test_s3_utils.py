@@ -136,3 +136,14 @@ class TestProcessParquetFiles:
         assert len(data_frames) == 2
         pd.testing.assert_frame_equal(data_frames[0], df1)
         pd.testing.assert_frame_equal(data_frames[1], df2)
+
+    def test_clienterror_given_invalid_uri(
+        mock_s3, mock_processed_bucket, caplog
+    ):
+        # Arrange
+        invalid_uri = "invalid-uri"
+        # Act
+        data_frames = process_parquet_files(mock_s3, [invalid_uri])
+        # Assert
+        assert len(data_frames) == 0
+        assert f"Invalid S3 URI: {invalid_uri}" in caplog.text
