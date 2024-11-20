@@ -17,8 +17,17 @@ S3_INGESTION_BUCKET = os.getenv(
 S3_PROCESSED_BUCKET = os.getenv("S3_PROCESSED_BUCKET")
 
 
-def load_data_from_s3(key):
-    """ """
+def load_data_from_s3_ingestion(key):
+    """
+    Loads data from the ingestion bucket
+    using a given key
+
+    ARGS:
+        key: s3 key file
+    
+    RETURNS:
+        data from the ingestion bucket
+    """
     response = s3_client.get_object(Bucket=S3_INGESTION_BUCKET, Key=key)
     logger.info(f"s3 replied with response {response}")
     if "Body" in response:
@@ -250,7 +259,7 @@ def transform_dim_payment_type(payment_type_data):
     pass
 
 
-def transform_dim_department():
+def transform_dim_department(department_data):
     """ """
     pass
 
@@ -350,7 +359,7 @@ def transform_fact_purchase_orders(transactions, dim_date):
     pass
 
 
-def transform_fact_payment(payments, dim_date, payment_types):
+def transform_fact_payment(payments_data, dim_date, payment_types_data):
     """
     Transforms payment data into fact_payment.
     """
@@ -358,9 +367,10 @@ def transform_fact_payment(payments, dim_date, payment_types):
 
 
 def transform_data(data):
-    """"""
-    # df = pd.DataFrame(data=data)
-
+    """
+    
+    """
+    
     # return {
     #     "fact_sales_order": fact_sales_order,
     #     "dim_date": dim_date,
