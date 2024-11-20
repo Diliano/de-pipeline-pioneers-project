@@ -77,11 +77,44 @@ def transform_dim_location(address_data):
     return dim_address
 
 
-def transform_dim_counterparty(counterparty_data):
+def transform_dim_counterparty(counterparty_data, address_data):
     """
-    Transforms counterparty data into dim_counterparty.
+    Merges counterparty data and address data and transforms
+    the merged data into dim_counterparty
     """
-    pass
+    dim_counterparty = pd.DataFrame(counterparty_data)
+    dim_address = pd.DataFrame(address_data)
+    dim_address.drop(columns=["created_at", "last_updated"], inplace=True)
+    dim_counterparty.drop(
+        columns=[
+            "created_at",
+            "last_updated",
+            "commercial_contact",
+            "delivery_contact"
+        ],
+        inplace=True
+    )
+    dim_address = dim_address.rename(
+        columns={
+            "address_line_1": "counterparty_legal_address_line_1",
+            "address_line_2": "counterparty_legal_address_line_2",
+            "district": "counterparty_legal_district",
+            "city": "counterparty_legal_city",
+            "postal_code": "counterparty_legal_postal_code",
+            "country": "counterparty_legal_country",
+            "phone": "counterparty_legal_phone_number"
+        }
+    )
+    merged_df = pd.merge(
+        dim_counterparty,
+        dim_address,
+        left_on="legal_address_id",
+        right_on="address_id",
+        how="inner"
+    )
+    merged_df.drop(columns=["legal_address_id", "address_id"], inplace=True)
+
+    return merged_df
 
 
 def transform_dim_currency(currency_data):
@@ -91,19 +124,41 @@ def transform_dim_currency(currency_data):
     pass
 
 
-def transform_dim_staff(staff_data):
+def transform_dim_staff(staff_data, department_data):
     """
     Transform records into the required format for dim_staff.
     """
-    return pd.DataFrame(staff_data).rename(
-        columns={
-            "staff_id": "id",
-            "first_name": "first_name",
-            "last_name": "last_name",
-            "department_id": "department_id",
-            "email_address": "email",
-        }
+    staff = pd.DataFrame(staff_data)
+    department = pd.DataFrame(department_data)
+    # Dropping unnecessary columns
+    department.drop(
+        columns=["manager", "created_at", "last_updated"], inplace=True
     )
+    staff.drop(columns=["created_at", "last_updated"], inplace=True)
+
+    dim_staff = pd.merge(staff, department, on="department_id", how="inner")
+    dim_staff.drop(columns=["department_id", "department_id"], inplace=True)
+
+    # Reordering columns
+    dim_staff = dim_staff[
+        [
+            "staff_id",
+            "first_name",
+            "last_name",
+            "department_name",
+            "location",
+            "email_address",
+        ]
+    ]
+
+    # Converting datatypes, not sure if its necessary
+    # dim_staff["staff_id"] = dim_staff["staff_id"].astype(int)
+    # dim_staff["first_name"] = dim_staff["first_name"].astype(str)
+    # dim_staff["last_name"] = dim_staff["last_name"].astype(str)
+    # dim_staff["department_name"] = dim_staff["department_name"].astype(str)
+    # dim_staff["location"] = dim_staff["department_location"].astype(str)
+
+    return dim_staff
 
 
 def transform_dim_design(design_data):
