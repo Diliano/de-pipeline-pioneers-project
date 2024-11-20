@@ -115,17 +115,23 @@ def transform_dim_design(design_data):
     dim_design = dim_design.rename(
         columns={
             "design_id": "design_id",
-            "design_name": "design_name",
+            # "design_name": "design_name",
             "file_location": "file_location",
             "file_name": "file_name",
         }
     )
     # # Convert data types
-    # dim_design['design_id'] = dim_design['design_id'].astype(int)
-    # dim_design['design_name'] = dim_design['design_name'].astype(str)
-    # dim_design['file_location'] = dim_design['file_location'].astype(str)
-    # dim_design['file_name'] = dim_design['file_name'].astype(str)
+    dim_design['design_id'] = dim_design['design_id'].astype(int)
+    dim_design['design_name'] = dim_design['design_name'].astype('string')
+    dim_design['file_location'] = dim_design['file_location'].astype('string')
+    dim_design['file_name'] = dim_design['file_name'].astype('string')
 
+    dim_design = dim_design[[
+        'design_id',
+        'design_name',
+        'file_location',
+        'file_name',
+    ]]
     return dim_design
 
 
@@ -339,7 +345,7 @@ if __name__ == "__main__":
     # with open("src/event_payload.json") as f:
     #     event = json.load(f)
     # lambda_handler(event, None)
-    with open("sales_order.json") as f:
+    with open("design.json") as f:
         data = json.loads(f.read())
 
     # print(address_data[0]['created_at'], address_data[0]['last_updated'])
@@ -350,10 +356,10 @@ if __name__ == "__main__":
 
     # dim_address = transform_dim_location(address_data)
     # print(dim_address)
-    fact_sales_order = transform_fact_sales_order(data)
-    print(fact_sales_order.dtypes)
+    # fact_sales_order = transform_fact_sales_order(data)
+    # print(fact_sales_order.dtypes)
 
-    # dim_design = transform_dim_design(data)
-    # print(dim_design.dtypes)
+    dim_design = transform_dim_design(data)
+    print(dim_design.dtypes)
     with open("testing_data.txt", mode="w") as f:
-        f.write(str(fact_sales_order.head()))
+        f.write(str(dim_design.head()))
