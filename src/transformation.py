@@ -2,7 +2,7 @@ from datetime import datetime
 from io import BytesIO
 import logging
 import boto3
-# import pandas as pd
+import pandas as pd
 import json
 import os
 
@@ -26,19 +26,58 @@ def load_data_from_s3(key):
     return data
 
 
-def create_dim_date(date_data):
+def create_dim_date(dates):
     """
-    Creates dim_date table from a list of datetime strings.
+    Creates the dim_date table from a list of datetime strings.
 
-    ARGS
-        dates
-    returns
-        a reformatted
+    ARGS:
+    a list of dates
+    ['2022-11-03T14:20:49.962000',]
+
+    RETURNS:
+    a dataframe reformatted dates
     """
-    pass
+
+    if not dates:
+        logger.warning(f"Invalid dates {dates} data")
+        return None
+
+    dates = pd.to_datetime(pd.Series(dates).drop_duplicates())
+    dim_date = pd.DataFrame(
+        {"date_id": range(1, len(dates) + 1), "date": dates}
+    )
+    dim_date["year"] = dim_date["date"].dt.year
+    dim_date["month"] = dim_date["date"].dt.month
+    dim_date["day"] = dim_date["date"].dt.day
+    dim_date["day_of_week"] = dim_date["date"].dt.dayofweek
+    dim_date["day_name"] = dim_date["date"].dt.day_name()
+    dim_date["month_name"] = dim_date["date"].dt.month_name()
+    dim_date["quarter"] = dim_date["date"].dt.quarter
+    return dim_date
 
 
-def transform_dim_counterparty(counterpart_data):
+def transform_dim_location(address_data):
+    """
+    Transforms address data into dim_location.
+    """
+    dim_address = pd.DataFrame(address_data)
+    dim_address.drop(columns=["created_at", "last_updated"], inplace=True)
+    dim_address = dim_address.rename(
+        columns={
+            "address_id": "id",
+            "address_line_1": "line_1",
+            "address_line_2": "line_2",
+            "district": "district",
+            "city": "city",
+            "postal_code": "post_code",
+            "country": "country",
+            "phone": "phone",
+        }
+    )
+    return dim_address
+
+
+def transform_dim_counterparty(counterparty_data):
     """
     Transforms counterparty data into dim_counterparty.
     """
@@ -54,21 +93,22 @@ def transform_dim_currency(currency_data):
 
 def transform_dim_staff(staff_data):
     """
-    Transforms staff data into dim_staff.
+    Transform records into the required format for dim_staff.
     """
-    pass
+    return pd.DataFrame(staff_data).rename(
+        columns={
+            "staff_id": "id",
+            "first_name": "first_name",
+            "last_name": "last_name",
+            "department_id": "department_id",
+            "email_address": "email",
+        }
+    )
 
 
 def transform_dim_design(design_data):
     """
     Transforms design data into dim_design.
-    """
-    pass
-
-
-def transform_dim_location(address_data):
-    """
-    Transforms address data into dim_location.
     """
     pass
 
@@ -90,11 +130,70 @@ def transform_dim_department():
     pass
 
 
-def transform_fact_sales_order(transactions, dim_date):
+def transform_fact_sales_order(sales_order):
     """
     Transforms sales transactions into fact_sales_order.
     """
-    pass
+    fact_sales_order = pd.DataFrame(sales_order)
+    fact_sales_order = fact_sales_order.rename(
+        columns={
+            "sales_order_id": "sales_order_id",
+            "created_at": "created_date",
+            "last_updated": "last_updated_date",
+            "staff_id": "sales_staff_id",
+            "counterparty_id": "counterparty_id",
+            "design_id": "design_id",
+            "units_sold": "units_sold",
+            "unit_price": "unit_price",
+            "currency_id": "currency_id",
+            "agreed_payment_date": "agreed_payment_date",
+            "agreed_delivery_date": "agreed_delivery_date",
+            "agreed_delivery_location_id": "agreed_delivery_location_id",
+        }
+    )
+
+    # Converting to pd.datetime first
+    fact_sales_order["created_date"] = pd.to_datetime(
+        fact_sales_order["created_date"],
+        format="mixed",
+    )
+    fact_sales_order["last_updated_date"] = pd.to_datetime(
+        fact_sales_order["last_updated_date"],
+        format="mixed",
+    )
+
+    # Extracting time and date separately
+    fact_sales_order["created_time"] = fact_sales_order["created_date"].dt.time
+    fact_sales_order["created_date"] = fact_sales_order["created_date"].dt.date
+
+    # Extracting time and date separately
+    fact_sales_order["last_updated_time"] = fact_sales_order[
+        "last_updated_date"
+    ].dt.time
+    fact_sales_order["last_updated_date"] = fact_sales_order[
+        "last_updated_date"
+    ].dt.date
+
+    fact_sales_order = fact_sales_order[
+        [
+            "sales_order_id",
+            "created_date",
+            "created_time",
+            "last_updated_date",
+            "last_updated_time",
+            "sales_staff_id",
+            "counterparty_id",
+            "units_sold",
+            "unit_price",
+            "currency_id",
+            "design_id",
+            "agreed_payment_date",
+            "agreed_delivery_date",
+            "agreed_delivery_location_id",
+        ]
+    ]
+
+    return fact_sales_order
 
 
 def transform_fact_purchase_orders(transactions, dim_date):
@@ -189,7 +288,7 @@ def lambda_handler(event, context):
     # dim_payment_type
 
     # fact_sales_order based on (transactions, dim_date)
-    
+
     # NOT NEEDED FOR THE MVP
     # fact_purchase_orders based on (transactions, dim_date)
     # fact_payment based on (payments, dim_date, payment_types)
@@ -199,6 +298,21 @@ def lambda_handler(event, context):
 
 # For testing purposes
 if __name__ == "__main__":
-    with open("src/event_payload.json") as f:
-        event = json.load(f)
-    lambda_handler(event, None)
+    # with open("src/event_payload.json") as f:
+    #     event = json.load(f)
+    # lambda_handler(event, None)
+    with open("sales_order.json") as f:
+        data = json.loads(f.read())
+
+    # print(address_data[0]['created_at'], address_data[0]['last_updated'])
+    # dates = list(pd.DataFrame(address_data)['created_at'])
+    # + list(pd.DataFrame(address_data)['last_updated'])
+    # dim_date = create_dim_date(dates)
+    # print(dim_date)
+
+    # dim_address = transform_dim_location(address_data)
+    # print(dim_address)
+    fact_sales_order = transform_fact_sales_order(data)
+    print(fact_sales_order.head())
+    with open("sales_order.txt", mode="w") as f:
+        f.write(str(fact_sales_order.head()))
