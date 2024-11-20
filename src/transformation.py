@@ -119,66 +119,46 @@ def transform_dim_counterparty(counterparty_data, address_data):
 
 def transform_dim_currency(currency_data):
     """
-    Transforms raw currency data into dim_currency.
-
-    ARGS:
-    currency_data = [
-        [1, 'GBP', datetime(2022, 11, 3, 14, 20, 49, 962000),
-        datetime(2022, 11, 3, 14, 20, 49, 962000)],
-        [2, 'USD', datetime(2022, 11, 3, 14, 20, 49, 962000),
-    ]
-
-    RETURNS:
-    DataFrame for dim_currency.
+    Transforms currency data into dim_currency.
     """
-    currency_mapping = {
-        "USD": "US Dollar",
-        "EUR": "Euro",
-        "GBP": "British Pound",
-        "JPY": "Japanese Yen",
-    }
-
-    if not currency_data:
-        logger.warning("No currency data provided.")
-        return None
-
-    dim_currency = pd.DataFrame(
-        currency_data,
-        columns=["currency_id", "currency_code", "created_at", "last_updated"],
-    )
-
-    dim_currency["currency_name"] = (
-        dim_currency["currency_code"]
-        .map(currency_mapping)
-        .fillna("Unknown Currency")
-    )
-
-    dim_currency = dim_currency[
-        [
-            "currency_id",
-            "currency_code",
-            "currency_name",
-        ]
-    ]
-
-    dim_currency.drop_duplicates(inplace=True)
-
-    return dim_currency
+    pass
 
 
-def transform_dim_staff(staff_data):
+def transform_dim_staff(staff_data, department_data):
     """
     Transform records into the required format for dim_staff.
     """
-    return pd.DataFrame(staff_data).rename(
-        columns={
-            "staff_id": "id",
-            "first_name": "first_name",
-            "last_name": "last_name",
-            "department_id": "department_id",
-            "email_address": "email",
-        }
+    staff = pd.DataFrame(staff_data)
+    department = pd.DataFrame(department_data)
+    # Dropping unnecessary columns
+    department.drop(
+        columns=["manager", "created_at", "last_updated"], inplace=True
     )
+    staff.drop(columns=["created_at", "last_updated"], inplace=True)
+
+    dim_staff = pd.merge(staff, department, on="department_id", how="inner")
+    dim_staff.drop(columns=["department_id", "department_id"], inplace=True)
+
+    # Reordering columns
+    dim_staff = dim_staff[
+        [
+            "staff_id",
+            "first_name",
+            "last_name",
+            "department_name",
+            "location",
+            "email_address",
+        ]
+    ]
+
+    # Converting datatypes, not sure if its necessary
+    # dim_staff["staff_id"] = dim_staff["staff_id"].astype(int)
+    # dim_staff["first_name"] = dim_staff["first_name"].astype(str)
+    # dim_staff["last_name"] = dim_staff["last_name"].astype(str)
+    # dim_staff["department_name"] = dim_staff["department_name"].astype(str)
+    # dim_staff["location"] = dim_staff["department_location"].astype(str)
+
+    return dim_staff
 
 
 def transform_dim_design(design_data):
@@ -376,8 +356,11 @@ if __name__ == "__main__":
     # with open("src/event_payload.json") as f:
     #     event = json.load(f)
     # lambda_handler(event, None)
-    with open("currency_data.json") as f:
-        data = json.loads(f.read())
+    with open("department.json", "r") as file1, open(
+        "staff.json", "r"
+    ) as file2:
+        data1 = json.loads(file1.read())
+        data2 = json.loads(file2.read())
 
     # print(address_data[0]['created_at'], address_data[0]['last_updated'])
     # dates = list(pd.DataFrame(address_data)['created_at'])
@@ -387,12 +370,9 @@ if __name__ == "__main__":
 
     # dim_address = transform_dim_location(address_data)
     # print(dim_address)
-
     # fact_sales_order = transform_fact_sales_order(data)
     # print(fact_sales_order.head())
     # with open("sales_order.txt", mode="w") as f:
     #     f.write(str(fact_sales_order.head()))
-
-    dim_currency = transform_dim_currency(data)
-    if dim_currency is not None:
-        print(dim_currency)
+    dim_staff = transform_dim_staff(data2, data1)
+    print(dim_staff.head())
