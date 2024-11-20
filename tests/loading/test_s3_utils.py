@@ -97,7 +97,7 @@ class TestReadFileList:
         with pytest.raises(Exception):
             read_file_list(mock_s3, mock_processed_bucket, json_key)
 
-        assert "Unexpected error" in caplog.text
+        assert "Error reading file list" in caplog.text
 
 
 class TestProcessParquetFiles:
