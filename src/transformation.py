@@ -78,10 +78,22 @@ def transform_dim_location(address_data):
 
 
 def transform_dim_counterparty(counterparty_data, address_data):
+    """
+    Merges counterparty data and address data and transforms
+    the merged data into dim_counterparty
+    """
     dim_counterparty = pd.DataFrame(counterparty_data)
     dim_address = pd.DataFrame(address_data)
     dim_address.drop(columns=["created_at", "last_updated"], inplace=True)
-    dim_counterparty.drop(columns=["created_at", "last_updated", "commercial_contact", "delivery_contact"], inplace=True)
+    dim_counterparty.drop(
+        columns=[
+            "created_at",
+            "last_updated",
+            "commercial_contact",
+            "delivery_contact"
+        ],
+        inplace=True
+    )
     dim_address = dim_address.rename(
         columns={
             "address_line_1": "counterparty_legal_address_line_1",
