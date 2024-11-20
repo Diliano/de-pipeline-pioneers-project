@@ -93,9 +93,6 @@ def transform_dim_currency(currency_data):
         [1, 'GBP', datetime(2022, 11, 3, 14, 20, 49, 962000),
         datetime(2022, 11, 3, 14, 20, 49, 962000)],
         [2, 'USD', datetime(2022, 11, 3, 14, 20, 49, 962000),
-          datetime(2022, 11, 3, 14, 20, 49, 962000)],
-        [3, 'EUR', datetime(2022, 11, 3, 14, 20, 49, 962000),
-          datetime(2022, 11, 3, 14, 20, 49, 962000)]
     ]
 
     RETURNS:
