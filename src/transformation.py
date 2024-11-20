@@ -119,9 +119,51 @@ def transform_dim_counterparty(counterparty_data, address_data):
 
 def transform_dim_currency(currency_data):
     """
-    Transforms currency data into dim_currency.
+    Transforms raw currency data into dim_currency.
+
+    ARGS:
+    currency_data = [
+        [1, 'GBP', datetime(2022, 11, 3, 14, 20, 49, 962000),
+        datetime(2022, 11, 3, 14, 20, 49, 962000)],
+        [2, 'USD', datetime(2022, 11, 3, 14, 20, 49, 962000),
+    ]
+
+    RETURNS:
+    DataFrame for dim_currency.
     """
-    pass
+    currency_mapping = {
+        "USD": "US Dollar",
+        "EUR": "Euro",
+        "GBP": "British Pound",
+        "JPY": "Japanese Yen",
+    }
+
+    if not currency_data:
+        logger.warning("No currency data provided.")
+        return None
+
+    dim_currency = pd.DataFrame(
+        currency_data,
+        columns=["currency_id", "currency_code", "created_at", "last_updated"],
+    )
+
+    dim_currency["currency_name"] = (
+        dim_currency["currency_code"]
+        .map(currency_mapping)
+        .fillna("Unknown Currency")
+    )
+
+    dim_currency = dim_currency[
+        [
+            "currency_id",
+            "currency_code",
+            "currency_name",
+        ]
+    ]
+
+    dim_currency.drop_duplicates(inplace=True)
+
+    return dim_currency
 
 
 def transform_dim_staff(staff_data):
@@ -334,7 +376,7 @@ if __name__ == "__main__":
     # with open("src/event_payload.json") as f:
     #     event = json.load(f)
     # lambda_handler(event, None)
-    with open("sales_order.json") as f:
+    with open("currency_data.json") as f:
         data = json.loads(f.read())
 
     # print(address_data[0]['created_at'], address_data[0]['last_updated'])
@@ -345,7 +387,12 @@ if __name__ == "__main__":
 
     # dim_address = transform_dim_location(address_data)
     # print(dim_address)
-    fact_sales_order = transform_fact_sales_order(data)
-    print(fact_sales_order.head())
-    with open("sales_order.txt", mode="w") as f:
-        f.write(str(fact_sales_order.head()))
+
+    # fact_sales_order = transform_fact_sales_order(data)
+    # print(fact_sales_order.head())
+    # with open("sales_order.txt", mode="w") as f:
+    #     f.write(str(fact_sales_order.head()))
+
+    dim_currency = transform_dim_currency(data)
+    if dim_currency is not None:
+        print(dim_currency)
