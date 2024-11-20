@@ -38,11 +38,11 @@ def mock_processed_bucket(mock_s3):
 class TestReadFileList:
     def test_read_file_list(self, mock_s3, mock_processed_bucket, caplog):
         # Arrange
-        json_key = "processed/file_list.json"
+        json_key = f"{mock_processed_bucket}/file_list.json"
         json_content = {
             "files": [
-                "s3://processed-bucket/table1/file1.parquet",
-                "s3://processed-bucket/table2/file2.parquet",
+                f"s3://{mock_processed_bucket}/table1/file1.parquet",
+                f"s3://{mock_processed_bucket}/table2/file2.parquet",
             ]
         }
 
