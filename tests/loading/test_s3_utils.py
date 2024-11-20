@@ -137,9 +137,7 @@ class TestProcessParquetFiles:
         pd.testing.assert_frame_equal(data_frames[0], df1)
         pd.testing.assert_frame_equal(data_frames[1], df2)
 
-    def test_clienterror_given_invalid_uri(
-        mock_s3, mock_processed_bucket, caplog
-    ):
+    def test_clienterror_given_invalid_uri(mock_s3, caplog):
         # Arrange
         invalid_uri = "invalid-uri"
         # Act
