@@ -86,9 +86,37 @@ def transform_dim_counterparty(counterparty_data):
 
 def transform_dim_currency(currency_data):
     """
-    Transforms currency data into dim_currency.
+    Transforms raw currency data into dim_currency.
+
+    ARGS:
+    currency_data: List of dictionaries containing currency information.
+    [
+        {"currency_code": "USD", "currency_name": "US Dollar"},
+        {"currency_code": "EUR", "currency_name": "Euro"},
+        {"currency_code": "GBP", "currency_name": "British Pound"}
+    ]
+    
+    RETURNS:
+    DataFrame for dim_currency.
     """
-    pass
+
+    if not currency_data:
+        logger.warning("No currency data provided.")
+        return None
+
+    dim_curreny = pd.DataFrame(currency_data)
+
+    if not all(col in dim_curreny.columns for col in ['currency_code', 'currency_name']):
+        logger.warning("Currency data missing required columns.")
+        return None
+
+    dim_curreny['currency_id'] = range(1, len(dim_curreny) + 1)
+
+    dim_curreny = dim_curreny[['currency_id', 'currency_code', 'currency_name']]
+
+    dim_curreny.drop_duplicates(inplace=True)
+
+    return dim_curreny
 
 
 def transform_dim_staff(staff_data):
@@ -301,7 +329,7 @@ if __name__ == "__main__":
     # with open("src/event_payload.json") as f:
     #     event = json.load(f)
     # lambda_handler(event, None)
-    with open("sales_order.json") as f:
+    with open("currency_data.json") as f:
         data = json.loads(f.read())
 
     # print(address_data[0]['created_at'], address_data[0]['last_updated'])
@@ -312,7 +340,13 @@ if __name__ == "__main__":
 
     # dim_address = transform_dim_location(address_data)
     # print(dim_address)
-    fact_sales_order = transform_fact_sales_order(data)
-    print(fact_sales_order.head())
-    with open("sales_order.txt", mode="w") as f:
-        f.write(str(fact_sales_order.head()))
+
+    # fact_sales_order = transform_fact_sales_order(data)
+    # print(fact_sales_order.head())
+    # with open("sales_order.txt", mode="w") as f:
+    #     f.write(str(fact_sales_order.head()))
+
+
+    # dim_currency = transform_dim_currency(data)
+    # if dim_currency is not None:
+    #     print(dim_currency)
