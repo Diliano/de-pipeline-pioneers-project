@@ -33,64 +33,66 @@ def mock_processed_bucket(mock_s3):
     return bucket_name
 
 
-def test_read_file_list(mock_s3, mock_processed_bucket, caplog):
-    # Arrange
-    json_key = "processed/file_list.json"
-    json_content = {
-        "files": [
-            "s3://processed-bucket/table1/file1.parquet",
-            "s3://processed-bucket/table2/file2.parquet",
-        ]
-    }
+class TestReadFileList:
+    def test_read_file_list(self, mock_s3, mock_processed_bucket, caplog):
+        # Arrange
+        json_key = "processed/file_list.json"
+        json_content = {
+            "files": [
+                "s3://processed-bucket/table1/file1.parquet",
+                "s3://processed-bucket/table2/file2.parquet",
+            ]
+        }
 
-    mock_s3.put_object(
-        Bucket=mock_processed_bucket,
-        Key=json_key,
-        Body=json.dumps(json_content),
-    )
-    # Act
-    file_paths = read_file_list(mock_s3, mock_processed_bucket, json_key)
-    # Assert
-    assert file_paths == json_content["files"]
-    assert "Read file list" in caplog.text
+        mock_s3.put_object(
+            Bucket=mock_processed_bucket,
+            Key=json_key,
+            Body=json.dumps(json_content),
+        )
+        # Act
+        file_paths = read_file_list(mock_s3, mock_processed_bucket, json_key)
+        # Assert
+        assert file_paths == json_content["files"]
+        assert "Read file list" in caplog.text
 
+    def test_exception_given_missing_bucket(self, mock_s3, caplog):
+        # Arrange
+        bucket_name = "nonexistent-bucket"
+        json_key = "file_list.json"
+        # Act + Assert
+        with pytest.raises(ClientError) as excinfo:
+            read_file_list(mock_s3, bucket_name, json_key)
 
-def test_exception_given_missing_bucket(mock_s3, caplog):
-    # Arrange
-    bucket_name = "nonexistent-bucket"
-    json_key = "file_list.json"
-    # Act + Assert
-    with pytest.raises(ClientError) as excinfo:
-        read_file_list(mock_s3, bucket_name, json_key)
+        assert "NoSuchBucket" in str(excinfo.value)
+        assert "Error reading file list from S3" in caplog.text
 
-    assert "NoSuchBucket" in str(excinfo.value)
-    assert "Error reading file list from S3" in caplog.text
+    def test_exception_given_missing_key(
+        self, mock_s3, mock_processed_bucket, caplog
+    ):
+        # Arrange
+        json_key = "missing_file_list.json"
 
+        # Act + Assert
+        with pytest.raises(ClientError) as excinfo:
+            read_file_list(mock_s3, mock_processed_bucket, json_key)
 
-def test_exception_given_missing_key(mock_s3, mock_processed_bucket, caplog):
-    # Arrange
-    json_key = "missing_file_list.json"
+        assert "NoSuchKey" in str(excinfo.value)
+        assert "Error reading file list from S3" in caplog.text
 
-    # Act + Assert
-    with pytest.raises(ClientError) as excinfo:
-        read_file_list(mock_s3, mock_processed_bucket, json_key)
+    def test_handles_non_clienterror_exceptions(
+        self, mock_s3, mock_processed_bucket, caplog
+    ):
+        # Arrange
+        json_key = "file_list.json"
+        invalid_json_content = "invalid-json-content"  # invalid JSON
 
-    assert "NoSuchKey" in str(excinfo.value)
-    assert "Error reading file list from S3" in caplog.text
+        mock_s3.put_object(
+            Bucket=mock_processed_bucket,
+            Key=json_key,
+            Body=invalid_json_content,
+        )
+        # Act + Assert
+        with pytest.raises(Exception):
+            read_file_list(mock_s3, mock_processed_bucket, json_key)
 
-
-def test_handles_non_clienterror_exceptions(
-    mock_s3, mock_processed_bucket, caplog
-):
-    # Arrange
-    json_key = "file_list.json"
-    invalid_json_content = "invalid-json-content"  # invalid JSON
-
-    mock_s3.put_object(
-        Bucket=mock_processed_bucket, Key=json_key, Body=invalid_json_content
-    )
-    # Act + Assert
-    with pytest.raises(Exception):
-        read_file_list(mock_s3, mock_processed_bucket, json_key)
-
-    assert "Unexpected error" in caplog.text
+        assert "Unexpected error" in caplog.text
