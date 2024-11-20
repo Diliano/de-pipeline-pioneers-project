@@ -98,7 +98,7 @@ def transform_dim_currency(currency_data):
     RETURNS:
     DataFrame for dim_currency.
     """
-    curremcy_mapping = {
+    currency_mapping = {
         "USD": "US Dollar",
         "EUR": "Euro",
         "GBP": "British Pound",
@@ -116,7 +116,7 @@ def transform_dim_currency(currency_data):
 
     dim_currency["currency_name"] = (
         dim_currency["currency_code"]
-        .map(curremcy_mapping)
+        .map(currency_mapping)
         .fillna("Unknown Currency")
     )
 
