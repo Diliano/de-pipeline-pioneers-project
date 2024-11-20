@@ -129,7 +129,7 @@ def transform_dim_currency(currency_data):
             "currency_code",
             "currency_name",
             "created_at",
-            "updated_at",
+            "last_updated",
         ]
     ]
 
@@ -365,6 +365,6 @@ if __name__ == "__main__":
     # with open("sales_order.txt", mode="w") as f:
     #     f.write(str(fact_sales_order.head()))
 
-    # dim_currency = transform_dim_currency(data)
-    # if dim_currency is not None:
-    #     print(dim_currency)
+    dim_currency = transform_dim_currency(data)
+    if dim_currency is not None:
+        print(dim_currency)
