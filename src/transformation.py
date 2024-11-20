@@ -95,7 +95,7 @@ def transform_dim_currency(currency_data):
         {"currency_code": "EUR", "currency_name": "Euro"},
         {"currency_code": "GBP", "currency_name": "British Pound"}
     ]
-    
+
     RETURNS:
     DataFrame for dim_currency.
     """
@@ -106,13 +106,18 @@ def transform_dim_currency(currency_data):
 
     dim_curreny = pd.DataFrame(currency_data)
 
-    if not all(col in dim_curreny.columns for col in ['currency_code', 'currency_name']):
+    if not all(
+        col in dim_curreny.columns
+        for col in ["currency_code", "currency_name"]
+    ):
         logger.warning("Currency data missing required columns.")
         return None
 
-    dim_curreny['currency_id'] = range(1, len(dim_curreny) + 1)
+    dim_curreny["currency_id"] = range(1, len(dim_curreny) + 1)
 
-    dim_curreny = dim_curreny[['currency_id', 'currency_code', 'currency_name']]
+    dim_curreny = dim_curreny[
+        ["currency_id", "currency_code", "currency_name"]
+    ]
 
     dim_curreny.drop_duplicates(inplace=True)
 
@@ -345,7 +350,6 @@ if __name__ == "__main__":
     # print(fact_sales_order.head())
     # with open("sales_order.txt", mode="w") as f:
     #     f.write(str(fact_sales_order.head()))
-
 
     # dim_currency = transform_dim_currency(data)
     # if dim_currency is not None:
