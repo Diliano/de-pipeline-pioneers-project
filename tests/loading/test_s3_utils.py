@@ -23,9 +23,18 @@ def mock_s3(aws_credentials):
         yield boto3.client("s3", region_name="eu-west-2")
 
 
-def test_read_file_list(mock_s3, caplog):
-    # Arrange
+@pytest.fixture(scope="function")
+def mock_processed_bucket(mock_s3):
     bucket_name = "processed-bucket"
+    mock_s3.create_bucket(
+        Bucket=bucket_name,
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+    )
+    return bucket_name
+
+
+def test_read_file_list(mock_s3, mock_processed_bucket, caplog):
+    # Arrange
     json_key = "processed/file_list.json"
     json_content = {
         "files": [
@@ -34,15 +43,13 @@ def test_read_file_list(mock_s3, caplog):
         ]
     }
 
-    mock_s3.create_bucket(
-        Bucket=bucket_name,
-        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-    )
     mock_s3.put_object(
-        Bucket=bucket_name, Key=json_key, Body=json.dumps(json_content)
+        Bucket=mock_processed_bucket,
+        Key=json_key,
+        Body=json.dumps(json_content),
     )
     # Act
-    file_paths = read_file_list(mock_s3, bucket_name, json_key)
+    file_paths = read_file_list(mock_s3, mock_processed_bucket, json_key)
     # Assert
     assert file_paths == json_content["files"]
     assert "Read file list" in caplog.text
@@ -60,38 +67,30 @@ def test_exception_given_missing_bucket(mock_s3, caplog):
     assert "Error reading file list from S3" in caplog.text
 
 
-def test_exception_given_missing_key(mock_s3, caplog):
+def test_exception_given_missing_key(mock_s3, mock_processed_bucket, caplog):
     # Arrange
-    bucket_name = "processed-bucket"
     json_key = "missing_file_list.json"
 
-    mock_s3.create_bucket(
-        Bucket=bucket_name,
-        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-    )
     # Act + Assert
     with pytest.raises(ClientError) as excinfo:
-        read_file_list(mock_s3, bucket_name, json_key)
+        read_file_list(mock_s3, mock_processed_bucket, json_key)
 
     assert "NoSuchKey" in str(excinfo.value)
     assert "Error reading file list from S3" in caplog.text
 
 
-def test_handles_non_clienterror_exceptions(mock_s3, caplog):
+def test_handles_non_clienterror_exceptions(
+    mock_s3, mock_processed_bucket, caplog
+):
     # Arrange
-    bucket_name = "processed-bucket"
     json_key = "file_list.json"
     invalid_json_content = "invalid-json-content"  # invalid JSON
 
-    mock_s3.create_bucket(
-        Bucket=bucket_name,
-        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-    )
     mock_s3.put_object(
-        Bucket=bucket_name, Key=json_key, Body=invalid_json_content
+        Bucket=mock_processed_bucket, Key=json_key, Body=invalid_json_content
     )
     # Act + Assert
     with pytest.raises(Exception):
-        read_file_list(mock_s3, bucket_name, json_key)
+        read_file_list(mock_s3, mock_processed_bucket, json_key)
 
     assert "Unexpected error" in caplog.text
