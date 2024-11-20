@@ -128,8 +128,6 @@ def transform_dim_currency(currency_data):
             "currency_id",
             "currency_code",
             "currency_name",
-            "created_at",
-            "last_updated",
         ]
     ]
 
