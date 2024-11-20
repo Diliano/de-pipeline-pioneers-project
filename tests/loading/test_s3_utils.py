@@ -137,7 +137,7 @@ class TestProcessParquetFiles:
         pd.testing.assert_frame_equal(data_frames[0], df1)
         pd.testing.assert_frame_equal(data_frames[1], df2)
 
-    def test_clienterror_given_invalid_uri(mock_s3, caplog):
+    def test_clienterror_given_invalid_uri(self, mock_s3, caplog):
         # Arrange
         invalid_uri = "invalid-uri"
         # Act
@@ -145,3 +145,13 @@ class TestProcessParquetFiles:
         # Assert
         assert len(data_frames) == 0
         assert f"Invalid S3 URI: {invalid_uri}" in caplog.text
+
+    def test_clienterror_given_missing_bucket(self, mock_s3, caplog):
+        # Arrange
+        file_path = "s3://nonexistent-bucket/table1/file1.parquet"
+        # Act
+        data_frames = process_parquet_files(mock_s3, [file_path])
+        # Assert
+        assert len(data_frames) == 0
+        assert "Error accessing Parquet file from S3" in caplog.text
+        assert "NoSuchBucket" in caplog.text
