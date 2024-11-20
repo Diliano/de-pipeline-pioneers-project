@@ -97,18 +97,10 @@ def transform_dim_staff(staff_data, department_data):
     """
     dim_staff = pd.DataFrame(staff_data)
     dim_department = pd.DataFrame(department_data)
-    dim_department.drop(columns=["manager", "created_at", "last_updated"])
-    dim_staff.drop(colums=["created_at", "last_updated"], inplace=True)
-    dim_staff = dim_staff.rename(
-        columns={
-            "staff_id": "id",
-            "first_name": "first_name",
-            "last_name": "last_name",
-            "department_name": "department_name",
-            "email_address": "email",
-            "location": "location",
-        }
-    )
+    dim_department.drop(
+        columns=["manager", "created_at", "last_updated"], inplace=True)
+    dim_staff.drop(columns=["created_at", "last_updated"], inplace=True)
+
     merged_ds = pd.merge(
         dim_staff,
         dim_department,
@@ -117,7 +109,7 @@ def transform_dim_staff(staff_data, department_data):
         how="inner"
     )
     merged_ds.drop(columns=["department_id", "department_id"], inplace=True)
-    
+
     return merged_ds
 
 
@@ -128,7 +120,7 @@ def transform_dim_design(design_data):
     pass
 
 
-def transform_dim_transaction(transaction_dat.):
+def transform_dim_transaction(transaction_data):
     """
     Transforms transaction data into dim_transaction.
     """
