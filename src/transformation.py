@@ -64,12 +64,12 @@ def transform_dim_location(address_data):
     dim_address.drop(columns=["created_at", "last_updated"], inplace=True)
     dim_address = dim_address.rename(
         columns={
-            "address_id": "id",
-            "address_line_1": "line_1",
-            "address_line_2": "line_2",
+            "address_id": "location_id",
+            "address_line_1": "address_line_1",
+            "address_line_2": "address_line_2",
             "district": "district",
             "city": "city",
-            "postal_code": "post_code",
+            "postal_code": "postal_code",
             "country": "country",
             "phone": "phone",
         }
@@ -90,9 +90,9 @@ def transform_dim_counterparty(counterparty_data, address_data):
             "created_at",
             "last_updated",
             "commercial_contact",
-            "delivery_contact"
+            "delivery_contact",
         ],
-        inplace=True
+        inplace=True,
     )
     dim_address = dim_address.rename(
         columns={
@@ -102,7 +102,7 @@ def transform_dim_counterparty(counterparty_data, address_data):
             "city": "counterparty_legal_city",
             "postal_code": "counterparty_legal_postal_code",
             "country": "counterparty_legal_country",
-            "phone": "counterparty_legal_phone_number"
+            "phone": "counterparty_legal_phone_number",
         }
     )
     merged_df = pd.merge(
@@ -110,7 +110,7 @@ def transform_dim_counterparty(counterparty_data, address_data):
         dim_address,
         left_on="legal_address_id",
         right_on="address_id",
-        how="inner"
+        how="inner",
     )
     merged_df.drop(columns=["legal_address_id", "address_id"], inplace=True)
 
@@ -119,9 +119,53 @@ def transform_dim_counterparty(counterparty_data, address_data):
 
 def transform_dim_currency(currency_data):
     """
-    Transforms currency data into dim_currency.
+    Transforms raw currency data into dim_currency.
+
+    ARGS:
+    currency_data = [{
+            "currency_id": 1,
+            "currency_code": "GBP",
+            "created_at": "2022-11-03 14:20:49.962000",
+            "last_updated": "2022-11-03 14:20:49.962000"
+        }
+    ]
+
+    RETURNS:
+    DataFrame for dim_currency.
     """
-    pass
+    currency_mapping = {
+        "USD": "US Dollar",
+        "EUR": "Euro",
+        "GBP": "British Pound",
+        "JPY": "Japanese Yen",
+    }
+
+    if not currency_data:
+        logger.warning("No currency data provided.")
+        return None
+
+    dim_currency = pd.DataFrame(
+        currency_data,
+        columns=["currency_id", "currency_code", "created_at", "last_updated"],
+    )
+
+    dim_currency["currency_name"] = (
+        dim_currency["currency_code"]
+        .map(currency_mapping)
+        .fillna("Unknown Currency")
+    )
+
+    dim_currency = dim_currency[
+        [
+            "currency_id",
+            "currency_code",
+            "currency_name",
+        ]
+    ]
+
+    dim_currency.drop_duplicates(inplace=True)
+
+    return dim_currency
 
 
 def transform_dim_staff(staff_data, department_data):
@@ -139,6 +183,13 @@ def transform_dim_staff(staff_data, department_data):
     dim_staff = pd.merge(staff, department, on="department_id", how="inner")
     dim_staff.drop(columns=["department_id", "department_id"], inplace=True)
 
+    # Converting datatypes, not sure if its necessary
+    # dim_staff["staff_id"] = dim_staff["staff_id"].astype(int)
+    # dim_staff["first_name"] = dim_staff["first_name"].astype(str)
+    # dim_staff["last_name"] = dim_staff["last_name"].astype(str)
+    # dim_staff["department_name"] = dim_staff["department_name"].astype(str)
+    # dim_staff["location"] = dim_staff["department_location"].astype(str)
+
     # Reordering columns
     dim_staff = dim_staff[
         [
@@ -150,13 +201,6 @@ def transform_dim_staff(staff_data, department_data):
             "email_address",
         ]
     ]
-
-    # Converting datatypes, not sure if its necessary
-    # dim_staff["staff_id"] = dim_staff["staff_id"].astype(int)
-    # dim_staff["first_name"] = dim_staff["first_name"].astype(str)
-    # dim_staff["last_name"] = dim_staff["last_name"].astype(str)
-    # dim_staff["department_name"] = dim_staff["department_name"].astype(str)
-    # dim_staff["location"] = dim_staff["department_location"].astype(str)
 
     return dim_staff
 
@@ -397,28 +441,3 @@ def lambda_handler(event, context):
     # fact_payment based on (payments, dim_date, payment_types)
     logger.info("Transformation process completed")
     return {"statusCode": 200, "body": "Transformation complete"}
-
-
-# For testing purposes
-if __name__ == "__main__":
-    # with open("src/event_payload.json") as f:
-    #     event = json.load(f)
-    # lambda_handler(event, None)
-    with open("design.json") as f:
-        data = json.loads(f.read())
-
-    # print(address_data[0]['created_at'], address_data[0]['last_updated'])
-    # dates = list(pd.DataFrame(address_data)['created_at'])
-    # + list(pd.DataFrame(address_data)['last_updated'])
-    # dim_date = create_dim_date(dates)
-    # print(dim_date)
-
-    # dim_address = transform_dim_location(address_data)
-    # print(dim_address)
-    # fact_sales_order = transform_fact_sales_order(data)
-    # print(fact_sales_order.dtypes)
-
-    dim_design = transform_dim_design(data)
-    print(dim_design.dtypes)
-    with open("testing_data.txt", mode="w") as f:
-        f.write(str(dim_design.head()))
