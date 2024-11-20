@@ -1,10 +1,12 @@
-from src.loading.code.s3_utils import read_file_list
+from src.loading.code.s3_utils import read_file_list, process_parquet_files
 import pytest
 from moto import mock_aws
 import boto3
 import json
 import os
 from botocore.exceptions import ClientError
+import pandas as pd
+from io import BytesIO
 
 
 @pytest.fixture(scope="function")
@@ -96,3 +98,41 @@ class TestReadFileList:
             read_file_list(mock_s3, mock_processed_bucket, json_key)
 
         assert "Unexpected error" in caplog.text
+
+
+class TestProcessParquetFiles:
+    def test_process_parquet_files(self, mock_s3, mock_processed_bucket):
+        # Arrange
+        parquet_key1 = "table1/file1.parquet"
+        parquet_key2 = "table2/file2.parquet"
+        file_paths = [
+            f"s3://{mock_processed_bucket}/{parquet_key1}",
+            f"s3://{mock_processed_bucket}/{parquet_key2}",
+        ]
+
+        df1 = pd.DataFrame({"col1": [1, 2], "col2": ["a", "b"]})
+        df2 = pd.DataFrame({"col3": [3, 4], "col4": ["c", "d"]})
+
+        buffer1 = BytesIO()
+        buffer2 = BytesIO()
+        df1.to_parquet(buffer1, index=False)
+        df2.to_parquet(buffer2, index=False)
+        buffer1.seek(0)
+        buffer2.seek(0)
+
+        mock_s3.put_object(
+            Bucket=mock_processed_bucket,
+            Key=parquet_key1,
+            Body=buffer1.getvalue(),
+        )
+        mock_s3.put_object(
+            Bucket=mock_processed_bucket,
+            Key=parquet_key2,
+            Body=buffer2.getvalue(),
+        )
+        # Act
+        data_frames = process_parquet_files(mock_s3, file_paths)
+        # Assert
+        assert len(data_frames) == 2
+        pd.testing.assert_frame_equal(data_frames[0], df1)
+        pd.testing.assert_frame_equal(data_frames[1], df2)
