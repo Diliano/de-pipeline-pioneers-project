@@ -24,7 +24,7 @@ def load_data_from_s3_ingestion(key):
 
     ARGS:
         key: s3 key file
-    
+
     RETURNS:
         data from the ingestion bucket
     """
@@ -367,10 +367,8 @@ def transform_fact_payment(payments_data, dim_date, payment_types_data):
 
 
 def transform_data(data):
-    """
-    
-    """
-    
+    """ """
+
     # return {
     #     "fact_sales_order": fact_sales_order,
     #     "dim_date": dim_date,
