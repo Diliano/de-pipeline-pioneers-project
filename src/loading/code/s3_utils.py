@@ -23,7 +23,7 @@ def read_file_list(s3_client, bucket_name, key):
         logger.error(f"Error reading file list from S3: {e}", exc_info=True)
         raise
     except Exception as e:
-        logger.error(f"Unexpected error: {e}", exc_info=True)
+        logger.error(f"Error reading file list: {e}", exc_info=True)
         raise
 
 
@@ -45,9 +45,14 @@ def process_parquet_files(s3_client, file_paths):
             data_frames.append(df)
 
             logger.info(f"Read Parquet file: {file_path}")
+        except ClientError as e:
+            logger.error(
+                f"Error accessing Parquet file from S3: {file_path}: {e}",
+                exc_info=True,
+            )
         except Exception as e:
             logger.error(
-                f"Error processing file {file_path}: {e}", exc_info=True
+                f"Error processing file: {file_path}: {e}", exc_info=True
             )
             continue
     return data_frames
