@@ -48,7 +48,7 @@ resource "aws_cloudwatch_dashboard" "ingestion_lambda_dashboard" {
         }
       },
 
-      # Error count widget
+      # Logged error count widget
       {
         "type" : "metric",
         "x" : 12,
@@ -57,9 +57,9 @@ resource "aws_cloudwatch_dashboard" "ingestion_lambda_dashboard" {
         "height" : 6,
         "properties" : {
           "metrics" : [
-            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.ingestion_lambda.function_name]
+            ["IngestionLambda", "IngestionLambdaErrorCount"]
           ],
-          "title" : "Error Count",
+          "title" : "Logged Error Count",
           "stat" : "Sum",
           "period" : 600,
           "region" : "eu-west-2"
