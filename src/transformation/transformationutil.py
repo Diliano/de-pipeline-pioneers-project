@@ -551,6 +551,63 @@ def transform_dim_location(address_data):
         )
 
 
+def transform_dim_transaction(transaction_data):
+    """
+    Transforms raw transaction data into dim_transaction
+    with error handling and validation.
+
+    Args:
+        transaction_data (list[dict] or pd.DataFrame):
+            Raw transaction data.
+
+    Returns:
+        pd.DataFrame: Transformed dim_transaction DataFrame
+        or None if an error occurs.
+    """
+    try:
+        dim_transaction = (
+            pd.DataFrame(transaction_data)
+            if not isinstance(transaction_data, pd.DataFrame)
+            else transaction_data.copy()
+        )
+
+        dim_transaction.drop(
+            columns=['created_at', 'last_updated'],
+            inplace=True)
+        return dim_transaction
+    except Exception as err:
+        logger.error(f"Unexpected error occurred with dim_transaction: {err}")
+        # return None
+
+
+def transform_dim_payment_types(payment_types_data, ):
+    """
+    Transforms raw payment types data into dim_payment_type
+    with error handling and validation.
+
+    Args:
+        payment_types_data (list[dict] or pd.DataFrame):
+            Raw payment types data.
+
+    Returns:
+        pd.DataFrame: Transformed dim_payment_type DataFrame
+        or None if an error occurs.
+    """
+    try:
+        dim_payment_type = (
+            pd.DataFrame(payment_types_data)
+            if not isinstance(payment_types_data, pd.DataFrame)
+            else payment_types_data.copy()
+        )
+        dim_payment_type.drop(
+            columns=['created_at', 'last_updated'],
+            inplace=True)
+        return dim_payment_type
+    except Exception as err:
+        logger.error(f"Unexpected error occurred with dim_payment_type: {err}")
+        # return None
+
+
 def transform_fact_payment(
     payments_data, transactions_data, payment_type_data
 ):
@@ -658,24 +715,32 @@ def transform_fact_payment(
         ]
 
         # Converting data types
-        # fact_payment["payment_id"] = fact_payment["payment_id"].astype(int)
-        # fact_payment["transaction_id"] = fact_payment["transaction_id"].astype(
-        #     int
-        # )
-        # fact_payment["counterparty_id"] = fact_payment[
-        #     "counterparty_id"
-        # ].astype(int)
-        # fact_payment["payment_amount"] = fact_payment["payment_amount"].astype(
-        #     float
-        # )
-        # fact_payment["currency_id"] = fact_payment["currency_id"].astype(int)
-        # fact_payment["payment_type_id"] = fact_payment[
-        #     "payment_type_id"
-        # ].astype(int)
-        # fact_payment["paid"] = fact_payment["paid"].astype(bool)
-        # fact_payment["payment_date"] = pd.to_datetime(
-        #     fact_payment["payment_date"]
-        # ).dt.date
+        fact_payment["payment_id"] = fact_payment[
+            "payment_id"
+        ].astype(int)
+        fact_payment["transaction_id"] = fact_payment[
+            "transaction_id"
+        ].astype(
+            int
+        )
+        fact_payment["counterparty_id"] = fact_payment[
+            "counterparty_id"
+        ].astype(int)
+        fact_payment["payment_amount"] = fact_payment[
+            "payment_amount"
+        ].astype(
+            float
+        )
+        fact_payment["currency_id"] = fact_payment[
+            "currency_id"
+        ].astype(int)
+        fact_payment["payment_type_id"] = fact_payment[
+            "payment_type_id"
+        ].astype(int)
+        fact_payment["paid"] = fact_payment["paid"].astype(bool)
+        fact_payment["payment_date"] = pd.to_datetime(
+            fact_payment["payment_date"]
+        ).dt.date
 
         return fact_payment
     except Exception as err:
