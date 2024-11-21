@@ -2,7 +2,8 @@ from datetime import datetime
 from io import BytesIO
 import logging
 import boto3
-import pandas as pd
+
+# import pandas as pd
 import json
 import os
 
@@ -24,7 +25,7 @@ def load_data_from_s3_ingestion(key):
 
     ARGS:
         key: s3 key file
-    
+
     RETURNS:
         data from the ingestion bucket
     """
@@ -51,7 +52,7 @@ def transform_dim_department(department_data):
     """ """
     pass
 
-    
+
 def transform_fact_purchase_orders(transactions, dim_date):
     """
     Transforms purchase transactions into fact_purchase_orders.
@@ -67,10 +68,8 @@ def transform_fact_payment(payments_data, dim_date, payment_types_data):
 
 
 def transform_data(data):
-    """
-    
-    """
-    
+    """ """
+
     # return {
     #     "fact_sales_order": fact_sales_order,
     #     "dim_date": dim_date,
@@ -106,6 +105,7 @@ def save_transformed_data(dataframes):
             logger.info(
                 f"Saved {table_name} to s3://{S3_PROCESSED_BUCKET}/{s3_key}"
             )
+
 
 # Commented for now
 # TRANSFORMATION_FUNCTIONS = {

@@ -1,13 +1,13 @@
 from unittest.mock import patch
-from src.utils.utils import connect_to_db
+from src.ingestion.utils import connect_to_db
 import logging
 
 # import pytest
 
 
 # @pytest.mark.xfail
-@patch("src.utils.utils.retrieve_db_credentials")
-@patch("src.utils.utils.Connection")
+@patch("src.ingestion.utils.retrieve_db_credentials")
+@patch("src.ingestion.utils.Connection")
 def test_connect_to_db_success(
     mock_connection, mock_retrieve_credentials, caplog
 ):
@@ -37,8 +37,8 @@ def test_connect_to_db_success(
 
 
 # @pytest.mark.xfail
-@patch("src.utils.utils.retrieve_db_credentials")
-@patch("src.utils.utils.Connection")
+@patch("src.ingestion.utils.retrieve_db_credentials")
+@patch("src.ingestion.utils.Connection")
 def test_connect_to_db_failure(
     mock_connection, mock_retrieve_credentials, caplog
 ):

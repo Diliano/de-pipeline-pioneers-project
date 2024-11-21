@@ -1,18 +1,18 @@
 from unittest.mock import patch
 from datetime import datetime
-from src.ingestion import TIMESTAMP_FILE_KEY
+from src.ingestion.ingestion import TIMESTAMP_FILE_KEY
 import logging
 
 # import pytest
 import json
 
-from src.utils.utils import (
+from src.ingestion.utils import (
     get_last_ingestion_timestamp,
 )
 
 
 # @pytest.mark.xfail
-@patch("src.utils.utils.S3_INGESTION_BUCKET", "test_bucket")
+@patch("src.ingestion.utils.S3_INGESTION_BUCKET", "test_bucket")
 def test_get_last_ingestion_timestamp_valid_timestamp(mock_s3_client):
     mock_s3_client.create_bucket(
         Bucket="test_bucket",
@@ -27,21 +27,21 @@ def test_get_last_ingestion_timestamp_valid_timestamp(mock_s3_client):
         Body=json.dumps({"timestamp": valid_timestamp}),
     )
 
-    with patch("src.ingestion.s3_client", mock_s3_client):
+    with patch("src.ingestion.ingestion.s3_client", mock_s3_client):
         result = get_last_ingestion_timestamp()
 
         assert result == datetime.fromisoformat(valid_timestamp)
 
 
 # @pytest.mark.xfail
-@patch("src.utils.utils.S3_INGESTION_BUCKET", "test_bucket")
+@patch("src.ingestion.utils.S3_INGESTION_BUCKET", "test_bucket")
 def test_get_last_ingestion_timestamp_no_file(mock_s3_client):
     mock_s3_client.create_bucket(
         Bucket="test_bucket",
         CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
     )
 
-    with patch("src.utils.utils.s3_client", mock_s3_client):
+    with patch("src.ingestion.ingestion.s3_client", mock_s3_client):
         result = get_last_ingestion_timestamp()
 
         expected_default_timestamp = "1970-01-01 00:00:00"
@@ -49,7 +49,7 @@ def test_get_last_ingestion_timestamp_no_file(mock_s3_client):
 
 
 # @pytest.mark.xfail
-@patch("src.utils.utils.S3_INGESTION_BUCKET", "test_bucket")
+@patch("src.ingestion.utils.S3_INGESTION_BUCKET", "test_bucket")
 def test_get_last_ingestion_timestamp_missing_timestamp_key(mock_s3_client):
     mock_s3_client.create_bucket(
         Bucket="test_bucket",
@@ -60,13 +60,13 @@ def test_get_last_ingestion_timestamp_missing_timestamp_key(mock_s3_client):
         Bucket="test_bucket", Key=TIMESTAMP_FILE_KEY, Body=json.dumps({})
     )
 
-    with patch("src.utils.utils.s3_client", mock_s3_client):
+    with patch("src.ingestion.ingestion.s3_client", mock_s3_client):
         result = get_last_ingestion_timestamp()
         assert result == "1970-01-01 00:00:00"
 
 
 # @pytest.mark.xfail
-@patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
+@patch("src.ingestion.ingestion.S3_INGESTION_BUCKET", "test_bucket")
 def test_get_last_ingestion_timestamp_unexpected_error(mock_s3_client, caplog):
     caplog.set_level(logging.INFO)
 
@@ -77,9 +77,9 @@ def test_get_last_ingestion_timestamp_unexpected_error(mock_s3_client, caplog):
     )
 
     with patch(
-        "src.ingestion.s3_client.get_object",
+        "src.ingestion.ingestion.s3_client.get_object",
         side_effect=Exception("Unexpected error"),
-    ), patch("src.utils.utils.logger") as mock_logger:
+    ), patch("src.ingestion.utils.logger") as mock_logger:
 
         # with pytest.raises(Exception, match="Unexpected error"):
         #     get_last_ingestion_timestamp()

@@ -3,7 +3,7 @@ import boto3
 
 # import pytest
 
-from src.utils.utils import retrieve_db_credentials
+from src.ingestion.utils import retrieve_db_credentials
 
 
 # @pytest.mark.xfail
