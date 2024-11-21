@@ -799,3 +799,45 @@ def transform_fact_payment(
         return fact_payment
     except Exception as err:
         logger.error(f"Unexpected error occurred with fact_payment: {err}")
+
+
+def transform_dim_department(department_data):
+    """
+    Transforms raw department data into dim_department
+    with error handling and validation.
+
+    Args:
+        department_data (list[dict] or pd.DataFrame):
+            Raw department data.
+
+    Returns:
+        pd.DataFrame: Transformed dim_department
+            DataFrame or None if an error occurs.
+    """
+    try:
+        dim_department = (
+            pd.DataFrame(department_data)
+            if not isinstance(department_data, pd.DataFrame)
+            else department_data.copy()
+        )
+
+        # Dropping columns
+        dim_department.drop(columns=["created_at", "last_updated"], inplace=True)
+
+        # Renaming columns
+        dim_department = dim_department.rename(columns={
+            "department_id": "department_id",
+            "department_name": "department_name",
+            "location": "location",
+            "manager": "manager",
+        })
+
+        # Ensure data types might not be necessary
+        # but can be added here
+
+        dim_department.drop_duplicates(inplace=True)
+
+        return dim_department
+
+    except Exception as e:
+        logger.error(f"Error in transform_dim_department: {e}")
