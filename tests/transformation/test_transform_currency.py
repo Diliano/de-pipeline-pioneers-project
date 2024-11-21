@@ -1,4 +1,4 @@
-from src.transformation import transform_dim_currency
+from src.transformation.transformationutil import transform_dim_currency
 import pandas as pd
 from datetime import datetime
 import pandas.testing as test
