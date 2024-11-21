@@ -36,33 +36,9 @@ def load_data_from_s3_ingestion(key):
     return data
 
 
-def transform_dim_transaction(transaction_data):
-    """
-    Transforms transaction data into dim_transaction.
-    """
-    pass
-
-
-def transform_dim_payment_type(payment_type_data):
-    """Transforms payment type data into dim_payment_type."""
-    pass
-
-
-def transform_dim_department(department_data):
-    """ """
-    pass
-
-
 def transform_fact_purchase_orders(transactions, dim_date):
     """
     Transforms purchase transactions into fact_purchase_orders.
-    """
-    pass
-
-
-def transform_fact_payment(payments_data, dim_date, payment_types_data):
-    """
-    Transforms payment data into fact_payment.
     """
     pass
 
@@ -136,18 +112,5 @@ def lambda_handler(event, context):
         #     logger.warning(f"Skipping file with invalid format: {s3_key}")
         #     continue
 
-    # Creating dimensions and fact tables independently
-    # dim_counterparty
-    # dim_currency
-    # dim_staff
-    # dim_design
-    # dim_location
-    # dim_payment_type
-
-    # fact_sales_order based on (transactions, dim_date)
-
-    # NOT NEEDED FOR THE MVP
-    # fact_purchase_orders based on (transactions, dim_date)
-    # fact_payment based on (payments, dim_date, payment_types)
     logger.info("Transformation process completed")
     return {"statusCode": 200, "body": "Transformation complete"}
