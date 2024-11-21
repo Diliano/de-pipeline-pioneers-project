@@ -318,3 +318,118 @@ def transform_dim_counterparty(counterparty_data, address_data):
         return merged_df
     except Exception as err:
         logger.error(f"Unexpected error occurred in transform_dim_counterparty: {err}")
+
+
+def transform_fact_sales_order(sales_order):
+    """
+    Transforms sales transactions into fact_sales_order with error handling and validation.
+    
+    Args:
+        sales_order (list[dict] or pd.DataFrame): Raw sales order data.
+    
+    Returns:
+        pd.DataFrame: Transformed fact_sales_order DataFrame.
+    
+    Logs:
+        If required columns are missing or invalid data is provided.
+    """
+    try:
+        fact_sales_order = (
+            pd.DataFrame(sales_order)
+            if not isinstance(sales_order, pd.DataFrame)
+            else sales_order.copy()
+        )
+        fact_sales_order = fact_sales_order.rename(
+            columns={
+                "sales_order_id": "sales_order_id",
+                "created_at": "created_date",
+                "last_updated": "last_updated_date",
+                "staff_id": "sales_staff_id",
+                "counterparty_id": "counterparty_id",
+                "design_id": "design_id",
+                "units_sold": "units_sold",
+                "unit_price": "unit_price",
+                "currency_id": "currency_id",
+                "agreed_payment_date": "agreed_payment_date",
+                "agreed_delivery_date": "agreed_delivery_date",
+                "agreed_delivery_location_id": "agreed_delivery_location_id",
+            }
+        )
+
+        # Convert data types
+        # Assuming the data we get is already of the type we want
+        # fact_sales_order["sales_order_id"] = fact_sales_order[
+        #     "sales_order_id"
+        # ].astype(int)
+        # fact_sales_order["sales_staff_id"] = fact_sales_order[
+        #     "sales_staff_id"
+        # ].astype(int)
+        # fact_sales_order["counterparty_id"] = fact_sales_order[
+        #     "counterparty_id"
+        # ].astype(int)
+        # fact_sales_order["units_sold"] = fact_sales_order["units_sold"].astype(int)
+        # fact_sales_order["unit_price"] = fact_sales_order["unit_price"].astype(
+        #     float
+        # )
+        # fact_sales_order["currency_id"] = fact_sales_order["currency_id"].astype(
+        #     int
+        # )
+        # fact_sales_order["design_id"] = fact_sales_order["design_id"].astype(int)
+        # fact_sales_order["agreed_delivery_location_id"] = fact_sales_order[
+        #     "agreed_delivery_location_id"
+        # ].astype(int)
+
+        # Converting to pd.datetime first
+        datetime_columns = ["created_date", "last_updated_date"]
+        for col in datetime_columns:
+            try:
+                fact_sales_order[col] = pd.to_datetime(
+                    fact_sales_order[col], format="mixed"
+                )
+            except Exception as err:
+                logger.error(ValueError(f"Error parsing datetime column '{col}': {err}"))
+        # fact_sales_order["created_date"] = pd.to_datetime(
+        #     fact_sales_order["created_date"],
+        #     format="mixed",
+        # )
+        # fact_sales_order["last_updated_date"] = pd.to_datetime(
+        #     fact_sales_order["last_updated_date"],
+        #     format="mixed",
+        # )
+
+        # Extracting time and date separately
+        fact_sales_order["created_time"] = fact_sales_order["created_date"].dt.time
+        fact_sales_order["created_date"] = fact_sales_order["created_date"].dt.date
+
+        # Extracting time and date separately
+        fact_sales_order["last_updated_time"] = fact_sales_order[
+            "last_updated_date"
+        ].dt.time
+        fact_sales_order["last_updated_date"] = fact_sales_order[
+            "last_updated_date"
+        ].dt.date
+
+        fact_sales_order = fact_sales_order[
+            [
+                "sales_order_id",
+                "created_date",
+                "created_time",
+                "last_updated_date",
+                "last_updated_time",
+                "sales_staff_id",
+                "counterparty_id",
+                "units_sold",
+                "unit_price",
+                "currency_id",
+                "design_id",
+                "agreed_payment_date",
+                "agreed_delivery_date",
+                "agreed_delivery_location_id",
+            ]
+        ]
+
+        return fact_sales_order
+    except Exception as err:
+        logger.error(f"Unexpected error occurred in transform_fact_sales_order: {err} ")
+        # return None
+
