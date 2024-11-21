@@ -55,3 +55,20 @@ def test_clienterror_given_missing_secret(mock_secrets_manager, caplog):
 
     assert "ResourceNotFound" in str(excinfo.value)
     assert "Error accessing Secrets Manager" in caplog.text
+
+
+def test_handles_general_exceptions(mock_secrets_manager, caplog):
+    # Arrange
+    secret_name = "db_secret"
+    region_name = "eu-west-2"
+    invalid_secret_string = "not-a-json"
+
+    mock_secrets_manager.create_secret(
+        Name=secret_name,
+        SecretString=invalid_secret_string,
+    )
+    # Act + Assert
+    with pytest.raises(Exception):
+        retrieve_db_credentials(secret_name, region_name)
+
+    assert "Error retrieving DB credentials" in caplog.text
