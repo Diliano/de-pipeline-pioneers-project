@@ -256,3 +256,65 @@ def dim_date(*datasets):
         return dim_date
     except Exception as err:
         logger.error(f"Unexpected exception has occurred: {err}")
+
+
+def transform_dim_counterparty(counterparty_data, address_data):
+    """
+    Merges counterparty data and address data and transforms
+    the merged data into dim_counterparty.
+
+    Args:
+        counterparty_data (list[dict] or pd.DataFrame): Counterparty dataset.
+        address_data (list[dict] or pd.DataFrame): Address dataset.
+
+    Returns:
+        pd.DataFrame: Transformed dim_counterparty table.
+
+    Logs:
+        If required columns are missing or if inputs are invalid.
+    """
+    try:
+        dim_counterparty = (
+            pd.DataFrame(counterparty_data)
+            if not isinstance(counterparty_data, pd.DataFrame)
+            else counterparty_data.copy()
+        )
+        dim_address = (
+            pd.DataFrame(address_data)
+            if not isinstance(address_data, pd.DataFrame)
+            else address_data.copy()
+        )
+        # Assuming this columns must exist for now
+        dim_address.drop(columns=["created_at", "last_updated"], inplace=True)
+        dim_counterparty.drop(
+            columns=[
+                "created_at",
+                "last_updated",
+                "commercial_contact",
+                "delivery_contact",
+            ],
+            inplace=True,
+        )
+        dim_address = dim_address.rename(
+            columns={
+                "address_line_1": "counterparty_legal_address_line_1",
+                "address_line_2": "counterparty_legal_address_line_2",
+                "district": "counterparty_legal_district",
+                "city": "counterparty_legal_city",
+                "postal_code": "counterparty_legal_postal_code",
+                "country": "counterparty_legal_country",
+                "phone": "counterparty_legal_phone_number",
+            }
+        )
+        merged_df = pd.merge(
+            dim_counterparty,
+            dim_address,
+            left_on="legal_address_id",
+            right_on="address_id",
+            how="inner",
+        )
+        merged_df.drop(columns=["legal_address_id", "address_id"], inplace=True)
+
+        return merged_df
+    except Exception as err:
+        logger.error(f"Unexpected error occurred in transform_dim_counterparty: {err}")
