@@ -444,8 +444,8 @@ def transform_dim_design(design_data):
     Returns:
         pd.DataFrame: Transformed dim_design DataFrame.
 
-    Raises:
-        ValueError: If required columns are missing or if inputs are invalid.
+    Logs:
+        If required columns are missing or if inputs are invalid.
     """
     try:
         dim_design = (
@@ -494,8 +494,8 @@ def transform_dim_staff(staff_data, department_data):
     Returns:
         pd.DataFrame: Transformed dim_staff DataFrame.
 
-    Raises:
-        ValueError: If required columns are missing or if inputs are invalid.
+    Logs:
+        If required columns are missing or if inputs are invalid.
     """
     try:
         staff = (
@@ -540,3 +540,66 @@ def transform_dim_staff(staff_data, department_data):
         return dim_staff
     except Exception as err:
         logger.error(f"Unexpected error occurred with transform_dim_design: {err}")
+
+
+def transform_dim_currency(currency_data):
+    """
+    Transforms raw currency data into dim_currency.
+
+    Args:
+    currency_data = [{
+            "currency_id": 1,
+            "currency_code": "GBP",
+            "created_at": "2022-11-03 14:20:49.962000",
+            "last_updated": "2022-11-03 14:20:49.962000"
+        }
+    ]
+
+    Returns:
+        DataFrame for dim_currency.
+    Logs:
+        an unexpected error during transform
+    """
+    try:
+
+        currency_mapping = {
+            "USD": "US Dollar",
+            "EUR": "Euro",
+            "GBP": "British Pound",
+            "JPY": "Japanese Yen",
+        }
+
+        if not currency_data:
+            logger.warning("No currency data provided.")
+            return None
+
+        # dim_currency = (
+        #     pd.DataFrame(currency_data)
+        #     if not isinstance(currency_data, pd.DataFrame)
+        #     else currency_data.copy()
+        # )
+        
+        dim_currency = pd.DataFrame(
+            currency_data,
+            columns=["currency_id", "currency_code", "created_at", "last_updated"],
+        )
+
+        dim_currency["currency_name"] = (
+            dim_currency["currency_code"]
+            .map(currency_mapping)
+            .fillna("Unknown Currency")
+        )
+
+        dim_currency = dim_currency[
+            [
+                "currency_id",
+                "currency_code",
+                "currency_name",
+            ]
+        ]
+
+        dim_currency.drop_duplicates(inplace=True)
+
+        return dim_currency
+    except Exception as err:
+        logger.error(f"Unexpected error occurred with transform_dim_currency: {err}")
