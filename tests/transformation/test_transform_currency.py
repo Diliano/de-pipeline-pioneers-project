@@ -3,15 +3,16 @@ import pandas as pd
 from datetime import datetime
 import pandas.testing as test
 
+
 def test_empty_currency_data():
     # Arrange
     currency_data = []
 
     # Act
     result = transform_dim_currency(currency_data)
-    
+
     # Assert
-    assert result == None
+    assert result is None
 
 
 def test_transform_currency_success():
@@ -108,5 +109,3 @@ def test_for_unknown_currency():
 
     # Assert
     test.assert_frame_equal(result, expected_output)
-
-
