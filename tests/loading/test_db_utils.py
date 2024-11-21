@@ -1,10 +1,11 @@
-from src.loading.code.db_utils import retrieve_db_credentials
+from src.loading.code.db_utils import retrieve_db_credentials, connect_to_db
 import pytest
 from moto import mock_aws
 import boto3
 import json
 import os
 from botocore.exceptions import ClientError
+from unittest.mock import patch
 
 
 @pytest.fixture(scope="function")
@@ -73,3 +74,33 @@ class TestRetrieveDbCredentials:
             retrieve_db_credentials(secret_name, region_name)
 
         assert "Error retrieving DB credentials" in caplog.text
+
+
+@patch("src.loading.code.db_utils.Connection")
+@patch("src.loading.code.db_utils.retrieve_db_credentials")
+def test_successfully_connects_to_db(mock_retrieve_creds, mock_pg_connect):
+    # Arrange
+    secret_name = "my_db_secret"
+    region_name = "eu-west-2"
+    expected_credentials = {
+        "USER": "db_user",
+        "PASSWORD": "db_password",
+        "DATABASE": "db_name",
+        "HOST": "db_host",
+        "PORT": 5432,
+    }
+
+    mock_retrieve_creds.return_value = expected_credentials
+    mock_conn = mock_pg_connect.return_value
+    # Act
+    conn = connect_to_db(secret_name, region_name)
+    # Assert
+    assert conn == mock_conn
+    mock_retrieve_creds.assert_called_once_with(secret_name, region_name)
+    mock_pg_connect.assert_called_once_with(
+        user="db_user",
+        password="db_password",
+        database="db_name",
+        host="db_host",
+        port=5432,
+    )

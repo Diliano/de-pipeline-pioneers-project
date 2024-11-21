@@ -2,6 +2,7 @@ import boto3
 import json
 import logging
 from botocore.exceptions import ClientError
+from pg8000.native import Connection
 
 
 logger = logging.getLogger()
@@ -26,4 +27,21 @@ def retrieve_db_credentials(secret_name, region_name):
         raise
     except Exception as err:
         logger.error(f"Error retrieving DB credentials: {err}", exc_info=True)
+        raise
+
+
+def connect_to_db(secret_name, region_name):
+    try:
+        creds = retrieve_db_credentials(secret_name, region_name)
+        conn = Connection(
+            user=creds["USER"],
+            password=creds["PASSWORD"],
+            database=creds["DATABASE"],
+            host=creds["HOST"],
+            port=int(creds["PORT"]),
+        )
+        logger.info("Successfully connected to the database.")
+        return conn
+    except Exception as e:
+        logger.error(f"Error connecting to the database: {e}", exc_info=True)
         raise
