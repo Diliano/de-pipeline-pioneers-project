@@ -137,28 +137,28 @@ class TestProcessParquetFiles:
             Body=buffer2.getvalue(),
         )
         # Act
-        data_frames = process_parquet_files(mock_s3, file_paths)
+        tables_data_frames = process_parquet_files(mock_s3, file_paths)
         # Assert
-        assert len(data_frames) == 2
-        pd.testing.assert_frame_equal(data_frames["table1"], df1)
-        pd.testing.assert_frame_equal(data_frames["table2"], df2)
+        assert len(tables_data_frames) == 2
+        pd.testing.assert_frame_equal(tables_data_frames["table1"], df1)
+        pd.testing.assert_frame_equal(tables_data_frames["table2"], df2)
 
     def test_clienterror_given_invalid_uri(self, mock_s3, caplog):
         # Arrange
         invalid_uri = "invalid-uri"
         # Act
-        data_frames = process_parquet_files(mock_s3, [invalid_uri])
+        tables_data_frames = process_parquet_files(mock_s3, [invalid_uri])
         # Assert
-        assert len(data_frames) == 0
+        assert len(tables_data_frames) == 0
         assert f"Invalid S3 URI: {invalid_uri}" in caplog.text
 
     def test_clienterror_given_missing_bucket(self, mock_s3, caplog):
         # Arrange
         file_path = "s3://nonexistent-bucket/processed/table1/file1.parquet"
         # Act
-        data_frames = process_parquet_files(mock_s3, [file_path])
+        tables_data_frames = process_parquet_files(mock_s3, [file_path])
         # Assert
-        assert len(data_frames) == 0
+        assert len(tables_data_frames) == 0
         assert "Error accessing Parquet file from S3" in caplog.text
         assert "NoSuchBucket" in caplog.text
 
@@ -171,9 +171,9 @@ class TestProcessParquetFiles:
             f"table1/missing_file.parquet"
         )
         # Act
-        data_frames = process_parquet_files(mock_s3, [file_path])
+        tables_data_frames = process_parquet_files(mock_s3, [file_path])
         # Assert
-        assert len(data_frames) == 0
+        assert len(tables_data_frames) == 0
         assert "Error accessing Parquet file from S3" in caplog.text
         assert "NoSuchKey" in caplog.text
 
@@ -193,7 +193,7 @@ class TestProcessParquetFiles:
             Body=corrupted_content,
         )
         # Act
-        data_frames = process_parquet_files(mock_s3, [file_path])
+        tables_data_frames = process_parquet_files(mock_s3, [file_path])
         # Assert
-        assert len(data_frames) == 0
+        assert len(tables_data_frames) == 0
         assert "Error processing file" in caplog.text
