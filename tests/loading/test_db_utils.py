@@ -20,12 +20,14 @@ def aws_credentials():
 
 @pytest.fixture(scope="function")
 def mock_secrets_manager(aws_credentials):
+    """Mocked AWS Secretsmanager"""
     with mock_aws():
         yield boto3.client("secretsmanager", region_name="eu-west-2")
 
 
 @pytest.fixture(scope="function")
 def mock_db_credentials():
+    """Mocked database credentials"""
     return {
         "USER": "db_user",
         "PASSWORD": "db_password",
