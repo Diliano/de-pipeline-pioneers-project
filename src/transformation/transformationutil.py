@@ -362,7 +362,8 @@ def transform_dim_design(design_data):
     Transforms design data into dim_design with error handling and logging.
 
     Args:
-        design_data (list[dict] or pd.DataFrame): Raw design data.
+        design_data (list[dict]):
+            Raw design data.
 
     Returns:
         pd.DataFrame: Transformed dim_design DataFrame.
@@ -371,21 +372,24 @@ def transform_dim_design(design_data):
         If required columns are missing or if inputs are invalid.
     """
     try:
+        if not design_data:
+            logger.warning(f"Design data is empty: {design_data}")
+            return None
+
         dim_design = (
             pd.DataFrame(design_data)
             if not isinstance(design_data, pd.DataFrame)
             else design_data.copy()
         )
         dim_design.drop(columns=["created_at", "last_updated"], inplace=True)
-        dim_design = dim_design.rename(
-            columns={
-                "design_id": "design_id",
-                "design_name": "design_name",
-                "file_location": "file_location",
-                "file_name": "file_name",
-            }
-        )
-
+        # dim_design = dim_design.rename(
+        #     columns={
+        #         "design_id": "design_id",
+        #         "design_name": "design_name",
+        #         "file_location": "file_location",
+        #         "file_name": "file_name",
+        #     }
+        # )
         dim_design = dim_design[
             [
                 "design_id",
@@ -403,6 +407,7 @@ def transform_dim_design(design_data):
         #     dim_design['file_location'].astype('string')
         # )
         # dim_design['file_name'] = dim_design['file_name'].astype('string')
+        dim_design.drop_duplicates(inplace=True)
         return dim_design
     except Exception as err:
         logger.error(
