@@ -1,4 +1,3 @@
-import boto3
 import json
 import logging
 from botocore.exceptions import ClientError
@@ -28,7 +27,7 @@ def read_file_list(s3_client, bucket_name, key):
 
 
 def process_parquet_files(s3_client, file_paths):
-    data_frames = []
+    data_frames = {}
     for file_path in file_paths:
         try:
             match = re.match(r"s3://([^/]+)/(.+)", file_path)
@@ -37,14 +36,16 @@ def process_parquet_files(s3_client, file_paths):
                 continue
             bucket_name, key = match.groups()
 
+            table_name = key.split("/")[1]
+
             obj = s3_client.get_object(Bucket=bucket_name, Key=key)
             parquet_content = obj["Body"].read()
             buffer = BytesIO(parquet_content)
 
             df = pd.read_parquet(buffer)
-            data_frames.append(df)
+            data_frames[table_name] = df
 
-            logger.info(f"Read Parquet file: {file_path}")
+            logger.info(f"Processed Parquet file for table: {table_name}")
         except ClientError as e:
             logger.error(
                 f"Error accessing Parquet file from S3: {file_path}: {e}",

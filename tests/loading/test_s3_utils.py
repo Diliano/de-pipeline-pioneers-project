@@ -109,8 +109,8 @@ class TestProcessParquetFiles:
         self, mock_s3, mock_processed_bucket
     ):
         # Arrange
-        parquet_key1 = "table1/file1.parquet"
-        parquet_key2 = "table2/file2.parquet"
+        parquet_key1 = "processed/table1/file1.parquet"
+        parquet_key2 = "processed/table2/file2.parquet"
         file_paths = [
             f"s3://{mock_processed_bucket}/{parquet_key1}",
             f"s3://{mock_processed_bucket}/{parquet_key2}",
@@ -140,8 +140,8 @@ class TestProcessParquetFiles:
         data_frames = process_parquet_files(mock_s3, file_paths)
         # Assert
         assert len(data_frames) == 2
-        pd.testing.assert_frame_equal(data_frames[0], df1)
-        pd.testing.assert_frame_equal(data_frames[1], df2)
+        pd.testing.assert_frame_equal(data_frames["table1"], df1)
+        pd.testing.assert_frame_equal(data_frames["table2"], df2)
 
     def test_clienterror_given_invalid_uri(self, mock_s3, caplog):
         # Arrange
@@ -154,7 +154,7 @@ class TestProcessParquetFiles:
 
     def test_clienterror_given_missing_bucket(self, mock_s3, caplog):
         # Arrange
-        file_path = "s3://nonexistent-bucket/table1/file1.parquet"
+        file_path = "s3://nonexistent-bucket/processed/table1/file1.parquet"
         # Act
         data_frames = process_parquet_files(mock_s3, [file_path])
         # Assert
@@ -166,7 +166,10 @@ class TestProcessParquetFiles:
         self, mock_s3, mock_processed_bucket, caplog
     ):
         # Arrange
-        file_path = f"s3://{mock_processed_bucket}/missing_file.parquet"
+        file_path = (
+            f"s3://{mock_processed_bucket}/processed/"
+            f"table1/missing_file.parquet"
+        )
         # Act
         data_frames = process_parquet_files(mock_s3, [file_path])
         # Assert
@@ -178,12 +181,15 @@ class TestProcessParquetFiles:
         self, mock_s3, mock_processed_bucket, caplog
     ):
         # Arrange
-        file_path = f"s3://{mock_processed_bucket}/corrupted_file.parquet"
+        file_path = (
+            f"s3://{mock_processed_bucket}/processed/"
+            "table1/corrupted_file.parquet"
+        )
         corrupted_content = b"not-a-parquet-file"
 
         mock_s3.put_object(
             Bucket=mock_processed_bucket,
-            Key="corrupted_file.parquet",
+            Key="processed/table1/corrupted_file.parquet",
             Body=corrupted_content,
         )
         # Act
