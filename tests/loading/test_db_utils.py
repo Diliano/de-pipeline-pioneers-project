@@ -4,6 +4,7 @@ from moto import mock_aws
 import boto3
 import json
 import os
+from botocore.exceptions import ClientError
 
 
 @pytest.fixture(scope="function")
@@ -42,3 +43,15 @@ def test_successfully_retrieves_db_credentials(mock_secrets_manager):
     credentials = retrieve_db_credentials(secret_name, region_name)
     # Assert
     assert credentials == expected_credentials
+
+
+def test_clienterror_given_missing_secret(mock_secrets_manager, caplog):
+    # Arrange
+    secret_name = "nonexistent_secret"
+    region_name = "eu-west-2"
+    # Act + Assert
+    with pytest.raises(ClientError) as excinfo:
+        retrieve_db_credentials(secret_name, region_name)
+
+    assert "ResourceNotFound" in str(excinfo.value)
+    assert "Error accessing Secrets Manager" in caplog.text
