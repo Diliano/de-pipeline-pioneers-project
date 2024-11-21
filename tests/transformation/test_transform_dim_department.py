@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 from unittest.mock import patch
 from src.transformation.transformationutil import transform_dim_department
 
@@ -8,16 +7,32 @@ from src.transformation.transformationutil import transform_dim_department
 def test_transform_dim_department_valid_list(mock_logger):
     # Input: List of dictionaries
     input_data = [
-        {"department_id": 1, "department_name": "HR", "location": "HQ", "manager": "Alice", "created_at": "2023-01-01", "last_updated": "2023-01-10"},
-        {"department_id": 2, "department_name": "Engineering", "location": "HQ", "manager": "Bob", "created_at": "2023-01-01", "last_updated": "2023-01-10"}
+        {
+            "department_id": 1,
+            "department_name": "HR",
+            "location": "HQ",
+            "manager": "Alice",
+            "created_at": "2023-01-01",
+            "last_updated": "2023-01-10",
+        },
+        {
+            "department_id": 2,
+            "department_name": "Engineering",
+            "location": "HQ",
+            "manager": "Bob",
+            "created_at": "2023-01-01",
+            "last_updated": "2023-01-10",
+        },
     ]
 
-    expected_output = pd.DataFrame({
-        "department_id": [1, 2],
-        "department_name": ["HR", "Engineering"],
-        "location": ["HQ", "HQ"],
-        "manager": ["Alice", "Bob"]
-    })
+    expected_output = pd.DataFrame(
+        {
+            "department_id": [1, 2],
+            "department_name": ["HR", "Engineering"],
+            "location": ["HQ", "HQ"],
+            "manager": ["Alice", "Bob"],
+        }
+    )
 
     result = transform_dim_department(input_data)
 
@@ -29,21 +44,25 @@ def test_transform_dim_department_valid_list(mock_logger):
 @patch("src.transformation.transformationutil.logger")
 def test_transform_dim_department_valid_dataframe(mock_logger):
     # Input: DataFrame
-    input_data = pd.DataFrame({
-        "department_id": [1, 2],
-        "department_name": ["HR", "Engineering"],
-        "location": ["HQ", "HQ"],
-        "manager": ["Alice", "Bob"],
-        "created_at": ["2023-01-01", "2023-01-01"],
-        "last_updated": ["2023-01-10", "2023-01-10"]
-    })
+    input_data = pd.DataFrame(
+        {
+            "department_id": [1, 2],
+            "department_name": ["HR", "Engineering"],
+            "location": ["HQ", "HQ"],
+            "manager": ["Alice", "Bob"],
+            "created_at": ["2023-01-01", "2023-01-01"],
+            "last_updated": ["2023-01-10", "2023-01-10"],
+        }
+    )
 
-    expected_output = pd.DataFrame({
-        "department_id": [1, 2],
-        "department_name": ["HR", "Engineering"],
-        "location": ["HQ", "HQ"],
-        "manager": ["Alice", "Bob"]
-    })
+    expected_output = pd.DataFrame(
+        {
+            "department_id": [1, 2],
+            "department_name": ["HR", "Engineering"],
+            "location": ["HQ", "HQ"],
+            "manager": ["Alice", "Bob"],
+        }
+    )
 
     result = transform_dim_department(input_data)
 
@@ -55,11 +74,13 @@ def test_transform_dim_department_valid_dataframe(mock_logger):
 @patch("src.transformation.transformationutil.logger")
 def test_transform_dim_department_missing_columns(mock_logger):
     # Input: Missing required columns
-    input_data = [{
+    input_data = [
+        {
             "department_id": 1,
             "department_name": "HR",
-            "created_at": "2023-01-01"
-        }]
+            "created_at": "2023-01-01",
+        }
+    ]
 
     result = transform_dim_department(input_data)
 
@@ -75,12 +96,8 @@ def test_transform_dim_department_empty_input(mock_logger):
     input_data = []
 
     expected_output = pd.DataFrame(
-        columns=[
-            "department_id",
-            "department_name",
-            "location",
-            "manager"
-        ])
+        columns=["department_id", "department_name", "location", "manager"]
+    )
 
     result = transform_dim_department(input_data)
 
