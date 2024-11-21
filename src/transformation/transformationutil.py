@@ -130,11 +130,17 @@ def transform_dim_counterparty(counterparty_data, address_data):
         required_counterparty_columns = {
             "counterparty_id",
             "counterparty_legal_name",
-            "legal_address_id"
+            "legal_address_id",
         }
         required_address_columns = {
-            "address_id", "address_line_1", "address_line_2", "district",
-            "city", "postal_code", "country", "phone",
+            "address_id",
+            "address_line_1",
+            "address_line_2",
+            "district",
+            "city",
+            "postal_code",
+            "country",
+            "phone",
         }
         final_columns = [
             "counterparty_id",
@@ -148,36 +154,34 @@ def transform_dim_counterparty(counterparty_data, address_data):
             "counterparty_legal_phone_number",
         ]
 
-        missing_cp_cols = (
-            required_counterparty_columns - set(dim_counterparty.columns)
+        missing_cp_cols = required_counterparty_columns - set(
+            dim_counterparty.columns
         )
-        missing_a_columns = (
-            required_address_columns - set(dim_address.columns)
-        )
+        missing_a_columns = required_address_columns - set(dim_address.columns)
 
         if missing_cp_cols or missing_a_columns:
             missing_info = []
-            missing_cp_cols = (
-                required_counterparty_columns - set(dim_counterparty.columns)
+            missing_cp_cols = required_counterparty_columns - set(
+                dim_counterparty.columns
             )
-            missing_a_columns = (
-                required_address_columns - set(dim_address.columns)
+            missing_a_columns = required_address_columns - set(
+                dim_address.columns
             )
             if missing_cp_cols:
                 missing_info.append(
                     f"counterparty_data is missing columns: {missing_cp_cols}"
-                    )
+                )
             if missing_a_columns:
                 missing_info.append(
                     f"address_data is missing columns: {missing_a_columns}"
-                    )
+                )
             logger.error(f"{missing_info}")
             return pd.DataFrame(columns=final_columns)
 
         dim_address.drop(
             columns=["created_at", "last_updated"],
             inplace=True,
-            errors="ignore"
+            errors="ignore",
         )
 
         dim_counterparty.drop(
@@ -185,8 +189,8 @@ def transform_dim_counterparty(counterparty_data, address_data):
                 "created_at",
                 "last_updated",
                 "commercial_contact",
-                "delivery_contact"
-                ],
+                "delivery_contact",
+            ],
             inplace=True,
             errors="ignore",
         )
@@ -214,7 +218,8 @@ def transform_dim_counterparty(counterparty_data, address_data):
         merged_df.drop(
             columns=["legal_address_id", "address_id"],
             inplace=True,
-            errors="ignore")
+            errors="ignore",
+        )
 
         return merged_df[final_columns]
     except Exception as err:
@@ -626,15 +631,17 @@ def transform_dim_transaction(transaction_data):
         )
 
         dim_transaction.drop(
-            columns=['created_at', 'last_updated'],
-            inplace=True)
+            columns=["created_at", "last_updated"], inplace=True
+        )
         return dim_transaction
     except Exception as err:
         logger.error(f"Unexpected error occurred with dim_transaction: {err}")
         # return None
 
 
-def transform_dim_payment_types(payment_types_data, ):
+def transform_dim_payment_types(
+    payment_types_data,
+):
     """
     Transforms raw payment types data into dim_payment_type
     with error handling and validation.
@@ -654,8 +661,8 @@ def transform_dim_payment_types(payment_types_data, ):
             else payment_types_data.copy()
         )
         dim_payment_type.drop(
-            columns=['created_at', 'last_updated'],
-            inplace=True)
+            columns=["created_at", "last_updated"], inplace=True
+        )
         return dim_payment_type
     except Exception as err:
         logger.error(f"Unexpected error occurred with dim_payment_type: {err}")
@@ -769,25 +776,17 @@ def transform_fact_payment(
         ]
 
         # Converting data types
-        fact_payment["payment_id"] = fact_payment[
-            "payment_id"
-        ].astype(int)
-        fact_payment["transaction_id"] = fact_payment[
-            "transaction_id"
-        ].astype(
+        fact_payment["payment_id"] = fact_payment["payment_id"].astype(int)
+        fact_payment["transaction_id"] = fact_payment["transaction_id"].astype(
             int
         )
         fact_payment["counterparty_id"] = fact_payment[
             "counterparty_id"
         ].astype(int)
-        fact_payment["payment_amount"] = fact_payment[
-            "payment_amount"
-        ].astype(
+        fact_payment["payment_amount"] = fact_payment["payment_amount"].astype(
             float
         )
-        fact_payment["currency_id"] = fact_payment[
-            "currency_id"
-        ].astype(int)
+        fact_payment["currency_id"] = fact_payment["currency_id"].astype(int)
         fact_payment["payment_type_id"] = fact_payment[
             "payment_type_id"
         ].astype(int)
@@ -816,12 +815,28 @@ def transform_dim_department(department_data):
     """
     try:
         if isinstance(department_data, pd.DataFrame) and department_data.empty:
-            logger.info("Received empty DataFrame. Returning an empty DataFrame.")
-            return pd.DataFrame(columns=["department_id", "department_name", "location", "manager"])
+            logger.info(
+                "Received empty DataFrame. Returning an empty DataFrame."
+            )
+            return pd.DataFrame(
+                columns=[
+                    "department_id",
+                    "department_name",
+                    "location",
+                    "manager",
+                ]
+            )
 
         if isinstance(department_data, list) and not department_data:
             logger.info("Received empty list. Returning an empty DataFrame.")
-            return pd.DataFrame(columns=["department_id", "department_name", "location", "manager"])
+            return pd.DataFrame(
+                columns=[
+                    "department_id",
+                    "department_name",
+                    "location",
+                    "manager",
+                ]
+            )
 
         dim_department = (
             pd.DataFrame(department_data)
@@ -830,11 +845,9 @@ def transform_dim_department(department_data):
         )
 
         # Only selecting relevant columns
-        dim_department = dim_department[[
-            "department_id",
-            "department_name",
-            "location", "manager"
-        ]]
+        dim_department = dim_department[
+            ["department_id", "department_name", "location", "manager"]
+        ]
 
         # Renaming columns, i dont think its needed
         # dim_department = dim_department.rename(columns={
