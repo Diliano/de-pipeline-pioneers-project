@@ -124,27 +124,73 @@ def transform_dim_counterparty(counterparty_data, address_data):
         If required columns are missing or if inputs are invalid.
     """
     try:
-        dim_counterparty = (
-            pd.DataFrame(counterparty_data)
-            if not isinstance(counterparty_data, pd.DataFrame)
-            else counterparty_data.copy()
+        dim_counterparty = pd.DataFrame(counterparty_data)
+        dim_address = pd.DataFrame(address_data)
+
+        required_counterparty_columns = {
+            "counterparty_id",
+            "counterparty_legal_name",
+            "legal_address_id"
+        }
+        required_address_columns = {
+            "address_id", "address_line_1", "address_line_2", "district",
+            "city", "postal_code", "country", "phone",
+        }
+        final_columns = [
+            "counterparty_id",
+            "counterparty_legal_name",
+            "counterparty_legal_address_line_1",
+            "counterparty_legal_address_line_2",
+            "counterparty_legal_district",
+            "counterparty_legal_city",
+            "counterparty_legal_postal_code",
+            "counterparty_legal_country",
+            "counterparty_legal_phone_number",
+        ]
+
+        missing_cp_cols = (
+            required_counterparty_columns - set(dim_counterparty.columns)
         )
-        dim_address = (
-            pd.DataFrame(address_data)
-            if not isinstance(address_data, pd.DataFrame)
-            else address_data.copy()
+        missing_a_columns = (
+            required_address_columns - set(dim_address.columns)
         )
-        # Assuming this columns must exist for now
-        dim_address.drop(columns=["created_at", "last_updated"], inplace=True)
+
+        if missing_cp_cols or missing_a_columns:
+            missing_info = []
+            missing_cp_cols = (
+                required_counterparty_columns - set(dim_counterparty.columns)
+            )
+            missing_a_columns = (
+                required_address_columns - set(dim_address.columns)
+            )
+            if missing_cp_cols:
+                missing_info.append(
+                    f"counterparty_data is missing columns: {missing_cp_cols}"
+                    )
+            if missing_a_columns:
+                missing_info.append(
+                    f"address_data is missing columns: {missing_a_columns}"
+                    )
+            logger.error(f"{missing_info}")
+            return pd.DataFrame(columns=final_columns)
+
+        dim_address.drop(
+            columns=["created_at", "last_updated"],
+            inplace=True,
+            errors="ignore"
+        )
+
         dim_counterparty.drop(
             columns=[
                 "created_at",
                 "last_updated",
                 "commercial_contact",
-                "delivery_contact",
-            ],
+                "delivery_contact"
+                ],
             inplace=True,
+            errors="ignore",
         )
+
         dim_address = dim_address.rename(
             columns={
                 "address_line_1": "counterparty_legal_address_line_1",
@@ -156,6 +202,7 @@ def transform_dim_counterparty(counterparty_data, address_data):
                 "phone": "counterparty_legal_phone_number",
             }
         )
+
         merged_df = pd.merge(
             dim_counterparty,
             dim_address,
@@ -163,11 +210,13 @@ def transform_dim_counterparty(counterparty_data, address_data):
             right_on="address_id",
             how="inner",
         )
-        merged_df.drop(
-            columns=["legal_address_id", "address_id"], inplace=True
-        )
 
-        return merged_df
+        merged_df.drop(
+            columns=["legal_address_id", "address_id"],
+            inplace=True,
+            errors="ignore")
+
+        return merged_df[final_columns]
     except Exception as err:
         logger.error(
             f"Unexpected error occurred in transform_dim_counterparty: {err}"
