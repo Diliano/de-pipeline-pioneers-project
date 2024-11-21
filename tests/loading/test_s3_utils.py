@@ -21,12 +21,14 @@ def aws_credentials():
 
 @pytest.fixture(scope="function")
 def mock_s3(aws_credentials):
+    """Mocked AWS Boto3 S3 client"""
     with mock_aws():
         yield boto3.client("s3", region_name="eu-west-2")
 
 
 @pytest.fixture(scope="function")
 def mock_processed_bucket(mock_s3):
+    """Mocked AWS S3 bucket, created with Boto3"""
     bucket_name = "processed-bucket"
     mock_s3.create_bucket(
         Bucket=bucket_name,
