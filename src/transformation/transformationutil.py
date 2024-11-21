@@ -21,7 +21,7 @@ def dim_date(*datasets):
     """
     try:
         if not datasets:
-            logger.warning(f"Invalid dates {datasets} data")
+            logger.warning(f"Datasets can't be empty: {datasets}")
             return None
 
         # Extracting and combining all unique dates from relevant columns
@@ -79,13 +79,13 @@ def dim_date(*datasets):
         dim_date["date_id"] = (
             dim_date["date"].dt.strftime("%Y%m%d").astype(int)
         )
-        dim_date["year"] = dim_date["date"].dt.year
-        dim_date["month"] = dim_date["date"].dt.month
-        dim_date["day"] = dim_date["date"].dt.day
-        dim_date["day_of_week"] = dim_date["date"].dt.dayofweek
+        dim_date["year"] = dim_date["date"].dt.year.astype("int64")
+        dim_date["month"] = dim_date["date"].dt.month.astype("int64")
+        dim_date["day"] = dim_date["date"].dt.day.astype("int64")
+        dim_date["day_of_week"] = dim_date["date"].dt.dayofweek.astype("int64")
         dim_date["day_name"] = dim_date["date"].dt.day_name()
         dim_date["month_name"] = dim_date["date"].dt.month_name()
-        dim_date["quarter"] = dim_date["date"].dt.quarter
+        dim_date["quarter"] = dim_date["date"].dt.quarter.astype("int64")
         # Not needed, just thought it was interesting to add
         # dim_date['day_of_week'] = dim_date['date'].dt.dayofweek
         # dim_date['is_weekend'] = dim_date['day_of_week'].isin([5, 6])
@@ -362,7 +362,8 @@ def transform_dim_design(design_data):
     Transforms design data into dim_design with error handling and logging.
 
     Args:
-        design_data (list[dict] or pd.DataFrame): Raw design data.
+        design_data (list[dict]):
+            Raw design data.
 
     Returns:
         pd.DataFrame: Transformed dim_design DataFrame.
@@ -371,21 +372,24 @@ def transform_dim_design(design_data):
         If required columns are missing or if inputs are invalid.
     """
     try:
+        if not design_data:
+            logger.warning(f"Design data is empty: {design_data}")
+            return None
+
         dim_design = (
             pd.DataFrame(design_data)
             if not isinstance(design_data, pd.DataFrame)
             else design_data.copy()
         )
         dim_design.drop(columns=["created_at", "last_updated"], inplace=True)
-        dim_design = dim_design.rename(
-            columns={
-                "design_id": "design_id",
-                "design_name": "design_name",
-                "file_location": "file_location",
-                "file_name": "file_name",
-            }
-        )
-
+        # dim_design = dim_design.rename(
+        #     columns={
+        #         "design_id": "design_id",
+        #         "design_name": "design_name",
+        #         "file_location": "file_location",
+        #         "file_name": "file_name",
+        #     }
+        # )
         dim_design = dim_design[
             [
                 "design_id",
@@ -403,6 +407,7 @@ def transform_dim_design(design_data):
         #     dim_design['file_location'].astype('string')
         # )
         # dim_design['file_name'] = dim_design['file_name'].astype('string')
+        dim_design.drop_duplicates(inplace=True)
         return dim_design
     except Exception as err:
         logger.error(
