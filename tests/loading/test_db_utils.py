@@ -20,7 +20,7 @@ def aws_credentials():
 
 @pytest.fixture(scope="function")
 def mock_secrets_manager(aws_credentials):
-    """Mocked AWS Secretsmanager"""
+    """Mocked AWS Boto3 Secretsmanager client"""
     with mock_aws():
         yield boto3.client("secretsmanager", region_name="eu-west-2")
 
@@ -84,45 +84,45 @@ class TestRetrieveDbCredentials:
         assert "Error retrieving DB credentials" in caplog.text
 
 
-@patch("src.loading.code.db_utils.Connection")
-@patch("src.loading.code.db_utils.retrieve_db_credentials")
-def test_successfully_connects_to_db(
-    mock_retrieve_creds, mock_pg_connect, mock_db_credentials
-):
-    # Arrange
-    secret_name = "my_db_secret"
-    region_name = "eu-west-2"
+class TestConnectToDb:
+    @patch("src.loading.code.db_utils.Connection")
+    @patch("src.loading.code.db_utils.retrieve_db_credentials")
+    def test_successfully_connects_to_db(
+        self, mock_retrieve_creds, mock_pg_connect, mock_db_credentials
+    ):
+        # Arrange
+        secret_name = "my_db_secret"
+        region_name = "eu-west-2"
 
-    mock_retrieve_creds.return_value = mock_db_credentials
-    mock_conn = mock_pg_connect.return_value
-    # Act
-    conn = connect_to_db(secret_name, region_name)
-    # Assert
-    assert conn == mock_conn
-    mock_retrieve_creds.assert_called_once_with(secret_name, region_name)
-    mock_pg_connect.assert_called_once_with(
-        user="db_user",
-        password="db_password",
-        database="db_name",
-        host="db_host",
-        port=5432,
-    )
+        mock_retrieve_creds.return_value = mock_db_credentials
+        mock_conn = mock_pg_connect.return_value
+        # Act
+        conn = connect_to_db(secret_name, region_name)
+        # Assert
+        assert conn == mock_conn
+        mock_retrieve_creds.assert_called_once_with(secret_name, region_name)
+        mock_pg_connect.assert_called_once_with(
+            user="db_user",
+            password="db_password",
+            database="db_name",
+            host="db_host",
+            port=5432,
+        )
 
+    @patch("src.loading.code.db_utils.Connection")
+    @patch("src.loading.code.db_utils.retrieve_db_credentials")
+    def test_connect_to_db_handles_exceptions(
+        self, mock_retrieve_creds, mock_pg_connect, mock_db_credentials, caplog
+    ):
+        # Arrange
+        secret_name = "my_db_secret"
+        region_name = "eu-west-2"
 
-@patch("src.loading.code.db_utils.Connection")
-@patch("src.loading.code.db_utils.retrieve_db_credentials")
-def test_connect_to_db_handles_exceptions(
-    mock_retrieve_creds, mock_pg_connect, mock_db_credentials, caplog
-):
-    # Arrange
-    secret_name = "my_db_secret"
-    region_name = "eu-west-2"
+        mock_retrieve_creds.return_value = mock_db_credentials
+        mock_pg_connect.side_effect = Exception("Connection failed")
+        # Act + Assert
+        with pytest.raises(Exception) as excinfo:
+            connect_to_db(secret_name, region_name)
 
-    mock_retrieve_creds.return_value = mock_db_credentials
-    mock_pg_connect.side_effect = Exception("Connection failed")
-    # Act + Assert
-    with pytest.raises(Exception) as excinfo:
-        connect_to_db(secret_name, region_name)
-
-    assert "Connection failed" in str(excinfo.value)
-    assert "Error connecting to the database" in caplog.text
+        assert "Connection failed" in str(excinfo.value)
+        assert "Error connecting to the database" in caplog.text
