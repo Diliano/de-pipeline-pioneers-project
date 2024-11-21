@@ -483,3 +483,60 @@ def transform_dim_design(design_data):
         logger.error(f"Unexpected error occurred with transform_dim_design: {err}")
 
 
+def transform_dim_staff(staff_data, department_data):
+    """
+    Transforms staff and department records into the required format for dim_staff.
+
+    Args:
+        staff_data (list[dict] or pd.DataFrame): Raw staff data.
+        department_data (list[dict] or pd.DataFrame): Raw department data.
+
+    Returns:
+        pd.DataFrame: Transformed dim_staff DataFrame.
+
+    Raises:
+        ValueError: If required columns are missing or if inputs are invalid.
+    """
+    try:
+        staff = (
+            pd.DataFrame(staff_data)
+            if not isinstance(staff_data, pd.DataFrame)
+            else staff_data.copy()
+        )
+        department = (
+            pd.DataFrame(department_data)
+            if not isinstance(department_data, pd.DataFrame)
+            else department_data.copy()
+        )
+        # Dropping unnecessary columns
+        department.drop(
+            columns=["manager", "created_at", "last_updated"], inplace=True
+        )
+        staff.drop(columns=["created_at", "last_updated"], inplace=True)
+
+        dim_staff = pd.merge(staff, department, on="department_id", how="inner")
+        # Why is department_id twice here?
+        dim_staff.drop(columns=["department_id", "department_id"], inplace=True)
+
+        # Converting datatypes, not sure if its necessary
+        # dim_staff["staff_id"] = dim_staff["staff_id"].astype(int)
+        # dim_staff["first_name"] = dim_staff["first_name"].astype(str)
+        # dim_staff["last_name"] = dim_staff["last_name"].astype(str)
+        # dim_staff["department_name"] = dim_staff["department_name"].astype(str)
+        # dim_staff["location"] = dim_staff["department_location"].astype(str)
+
+        # Reordering columns
+        dim_staff = dim_staff[
+            [
+                "staff_id",
+                "first_name",
+                "last_name",
+                "department_name",
+                "location",
+                "email_address",
+            ]
+        ]
+
+        return dim_staff
+    except Exception as err:
+        logger.error(f"Unexpected error occurred with transform_dim_design: {err}")
