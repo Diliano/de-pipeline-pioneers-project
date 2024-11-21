@@ -35,57 +35,6 @@ def load_data_from_s3_ingestion(key):
     return data
 
 
-def dim_date(*datasets):
-    """
-    Creates a unique dim_date data frame
-
-    ARGS:
-        data frame of dates
-    RETURNS:
-        a data frame reformatted dates
-    """
-
-    if not datasets:
-        logger.warning(f"Invalid dates {datasets} data")
-        return None
-    
-     # Extracting and combining all unique dates from relevant columns
-    all_dates = []
-    for dataset in datasets:
-        for column in ['created_at', 'last_updated']:
-            if column in dataset.columns:
-                all_dates.append(pd.to_datetime(dataset[column], format="mixed").dt.date)
-    
-    # Flattening the list and getting unique dates
-    unique_dates = pd.Series(pd.concat(all_dates).unique())
-    unique_dates = unique_dates.sort_values().reset_index(drop=True)
-
-    # Generating a continuous date range (using the min and max dates from unique_dates)
-    # freq='D' helps with missing date data
-    date_range = pd.date_range(start=unique_dates.min(), end=unique_dates.max(), freq='D')
-
-    # Creating the dim_date table
-    dim_date = pd.DataFrame({'date': date_range})
-    dim_date['date_id'] = dim_date['date'].dt.strftime('%Y%m%d').astype(int)
-    dim_date['year'] = dim_date['date'].dt.year
-    dim_date['month'] = dim_date['date'].dt.month
-    dim_date['day'] = dim_date['date'].dt.day
-    dim_date['day_of_week'] = dim_date['date'].dt.dayofweek
-    dim_date['day_name'] = dim_date['date'].dt.day_name()
-    dim_date['month_name'] = dim_date['date'].dt.month_name()
-    dim_date['quarter'] = dim_date['date'].dt.quarter
-    # Not needed, just thought it was interesting to add
-    # dim_date['day_of_week'] = dim_date['date'].dt.dayofweek
-    # dim_date['is_weekend'] = dim_date['day_of_week'].isin([5, 6])
-
-    dim_date = dim_date[[
-        'date_id', 'date', 'year', 'month', 'day', 
-        'day_of_week','day_name', 'month_name', 
-        'quarter'
-    ]]
-    return dim_date
-
-
 def transform_dim_location(address_data):
     """
     Transforms address data into dim_location.
@@ -201,6 +150,11 @@ def transform_dim_currency(currency_data):
 def transform_dim_staff(staff_data, department_data):
     """
     Transform records into the required format for dim_staff.
+
+    ARGS:
+        json staff and department data
+    RETURNS:
+        a data frame of dim staff
     """
     staff = pd.DataFrame(staff_data)
     department = pd.DataFrame(department_data)
