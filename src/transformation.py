@@ -107,47 +107,6 @@ def transform_dim_currency(currency_data):
     return dim_currency
 
 
-def transform_dim_staff(staff_data, department_data):
-    """
-    Transform records into the required format for dim_staff.
-
-    ARGS:
-        json staff and department data
-    RETURNS:
-        a data frame of dim staff
-    """
-    staff = pd.DataFrame(staff_data)
-    department = pd.DataFrame(department_data)
-    # Dropping unnecessary columns
-    department.drop(
-        columns=["manager", "created_at", "last_updated"], inplace=True
-    )
-    staff.drop(columns=["created_at", "last_updated"], inplace=True)
-
-    dim_staff = pd.merge(staff, department, on="department_id", how="inner")
-    dim_staff.drop(columns=["department_id", "department_id"], inplace=True)
-
-    # Converting datatypes, not sure if its necessary
-    # dim_staff["staff_id"] = dim_staff["staff_id"].astype(int)
-    # dim_staff["first_name"] = dim_staff["first_name"].astype(str)
-    # dim_staff["last_name"] = dim_staff["last_name"].astype(str)
-    # dim_staff["department_name"] = dim_staff["department_name"].astype(str)
-    # dim_staff["location"] = dim_staff["department_location"].astype(str)
-
-    # Reordering columns
-    dim_staff = dim_staff[
-        [
-            "staff_id",
-            "first_name",
-            "last_name",
-            "department_name",
-            "location",
-            "email_address",
-        ]
-    ]
-
-    return dim_staff
-
 
 def transform_dim_transaction(transaction_data):
     """
