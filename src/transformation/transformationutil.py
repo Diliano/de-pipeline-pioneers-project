@@ -549,3 +549,134 @@ def transform_dim_location(address_data):
         logger.error(
             f"Unexpected error occurred with transform_dim_location: {err}"
         )
+
+
+def transform_fact_payment(
+    payments_data, transactions_data, payment_type_data
+):
+    """
+    Transforms raw payments, transactions, and payment
+    type data into fact_payment.
+
+    Args:
+        payments_data (list[dict] or pd.DataFrame):
+            Raw payments data.
+        transactions_data (list[dict] or pd.DataFrame):
+            Raw transactions data.
+        payment_type_data (list[dict] or pd.DataFrame):
+            Raw payment type data.
+
+    Returns:
+        pd.DataFrame: Transformed fact_payment DataFrame
+        or None if an error occurs.
+    """
+    try:
+        # Converting inputs to DataFrame if necessary
+        payments_df = (
+            pd.DataFrame(payments_data)
+            if not isinstance(payments_data, pd.DataFrame)
+            else payments_data.copy()
+        )
+        transactions_df = (
+            pd.DataFrame(transactions_data)
+            if not isinstance(transactions_data, pd.DataFrame)
+            else transactions_data.copy()
+        )
+        payment_type_df = (
+            pd.DataFrame(payment_type_data)
+            if not isinstance(payment_type_data, pd.DataFrame)
+            else payment_type_data.copy()
+        )
+
+        # Merging payments with transactions on `transaction_id`
+        fact_payment = pd.merge(
+            payments_df,
+            transactions_df[["transaction_id", "transaction_type"]],
+            on="transaction_id",
+            how="left",
+        )
+
+        # Merging with payment_type data on `payment_type_id`
+        fact_payment = pd.merge(
+            fact_payment,
+            payment_type_df[["payment_type_id", "payment_type_name"]],
+            on="payment_type_id",
+            how="left",
+        )
+
+        # Can also merge with sales_order on 'sales_order_id'
+
+        # Converting 'created_at' and 'last_updated'
+        # into date and time components
+        fact_payment["created_at"] = pd.to_datetime(
+            fact_payment["created_at"], format="mixed"
+        )
+        fact_payment["created_date"] = fact_payment["created_at"].dt.date
+        fact_payment["created_time"] = fact_payment["created_at"].dt.time
+
+        fact_payment["last_updated"] = pd.to_datetime(
+            fact_payment["last_updated"], format="mixed"
+        )
+        fact_payment["last_updated_date"] = fact_payment[
+            "last_updated"
+        ].dt.date
+        fact_payment["last_updated_time"] = fact_payment[
+            "last_updated"
+        ].dt.time
+
+        # Rename columns to match the schema
+        fact_payment = fact_payment.rename(
+            columns={
+                "payment_id": "payment_id",
+                "counterparty_id": "counterparty_id",
+                "payment_amount": "payment_amount",
+                "currency_id": "currency_id",
+                "payment_type_id": "payment_type_id",
+                "payment_type_name": "payment_type_name",
+                "paid": "paid",
+                "payment_date": "payment_date",
+            }
+        )
+
+        # Ensuring columns are in the correct order
+        fact_payment = fact_payment[
+            [
+                "payment_id",
+                "created_date",
+                "created_time",
+                "last_updated_date",
+                "last_updated_time",
+                "transaction_id",
+                "counterparty_id",
+                "payment_amount",
+                "currency_id",
+                "payment_type_id",
+                "payment_type_name",
+                "paid",
+                "payment_date",
+            ]
+        ]
+
+        # Converting data types
+        # fact_payment["payment_id"] = fact_payment["payment_id"].astype(int)
+        # fact_payment["transaction_id"] = fact_payment["transaction_id"].astype(
+        #     int
+        # )
+        # fact_payment["counterparty_id"] = fact_payment[
+        #     "counterparty_id"
+        # ].astype(int)
+        # fact_payment["payment_amount"] = fact_payment["payment_amount"].astype(
+        #     float
+        # )
+        # fact_payment["currency_id"] = fact_payment["currency_id"].astype(int)
+        # fact_payment["payment_type_id"] = fact_payment[
+        #     "payment_type_id"
+        # ].astype(int)
+        # fact_payment["paid"] = fact_payment["paid"].astype(bool)
+        # fact_payment["payment_date"] = pd.to_datetime(
+        #     fact_payment["payment_date"]
+        # ).dt.date
+
+        return fact_payment
+    except Exception as err:
+        logger.error(f"Unexpected error occurred with fact_payment: {err}")
