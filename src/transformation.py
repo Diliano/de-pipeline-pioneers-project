@@ -35,28 +35,6 @@ def load_data_from_s3_ingestion(key):
     return data
 
 
-def transform_dim_location(address_data):
-    """
-    Transforms address data into dim_location.
-    """
-    dim_address = pd.DataFrame(address_data)
-    dim_address.drop(columns=["created_at", "last_updated"], inplace=True)
-    dim_address = dim_address.rename(
-        columns={
-            "address_id": "location_id",
-            "address_line_1": "address_line_1",
-            "address_line_2": "address_line_2",
-            "district": "district",
-            "city": "city",
-            "postal_code": "postal_code",
-            "country": "country",
-            "phone": "phone",
-        }
-    )
-    return dim_address        
-
-
-
 def transform_dim_transaction(transaction_data):
     """
     Transforms transaction data into dim_transaction.
