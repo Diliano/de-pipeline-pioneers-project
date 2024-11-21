@@ -104,3 +104,28 @@ def test_successfully_connects_to_db(mock_retrieve_creds, mock_pg_connect):
         host="db_host",
         port=5432,
     )
+
+
+@patch("src.loading.code.db_utils.Connection")
+@patch("src.loading.code.db_utils.retrieve_db_credentials")
+def test_connect_to_db_handles_exceptions(
+    mock_retrieve_creds, mock_pg_connect, caplog
+):
+    # Arrange
+    secret_name = "my_db_secret"
+    region_name = "eu-west-2"
+
+    mock_retrieve_creds.return_value = {
+        "USER": "db_user",
+        "PASSWORD": "db_password",
+        "DATABASE": "db_name",
+        "HOST": "db_host",
+        "PORT": 5432,
+    }
+    mock_pg_connect.side_effect = Exception("Connection failed")
+    # Act + Assert
+    with pytest.raises(Exception) as excinfo:
+        connect_to_db(secret_name, region_name)
+
+    assert "Connection failed" in str(excinfo.value)
+    assert "Error connecting to the database" in caplog.text
