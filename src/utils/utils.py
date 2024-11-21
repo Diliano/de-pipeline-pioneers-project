@@ -433,3 +433,53 @@ def transform_fact_sales_order(sales_order):
         logger.error(f"Unexpected error occurred in transform_fact_sales_order: {err} ")
         # return None
 
+
+def transform_dim_design(design_data):
+    """
+    Transforms design data into dim_design with error handling and logging.
+
+    Args:
+        design_data (list[dict] or pd.DataFrame): Raw design data.
+
+    Returns:
+        pd.DataFrame: Transformed dim_design DataFrame.
+
+    Raises:
+        ValueError: If required columns are missing or if inputs are invalid.
+    """
+    try:
+        dim_design = (
+            pd.DataFrame(design_data)
+            if not isinstance(design_data, pd.DataFrame)
+            else design_data.copy()
+        )
+        dim_design.drop(columns=["created_at", "last_updated"], inplace=True)
+        dim_design = dim_design.rename(
+            columns={
+                "design_id": "design_id",
+                "design_name": "design_name",
+                "file_location": "file_location",
+                "file_name": "file_name",
+            }
+        )
+
+        dim_design = dim_design[
+            [
+                "design_id",
+                "design_name",
+                "file_location",
+                "file_name",
+            ]
+        ]
+        # Validation and converting data types
+        # dim_design['design_id'] = dim_design['design_id'].astype(int)
+        # dim_design['design_name'] = dim_design['design_name'].astype('string')
+        # dim_design['file_location'] = (
+        #     dim_design['file_location'].astype('string')
+        # )
+        # dim_design['file_name'] = dim_design['file_name'].astype('string')
+        return dim_design
+    except Exception as err:
+        logger.error(f"Unexpected error occurred with transform_dim_design: {err}")
+
+
