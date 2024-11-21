@@ -1,4 +1,4 @@
-import src.utils.utils as util
+import src.ingestion.utils as util
 from datetime import (
     datetime,
 )
@@ -7,14 +7,8 @@ import json
 import logging
 import os
 
-SECRET_NAME = os.getenv(
-    "DB_SECRET_NAME",
-    "nc-totesys-db-credentials"
-)
-REGION_NAME = os.getenv(
-    "AWS_REGION",
-    "eu-west-2"
-)
+SECRET_NAME = os.getenv("DB_SECRET_NAME", "nc-totesys-db-credentials")
+REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
 
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 
@@ -82,9 +76,7 @@ def lambda_handler(event, context):
     timestamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     for table_name, table_data in tables.items():
         prefix_time = f"{year}/{month}/{day}/{table_name}_{timestamp}"
-        object_key = (
-            f"ingestion/{table_name}/{prefix_time}.json"
-        )
+        object_key = f"ingestion/{table_name}/{prefix_time}.json"
         try:
             if not table_data:
                 logger.info(f"Table {table_name} has not been updated")

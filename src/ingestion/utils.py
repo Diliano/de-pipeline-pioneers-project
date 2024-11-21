@@ -1,4 +1,4 @@
-from src.ingestion import (
+from src.ingestion.ingestion import (
     logger,
 )
 from botocore.exceptions import ClientError
@@ -7,7 +7,7 @@ from pg8000.native import Connection
 from datetime import datetime
 import json
 
-from src.ingestion import (
+from src.ingestion.ingestion import (
     s3_client,
     secrets_manager_client,
     SECRET_NAME,
@@ -128,10 +128,11 @@ def update_last_ingestion_timestamp():
 
 def fetch_tables(tables: list = TABLES):
     """
-    Fetch data from specified tables in the database updated since last
-    ingestion.
+    Fetch data from specified tables in the database
+    updated since last ingestion.
     Args:
-        tables (list): List of table names to fetch data from. Defaults to the
+        tables (list): List of table names to fetch data from.
+        Defaults to the
             `TABLES` constant.
     Returns:
         dict: A dictionary where keys are table names and values are lists of

@@ -4,7 +4,7 @@ import pytest
 import json
 
 #
-from src.utils.utils import SECRET_NAME
+from src.ingestion.utils import SECRET_NAME
 
 
 # Defining a fixture
