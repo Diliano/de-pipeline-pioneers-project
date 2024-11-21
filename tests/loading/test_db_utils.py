@@ -24,27 +24,33 @@ def mock_secrets_manager(aws_credentials):
         yield boto3.client("secretsmanager", region_name="eu-west-2")
 
 
+@pytest.fixture(scope="function")
+def mock_db_credentials():
+    return {
+        "USER": "db_user",
+        "PASSWORD": "db_password",
+        "DATABASE": "db_name",
+        "HOST": "db_host",
+        "PORT": 5432,
+    }
+
+
 class TestRetrieveDbCredentials:
-    def test_successfully_retrieves_db_credentials(self, mock_secrets_manager):
+    def test_successfully_retrieves_db_credentials(
+        self, mock_secrets_manager, mock_db_credentials
+    ):
         # Arrange
         secret_name = "db_secret"
         region_name = "eu-west-2"
-        expected_credentials = {
-            "USER": "db_user",
-            "PASSWORD": "db_password",
-            "DATABASE": "db_name",
-            "HOST": "db_host",
-            "PORT": "5432",
-        }
 
         mock_secrets_manager.create_secret(
             Name=secret_name,
-            SecretString=json.dumps(expected_credentials),
+            SecretString=json.dumps(mock_db_credentials),
         )
         # Act
         credentials = retrieve_db_credentials(secret_name, region_name)
         # Assert
-        assert credentials == expected_credentials
+        assert credentials == mock_db_credentials
 
     def test_clienterror_given_missing_secret(
         self, mock_secrets_manager, caplog
@@ -78,19 +84,14 @@ class TestRetrieveDbCredentials:
 
 @patch("src.loading.code.db_utils.Connection")
 @patch("src.loading.code.db_utils.retrieve_db_credentials")
-def test_successfully_connects_to_db(mock_retrieve_creds, mock_pg_connect):
+def test_successfully_connects_to_db(
+    mock_retrieve_creds, mock_pg_connect, mock_db_credentials
+):
     # Arrange
     secret_name = "my_db_secret"
     region_name = "eu-west-2"
-    expected_credentials = {
-        "USER": "db_user",
-        "PASSWORD": "db_password",
-        "DATABASE": "db_name",
-        "HOST": "db_host",
-        "PORT": 5432,
-    }
 
-    mock_retrieve_creds.return_value = expected_credentials
+    mock_retrieve_creds.return_value = mock_db_credentials
     mock_conn = mock_pg_connect.return_value
     # Act
     conn = connect_to_db(secret_name, region_name)
@@ -109,19 +110,13 @@ def test_successfully_connects_to_db(mock_retrieve_creds, mock_pg_connect):
 @patch("src.loading.code.db_utils.Connection")
 @patch("src.loading.code.db_utils.retrieve_db_credentials")
 def test_connect_to_db_handles_exceptions(
-    mock_retrieve_creds, mock_pg_connect, caplog
+    mock_retrieve_creds, mock_pg_connect, mock_db_credentials, caplog
 ):
     # Arrange
     secret_name = "my_db_secret"
     region_name = "eu-west-2"
 
-    mock_retrieve_creds.return_value = {
-        "USER": "db_user",
-        "PASSWORD": "db_password",
-        "DATABASE": "db_name",
-        "HOST": "db_host",
-        "PORT": 5432,
-    }
+    mock_retrieve_creds.return_value = mock_db_credentials
     mock_pg_connect.side_effect = Exception("Connection failed")
     # Act + Assert
     with pytest.raises(Exception) as excinfo:
