@@ -1,4 +1,8 @@
-from src.loading.code.db_utils import retrieve_db_credentials, connect_to_db
+from src.loading.code.db_utils import (
+    retrieve_db_credentials,
+    connect_to_db,
+    load_data_into_warehouse,
+)
 import pytest
 from moto import mock_aws
 import boto3
@@ -6,6 +10,7 @@ import json
 import os
 from botocore.exceptions import ClientError
 from unittest.mock import patch
+import pandas as pd
 
 
 @pytest.fixture(scope="function")
@@ -34,6 +39,30 @@ def mock_db_credentials():
         "DATABASE": "db_name",
         "HOST": "db_host",
         "PORT": 5432,
+    }
+
+
+@pytest.fixture
+def mock_tables_data_frames():
+    """
+    Mocked tables data frames
+    """
+    return {
+        "dim_staff": pd.DataFrame(
+            {
+                "staff_id": [1, 2],
+                "first_name": ["North", "Pipeline"],
+                "last_name": ["Coder", "Pioneer"],
+            }
+        ),
+        "fact_sales_order": pd.DataFrame(
+            {
+                "sales_order_id": [100, 101],
+                "units_sold": [10, 30],
+                "unit_price": [15.25, 42.30],
+            }
+        ),
+        "dim_location": pd.DataFrame(),
     }
 
 
@@ -126,3 +155,59 @@ class TestConnectToDb:
 
         assert "Connection failed" in str(excinfo.value)
         assert "Error connecting to the database" in caplog.text
+
+
+@patch("src.loading.code.db_utils.Connection")
+def test_successfully_loads_data_into_warehouse(
+    mock_pg_connect, mock_tables_data_frames
+):
+    # Arrange
+    def normalise_query(sql):
+        return (" ").join(sql.split())
+
+    mock_conn = mock_pg_connect.return_value
+
+    expected_dimension_query = normalise_query(
+        """
+        INSERT INTO "dim_staff" ("staff_id", "first_name", "last_name")
+        VALUES (%s, %s, %s)
+        ON CONFLICT ("staff_id") DO UPDATE
+        SET "staff_id" = EXCLUDED."staff_id",
+            "first_name" = EXCLUDED."first_name",
+            "last_name" = EXCLUDED."last_name";
+    """
+    )
+    expected_fact_query = normalise_query(
+        """
+        INSERT INTO "fact_sales_order" ("sales_order_id", "units_sold", "unit_price")
+        VALUES (%s, %s, %s);
+    """
+    )
+    # Act
+    results = load_data_into_warehouse(mock_conn, mock_tables_data_frames)
+
+    calls = mock_conn.run.call_args_list
+    executed_queries = [
+        (normalise_query(call.kwargs["sql"]), call.kwargs["params"])
+        for call in calls
+    ]
+    # Assert
+    assert results["successfully_loaded"] == ["dim_staff", "fact_sales_order"]
+    assert results["failed_to_load"] == []
+    assert results["skipped_empty"] == ["dim_location"]
+
+    assert (
+        expected_dimension_query,
+        [
+            (1, "North", "Coder"),
+            (2, "Pipeline", "Pioneer"),
+        ],
+    ) in executed_queries
+
+    assert (
+        expected_fact_query,
+        [
+            (100, 10, 15.25),
+            (101, 30, 42.30),
+        ],
+    ) in executed_queries
