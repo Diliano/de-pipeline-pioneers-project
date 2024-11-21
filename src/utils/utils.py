@@ -603,3 +603,46 @@ def transform_dim_currency(currency_data):
         return dim_currency
     except Exception as err:
         logger.error(f"Unexpected error occurred with transform_dim_currency: {err}")
+
+
+def transform_dim_location(address_data):
+    """
+     Transforms address data into dim_location with error handling and validation.
+
+    Args:
+        address_data (list[dict] or pd.DataFrame): Raw address data.
+
+    Returns:
+        pd.DataFrame: Transformed dim_location DataFrame or None if an error occurs.
+    
+    Logs:
+
+    """
+    try:
+        if not address_data:
+            logger.warning("No address data provided")
+            return None
+        
+        dim_address = (
+            pd.DataFrame(address_data)
+            if not isinstance(address_data, pd.DataFrame)
+            else address_data.copy()
+        )
+
+        dim_address.drop(columns=["created_at", "last_updated"], inplace=True)
+        dim_address = dim_address.rename(
+            columns={
+                "address_id": "location_id",
+                "address_line_1": "address_line_1",
+                "address_line_2": "address_line_2",
+                "district": "district",
+                "city": "city",
+                "postal_code": "postal_code",
+                "country": "country",
+                "phone": "phone",
+            }
+        )
+        dim_address.drop_duplicates(inplace=True)
+        return dim_address
+    except Exception as err:
+        logger.error(f"Unexpected error occurred with transform_dim_location: {err}")
