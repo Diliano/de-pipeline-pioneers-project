@@ -53,47 +53,7 @@ def transform_dim_location(address_data):
             "phone": "phone",
         }
     )
-    return dim_address
-
-
-def transform_dim_counterparty(counterparty_data, address_data):
-    """
-    Merges counterparty data and address data and transforms
-    the merged data into dim_counterparty
-    """
-    dim_counterparty = pd.DataFrame(counterparty_data)
-    dim_address = pd.DataFrame(address_data)
-    dim_address.drop(columns=["created_at", "last_updated"], inplace=True)
-    dim_counterparty.drop(
-        columns=[
-            "created_at",
-            "last_updated",
-            "commercial_contact",
-            "delivery_contact",
-        ],
-        inplace=True,
-    )
-    dim_address = dim_address.rename(
-        columns={
-            "address_line_1": "counterparty_legal_address_line_1",
-            "address_line_2": "counterparty_legal_address_line_2",
-            "district": "counterparty_legal_district",
-            "city": "counterparty_legal_city",
-            "postal_code": "counterparty_legal_postal_code",
-            "country": "counterparty_legal_country",
-            "phone": "counterparty_legal_phone_number",
-        }
-    )
-    merged_df = pd.merge(
-        dim_counterparty,
-        dim_address,
-        left_on="legal_address_id",
-        right_on="address_id",
-        how="inner",
-    )
-    merged_df.drop(columns=["legal_address_id", "address_id"], inplace=True)
-
-    return merged_df
+    return dim_address        
 
 
 def transform_dim_currency(currency_data):
@@ -382,16 +342,16 @@ def save_transformed_data(dataframes):
                 f"Saved {table_name} to s3://{S3_PROCESSED_BUCKET}/{s3_key}"
             )
 
-
-TRANSFORMATION_FUNCTIONS = {
-    "counterparty": transform_dim_counterparty,
-    "currency": transform_dim_currency,
-    "department": transform_dim_department,
-    "design": transform_dim_design,
-    "staff": transform_dim_staff,
-    "payment": transform_dim_payment_type,
-    "transaction": transform_dim_transaction,
-}
+# Commented for now
+# TRANSFORMATION_FUNCTIONS = {
+#     "counterparty": transform_dim_counterparty,
+#     "currency": transform_dim_currency,
+#     "department": transform_dim_department,
+#     "design": transform_dim_design,
+#     "staff": transform_dim_staff,
+#     "payment": transform_dim_payment_type,
+#     "transaction": transform_dim_transaction,
+# }
 
 
 def lambda_handler(event, context):
@@ -405,11 +365,11 @@ def lambda_handler(event, context):
         s3_key = record["s3"]["object"]["key"]
         logger.info(f"Processing file: {s3_key}")
 
-        table_name = s3_key.split("/")[1]
-        if table_name in TRANSFORMATION_FUNCTIONS:
-            # print(TRANSFORMATION_FUNCTIONS[table_name])
-            logger.warning(f"Skipping file with invalid format: {s3_key}")
-            continue
+        # table_name = s3_key.split("/")[1]
+        # if table_name in TRANSFORMATION_FUNCTIONS:
+        #     # print(TRANSFORMATION_FUNCTIONS[table_name])
+        #     logger.warning(f"Skipping file with invalid format: {s3_key}")
+        #     continue
 
     # Creating dimensions and fact tables independently
     # dim_counterparty
