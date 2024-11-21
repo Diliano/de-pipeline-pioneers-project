@@ -149,39 +149,6 @@ def transform_dim_staff(staff_data, department_data):
     return dim_staff
 
 
-def transform_dim_design(design_data):
-    """
-    Transforms design data into dim_design.
-    """
-    dim_design = pd.DataFrame(design_data)
-    dim_design.drop(columns=["created_at", "last_updated"], inplace=True)
-    dim_design = dim_design.rename(
-        columns={
-            "design_id": "design_id",
-            "design_name": "design_name",
-            "file_location": "file_location",
-            "file_name": "file_name",
-        }
-    )
-    # Convert data types
-    # dim_design['design_id'] = dim_design['design_id'].astype(int)
-    # dim_design['design_name'] = dim_design['design_name'].astype('string')
-    # dim_design['file_location'] = (
-    #     dim_design['file_location'].astype('string')
-    # )
-    # dim_design['file_name'] = dim_design['file_name'].astype('string')
-
-    dim_design = dim_design[
-        [
-            "design_id",
-            "design_name",
-            "file_location",
-            "file_name",
-        ]
-    ]
-    return dim_design
-
-
 def transform_dim_transaction(transaction_data):
     """
     Transforms transaction data into dim_transaction.
