@@ -815,22 +815,34 @@ def transform_dim_department(department_data):
             DataFrame or None if an error occurs.
     """
     try:
+        if isinstance(department_data, pd.DataFrame) and department_data.empty:
+            logger.info("Received empty DataFrame. Returning an empty DataFrame.")
+            return pd.DataFrame(columns=["department_id", "department_name", "location", "manager"])
+
+        if isinstance(department_data, list) and not department_data:
+            logger.info("Received empty list. Returning an empty DataFrame.")
+            return pd.DataFrame(columns=["department_id", "department_name", "location", "manager"])
+
         dim_department = (
             pd.DataFrame(department_data)
             if not isinstance(department_data, pd.DataFrame)
             else department_data.copy()
         )
 
-        # Dropping columns
-        dim_department.drop(columns=["created_at", "last_updated"], inplace=True)
+        # Only selecting relevant columns
+        dim_department = dim_department[[
+            "department_id",
+            "department_name",
+            "location", "manager"
+        ]]
 
-        # Renaming columns
-        dim_department = dim_department.rename(columns={
-            "department_id": "department_id",
-            "department_name": "department_name",
-            "location": "location",
-            "manager": "manager",
-        })
+        # Renaming columns, i dont think its needed
+        # dim_department = dim_department.rename(columns={
+        #     "department_id": "department_id",
+        #     "department_name": "department_name",
+        #     "location": "location",
+        #     "manager": "manager",
+        # })
 
         # Ensure data types might not be necessary
         # but can be added here
@@ -838,6 +850,7 @@ def transform_dim_department(department_data):
         dim_department.drop_duplicates(inplace=True)
 
         return dim_department
-
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
     except Exception as e:
         logger.error(f"Error in transform_dim_department: {e}")
