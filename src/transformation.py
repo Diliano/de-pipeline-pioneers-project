@@ -56,57 +56,6 @@ def transform_dim_location(address_data):
     return dim_address        
 
 
-def transform_dim_currency(currency_data):
-    """
-    Transforms raw currency data into dim_currency.
-
-    ARGS:
-    currency_data = [{
-            "currency_id": 1,
-            "currency_code": "GBP",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000"
-        }
-    ]
-
-    RETURNS:
-    DataFrame for dim_currency.
-    """
-    currency_mapping = {
-        "USD": "US Dollar",
-        "EUR": "Euro",
-        "GBP": "British Pound",
-        "JPY": "Japanese Yen",
-    }
-
-    if not currency_data:
-        logger.warning("No currency data provided.")
-        return None
-
-    dim_currency = pd.DataFrame(
-        currency_data,
-        columns=["currency_id", "currency_code", "created_at", "last_updated"],
-    )
-
-    dim_currency["currency_name"] = (
-        dim_currency["currency_code"]
-        .map(currency_mapping)
-        .fillna("Unknown Currency")
-    )
-
-    dim_currency = dim_currency[
-        [
-            "currency_id",
-            "currency_code",
-            "currency_name",
-        ]
-    ]
-
-    dim_currency.drop_duplicates(inplace=True)
-
-    return dim_currency
-
-
 
 def transform_dim_transaction(transaction_data):
     """
