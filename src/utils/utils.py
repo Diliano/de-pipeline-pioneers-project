@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 from pg8000.exceptions import DatabaseError
 from pg8000.native import Connection
 from datetime import datetime
+import pandas as pd
 import json
 
 from src.ingestion import (
@@ -181,3 +182,77 @@ def fetch_tables(tables: list = TABLES):
     except Exception as err:
         logger.error(f"Database connection failed: {err}", exc_info=True)
         # raise err
+
+
+# Transformation helper functions
+def dim_date(*datasets):
+    """
+    Create a comprehensive dim_date table with a date_id column from multiple datasets.
+    
+    Args:
+        *datasets (list[pd.DataFrame]): List of datasets containing date columns.
+    
+    Returns:
+        pd.DataFrame: dim_date table with a date_id column.
+    
+    Logs:
+        If no valid date columns are found in the datasets.
+    """
+    try:
+        if not datasets:
+            logger.warning(f"Invalid dates {datasets} data")
+            return None
+        
+        # Extracting and combining all unique dates from relevant columns
+        all_dates = []
+        for dataset in datasets:
+            if not isinstance(dataset, pd.DataFrame):
+                logger.error(f"Expected a DataFrame, but got {type(dataset)}")
+                return # not sure what to do in this case
+            
+            date_columns = [col for col in dataset.columns if 'date' in col or 'created_at' in col or 'last_updated' in col]
+            if not date_columns:
+                logger.warning(f"Skipping dataset without date columns: {dataset}")
+                continue 
+
+            for column in date_columns:
+                try:
+                    all_dates.append(pd.to_datetime(dataset[column], format="mixed").dropna().dt.date)
+                except Exception as err:
+                    logger.error(f"Error parsing column '{column}' in dataset: {err}")
+                    return # not sure what to do in this case
+                
+        if not all_dates:
+            logger.error("No valid date columns found in the provided datasets")
+            return
+        
+        # Flattening the list and getting unique dates
+        unique_dates = pd.Series(pd.concat(all_dates).unique())
+        unique_dates = unique_dates.sort_values().reset_index(drop=True)
+
+        # Generating a continuous date range (using the min and max dates from unique_dates)
+        # freq='D' helps with missing date data
+        date_range = pd.date_range(start=unique_dates.min(), end=unique_dates.max(), freq='D')
+
+        # Creating the dim_date table
+        dim_date = pd.DataFrame({'date': date_range})
+        dim_date['date_id'] = dim_date['date'].dt.strftime('%Y%m%d').astype(int)
+        dim_date['year'] = dim_date['date'].dt.year
+        dim_date['month'] = dim_date['date'].dt.month
+        dim_date['day'] = dim_date['date'].dt.day
+        dim_date['day_of_week'] = dim_date['date'].dt.dayofweek
+        dim_date['day_name'] = dim_date['date'].dt.day_name()
+        dim_date['month_name'] = dim_date['date'].dt.month_name()
+        dim_date['quarter'] = dim_date['date'].dt.quarter
+        # Not needed, just thought it was interesting to add
+        # dim_date['day_of_week'] = dim_date['date'].dt.dayofweek
+        # dim_date['is_weekend'] = dim_date['day_of_week'].isin([5, 6])
+
+        dim_date = dim_date[[
+            'date_id', 'date', 'year', 'month', 'day', 
+            'day_of_week','day_name', 'month_name', 
+            'quarter'
+        ]]
+        return dim_date
+    except Exception as err:
+        logger.error(f"Unexpected exception has occurred: {err}")
