@@ -23,52 +23,53 @@ def mock_secrets_manager(aws_credentials):
         yield boto3.client("secretsmanager", region_name="eu-west-2")
 
 
-def test_successfully_retrieves_db_credentials(mock_secrets_manager):
-    # Arrange
-    secret_name = "db_secret"
-    region_name = "eu-west-2"
-    expected_credentials = {
-        "USER": "db_user",
-        "PASSWORD": "db_password",
-        "DATABASE": "db_name",
-        "HOST": "db_host",
-        "PORT": "5432",
-    }
+class TestRetrieveDbCredentials:
+    def test_successfully_retrieves_db_credentials(self, mock_secrets_manager):
+        # Arrange
+        secret_name = "db_secret"
+        region_name = "eu-west-2"
+        expected_credentials = {
+            "USER": "db_user",
+            "PASSWORD": "db_password",
+            "DATABASE": "db_name",
+            "HOST": "db_host",
+            "PORT": "5432",
+        }
 
-    mock_secrets_manager.create_secret(
-        Name=secret_name,
-        SecretString=json.dumps(expected_credentials),
-    )
-    # Act
-    credentials = retrieve_db_credentials(secret_name, region_name)
-    # Assert
-    assert credentials == expected_credentials
+        mock_secrets_manager.create_secret(
+            Name=secret_name,
+            SecretString=json.dumps(expected_credentials),
+        )
+        # Act
+        credentials = retrieve_db_credentials(secret_name, region_name)
+        # Assert
+        assert credentials == expected_credentials
 
+    def test_clienterror_given_missing_secret(
+        self, mock_secrets_manager, caplog
+    ):
+        # Arrange
+        secret_name = "nonexistent_secret"
+        region_name = "eu-west-2"
+        # Act + Assert
+        with pytest.raises(ClientError) as excinfo:
+            retrieve_db_credentials(secret_name, region_name)
 
-def test_clienterror_given_missing_secret(mock_secrets_manager, caplog):
-    # Arrange
-    secret_name = "nonexistent_secret"
-    region_name = "eu-west-2"
-    # Act + Assert
-    with pytest.raises(ClientError) as excinfo:
-        retrieve_db_credentials(secret_name, region_name)
+        assert "ResourceNotFound" in str(excinfo.value)
+        assert "Error accessing Secrets Manager" in caplog.text
 
-    assert "ResourceNotFound" in str(excinfo.value)
-    assert "Error accessing Secrets Manager" in caplog.text
+    def test_handles_general_exceptions(self, mock_secrets_manager, caplog):
+        # Arrange
+        secret_name = "db_secret"
+        region_name = "eu-west-2"
+        invalid_secret_string = "not-a-json"
 
+        mock_secrets_manager.create_secret(
+            Name=secret_name,
+            SecretString=invalid_secret_string,
+        )
+        # Act + Assert
+        with pytest.raises(Exception):
+            retrieve_db_credentials(secret_name, region_name)
 
-def test_handles_general_exceptions(mock_secrets_manager, caplog):
-    # Arrange
-    secret_name = "db_secret"
-    region_name = "eu-west-2"
-    invalid_secret_string = "not-a-json"
-
-    mock_secrets_manager.create_secret(
-        Name=secret_name,
-        SecretString=invalid_secret_string,
-    )
-    # Act + Assert
-    with pytest.raises(Exception):
-        retrieve_db_credentials(secret_name, region_name)
-
-    assert "Error retrieving DB credentials" in caplog.text
+        assert "Error retrieving DB credentials" in caplog.text
