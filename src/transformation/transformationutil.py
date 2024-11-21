@@ -21,7 +21,7 @@ def dim_date(*datasets):
     """
     try:
         if not datasets:
-            logger.warning(f"Invalid dates {datasets} data")
+            logger.warning(f"Datasets can't be empty: {datasets}")
             return None
 
         # Extracting and combining all unique dates from relevant columns
@@ -79,13 +79,13 @@ def dim_date(*datasets):
         dim_date["date_id"] = (
             dim_date["date"].dt.strftime("%Y%m%d").astype(int)
         )
-        dim_date["year"] = dim_date["date"].dt.year
-        dim_date["month"] = dim_date["date"].dt.month
-        dim_date["day"] = dim_date["date"].dt.day
-        dim_date["day_of_week"] = dim_date["date"].dt.dayofweek
+        dim_date["year"] = dim_date["date"].dt.year.astype("int64")
+        dim_date["month"] = dim_date["date"].dt.month.astype("int64")
+        dim_date["day"] = dim_date["date"].dt.day.astype("int64")
+        dim_date["day_of_week"] = dim_date["date"].dt.dayofweek.astype("int64")
         dim_date["day_name"] = dim_date["date"].dt.day_name()
         dim_date["month_name"] = dim_date["date"].dt.month_name()
-        dim_date["quarter"] = dim_date["date"].dt.quarter
+        dim_date["quarter"] = dim_date["date"].dt.quarter.astype("int64")
         # Not needed, just thought it was interesting to add
         # dim_date['day_of_week'] = dim_date['date'].dt.dayofweek
         # dim_date['is_weekend'] = dim_date['day_of_week'].isin([5, 6])
