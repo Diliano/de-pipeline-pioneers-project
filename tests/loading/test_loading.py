@@ -98,8 +98,8 @@ class TestLambdaHandler:
     ):
         # Arrange
         mock_read_file.return_value = [
-            f"s3://{mock_processed_bucket}/table1/file1.parquet",
-            f"s3://{mock_processed_bucket}/table2/file2.parquet",
+            f"s3://{mock_processed_bucket}/dim_staff/file1.parquet",
+            f"s3://{mock_processed_bucket}/fact_sales_order/file2.parquet",
         ]
         mock_process_parquet.return_value = mock_tables_data_frames
         mock_load_data.return_value = {
