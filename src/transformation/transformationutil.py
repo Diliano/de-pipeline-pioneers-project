@@ -1,11 +1,24 @@
 import pandas as pd
 import json
 from botocore.exceptions import ClientError
-from src.transformation.transformation import (
-    logger,
-    s3_client,
-    S3_INGESTION_BUCKET,
-)
+
+
+
+def extract_table_name(s3_key):
+    """
+    Extract the table name from the S3 key.
+
+    Args:
+        s3_key (str): Name of file being processed
+    Returns:
+        returns a string of the 'table_name'
+    """
+    try:
+        return s3_key.split("/")[1]
+    except AttributeError:
+        logger.error(f"Object {s3_key} has no attribute 'split'")
+    except IndexError as err:
+        logger.error(f"Invalid S3 key format: {s3_key}: {err}")
 
 
 # Transformation helper functions
@@ -408,6 +421,13 @@ def transform_fact_sales_order(sales_order):
             f"Unexpected error occurred in transform_fact_sales_order: {err} "
         )
         # return None
+
+# Needs implementing
+def transform_fact_purchase_orders(transactions, dim_date):
+    """
+    Transforms purchase transactions into fact_purchase_orders.
+    """
+    pass
 
 
 def transform_dim_design(design_data):
@@ -916,3 +936,10 @@ def transform_dim_department(department_data):
         logger.error(f"Validation error: {ve}")
     except Exception as e:
         logger.error(f"Error in transform_dim_department: {e}")
+
+
+from src.transformation.transformation import (
+    logger,
+    s3_client,
+    S3_INGESTION_BUCKET,
+)
