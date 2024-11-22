@@ -211,3 +211,17 @@ def test_successfully_loads_data_into_warehouse(
             (101, 30, 42.30),
         ],
     ) in executed_queries
+
+
+@patch("src.loading.code.db_utils.Connection")
+def test_handles_exceptions(mock_pg_connect, mock_tables_data_frames):
+    # Arrange
+    mock_conn = mock_pg_connect.return_value
+
+    mock_conn.run.side_effect = Exception("SQL execution failed")
+    # Act
+    results = load_data_into_warehouse(mock_conn, mock_tables_data_frames)
+    # Assert
+    assert results["successfully_loaded"] == []
+    assert results["failed_to_load"] == ["dim_staff", "fact_sales_order"]
+    assert results["skipped_empty"] == ["dim_location"]
