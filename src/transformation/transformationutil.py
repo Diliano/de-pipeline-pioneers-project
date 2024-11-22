@@ -629,6 +629,12 @@ def transform_dim_transaction(transaction_data):
         or None if an error occurs.
     """
     try:
+        if not isinstance(transaction_data, list):
+            raise ValueError("Input must be a list of dictionaries.")
+
+        if not transaction_data:
+            raise ValueError("transaction_data must be populated")
+
         dim_transaction = (
             pd.DataFrame(transaction_data)
             if not isinstance(transaction_data, pd.DataFrame)
@@ -638,7 +644,10 @@ def transform_dim_transaction(transaction_data):
         dim_transaction.drop(
             columns=["created_at", "last_updated"], inplace=True
         )
+        dim_transaction.drop_duplicates(inplace=True)
         return dim_transaction
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
     except Exception as err:
         logger.error(f"Unexpected error occurred with dim_transaction: {err}")
         # return None
