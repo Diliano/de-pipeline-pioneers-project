@@ -36,16 +36,26 @@ def save_transformed_data(table_name, data):
         parquet_buffer = StringIO()
         data.to_parquet(parquet_buffer, index=False, engine="pyarrow")
 
-        s3_client.put_object(Bucket=S3_PROCESSED_BUCKET, Key=processed_key, Body=parquet_buffer.getvalue())
+        s3_client.put_object(
+            Bucket=S3_PROCESSED_BUCKET,
+            Key=processed_key,
+            Body=parquet_buffer.getvalue(),
+        )
         logger.info(f"Saved latest data to: {processed_key}")
 
         # If it's a fact 'sales_order' table, append to the history folder
         if table_name.startswith("fact"):
-            s3_client.put_object(Bucket=S3_PROCESSED_BUCKET, Key=history_key, Body=parquet_buffer.getvalue())
+            s3_client.put_object(
+                Bucket=S3_PROCESSED_BUCKET,
+                Key=history_key,
+                Body=parquet_buffer.getvalue(),
+            )
             logger.info(f"Saved historical data to: {history_key}")
 
     except Exception as err:
-        logger.error(f"Error saving transformed data for table {table_name}: {err}")
+        logger.error(
+            f"Error saving transformed data for table {table_name}: {err}"
+        )
 
 
 # Predefined functions for ease of lookup
@@ -72,22 +82,28 @@ def lambda_handler(event, context):
             try:
                 # Fetching data from key
                 table_name = util.extract_table_name(s3_key=s3_key)
-                transform_function = TRANSFORMATION_FUNCTIONS.get(table_name, None)
+                transform_function = TRANSFORMATION_FUNCTIONS.get(
+                    table_name, None
+                )
 
                 if not transform_function:
-                    logger.warning(f"No transformation logic implemented for table: {table_name}")
+                    logger.warning(
+                        f"No transformation logic exists, table: {table_name}"
+                    )
                     continue
-                
+
                 # Load data from s3
                 data = util.load_data_from_s3_ingestion(key=s3_key)
-                transformed_data = util.process_table(table_name, transform_function, data)
+                transformed_data = util.process_table(
+                    table_name, transform_function, data
+                )
 
                 # Save transformed data
                 if transformed_data is not None:
                     save_transformed_data(table_name, transformed_data)
 
                 # Handle dim date if 'sales_order'
-                if table_name == 'sales_order':
+                if table_name == "sales_order":
                     transformed_data = transform_function(data)
                     dim_date = util.dim_date(pd.DataFrame(data))
                     save_transformed_data("dim_date", dim_date)
