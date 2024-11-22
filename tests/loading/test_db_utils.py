@@ -157,71 +157,76 @@ class TestConnectToDb:
         assert "Error connecting to the database" in caplog.text
 
 
-@patch("src.loading.code.db_utils.Connection")
-def test_successfully_loads_data_into_warehouse(
-    mock_pg_connect, mock_tables_data_frames
-):
-    # Arrange
-    def normalise_query(sql):
-        return (" ").join(sql.split())
+class TestLoadDataIntoWarehouse:
+    @patch("src.loading.code.db_utils.Connection")
+    def test_successfully_loads_data_into_warehouse(
+        self, mock_pg_connect, mock_tables_data_frames
+    ):
+        # Arrange
+        def normalise_query(sql):
+            return (" ").join(sql.split())
 
-    mock_conn = mock_pg_connect.return_value
+        mock_conn = mock_pg_connect.return_value
 
-    expected_dimension_query = normalise_query(
+        expected_dimension_query = normalise_query(
+            """
+            INSERT INTO "dim_staff" ("staff_id", "first_name", "last_name")
+            VALUES (%s, %s, %s)
+            ON CONFLICT ("staff_id") DO UPDATE
+            SET "staff_id" = EXCLUDED."staff_id",
+                "first_name" = EXCLUDED."first_name",
+                "last_name" = EXCLUDED."last_name";
         """
-        INSERT INTO "dim_staff" ("staff_id", "first_name", "last_name")
-        VALUES (%s, %s, %s)
-        ON CONFLICT ("staff_id") DO UPDATE
-        SET "staff_id" = EXCLUDED."staff_id",
-            "first_name" = EXCLUDED."first_name",
-            "last_name" = EXCLUDED."last_name";
-    """
-    )
-    expected_fact_query = normalise_query(
+        )
+        expected_fact_query = normalise_query(
+            """
+            INSERT INTO "fact_sales_order" ("sales_order_id", "units_sold", "unit_price")
+            VALUES (%s, %s, %s);
         """
-        INSERT INTO "fact_sales_order" ("sales_order_id", "units_sold", "unit_price")
-        VALUES (%s, %s, %s);
-    """
-    )
-    # Act
-    results = load_data_into_warehouse(mock_conn, mock_tables_data_frames)
+        )
+        # Act
+        results = load_data_into_warehouse(mock_conn, mock_tables_data_frames)
 
-    calls = mock_conn.run.call_args_list
-    executed_queries = [
-        (normalise_query(call.kwargs["sql"]), call.kwargs["params"])
-        for call in calls
-    ]
-    # Assert
-    assert results["successfully_loaded"] == ["dim_staff", "fact_sales_order"]
-    assert results["failed_to_load"] == []
-    assert results["skipped_empty"] == ["dim_location"]
+        calls = mock_conn.run.call_args_list
+        executed_queries = [
+            (normalise_query(call.kwargs["sql"]), call.kwargs["params"])
+            for call in calls
+        ]
+        # Assert
+        assert results["successfully_loaded"] == [
+            "dim_staff",
+            "fact_sales_order",
+        ]
+        assert results["failed_to_load"] == []
+        assert results["skipped_empty"] == ["dim_location"]
 
-    assert (
-        expected_dimension_query,
-        [
-            (1, "North", "Coder"),
-            (2, "Pipeline", "Pioneer"),
-        ],
-    ) in executed_queries
+        assert (
+            expected_dimension_query,
+            [
+                (1, "North", "Coder"),
+                (2, "Pipeline", "Pioneer"),
+            ],
+        ) in executed_queries
 
-    assert (
-        expected_fact_query,
-        [
-            (100, 10, 15.25),
-            (101, 30, 42.30),
-        ],
-    ) in executed_queries
+        assert (
+            expected_fact_query,
+            [
+                (100, 10, 15.25),
+                (101, 30, 42.30),
+            ],
+        ) in executed_queries
 
+    @patch("src.loading.code.db_utils.Connection")
+    def test_handles_exceptions(
+        self, mock_pg_connect, mock_tables_data_frames
+    ):
+        # Arrange
+        mock_conn = mock_pg_connect.return_value
 
-@patch("src.loading.code.db_utils.Connection")
-def test_handles_exceptions(mock_pg_connect, mock_tables_data_frames):
-    # Arrange
-    mock_conn = mock_pg_connect.return_value
-
-    mock_conn.run.side_effect = Exception("SQL execution failed")
-    # Act
-    results = load_data_into_warehouse(mock_conn, mock_tables_data_frames)
-    # Assert
-    assert results["successfully_loaded"] == []
-    assert results["failed_to_load"] == ["dim_staff", "fact_sales_order"]
-    assert results["skipped_empty"] == ["dim_location"]
+        mock_conn.run.side_effect = Exception("SQL execution failed")
+        # Act
+        results = load_data_into_warehouse(mock_conn, mock_tables_data_frames)
+        # Assert
+        assert results["successfully_loaded"] == []
+        assert results["failed_to_load"] == ["dim_staff", "fact_sales_order"]
+        assert results["skipped_empty"] == ["dim_location"]
