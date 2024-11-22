@@ -1,9 +1,50 @@
 import pandas as pd
-
-from src.transformation.transformation import logger
+import json
+from src.transformation.transformation import (
+    logger,
+    s3_client,
+    S3_INGESTION_BUCKET
+)
 
 
 # Transformation helper functions
+def load_data_from_s3_ingestion(key):
+    """
+    Loads data from the ingestion bucket
+    using a given key
+
+    ARGS:
+        key: string - s3 key file
+
+    RETURNS:
+        data from the ingestion bucket
+    """
+    try:
+        if not key or not isinstance(key, str):
+            raise ValueError("Invalid s3 key. Key must be non empty string.")
+        
+        logger.info(f"Attempting to load data from s3: {key}")
+        response = s3_client.get_object(Bucket=S3_INGESTION_BUCKET, Key=key)
+        logger.debug(f"s3 response {response['ResponseMetadata']}")
+
+        if "Body" not in response:
+            raise ValueError(f"No 'Body' content in s3 response for key: {key}")
+        
+        content = response["Body"].read().decode("utf-8")
+        logger.info(f"Successfully loaded data from s3 key: {key}")
+        data = json.loads(content)
+
+        return data
+    except s3_client.exceptions.NoSuchKey as nsk:
+        logger.error(f"The specified key {key} does not exist in bucket: {nsk}")
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
+    except json.JSONDecodeError as jde:
+        logger.error(f"Data decoding with json failed with key: {key}, {jde}")
+    except Exception as err:
+        logger.error(f"Unexpected error occurred fetching data from s3 ingestion: {err}")
+
+
 def dim_date(*datasets):
     """
     Create a comprehensive dim_date table with
