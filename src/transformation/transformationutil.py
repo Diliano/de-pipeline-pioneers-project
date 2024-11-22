@@ -579,9 +579,12 @@ def transform_dim_location(address_data):
         Unexpected error
     """
     try:
+        # not sure if we want to raise the errors
+        if not isinstance(address_data, list):
+            raise ValueError("Input must be a list of dictionaries.")
+
         if not address_data:
-            logger.warning("No address data provided")
-            return None
+            raise ValueError("Input must be populated.")
 
         dim_address = (
             pd.DataFrame(address_data)
