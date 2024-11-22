@@ -956,7 +956,7 @@ def transform_dim_department(department_data):
         logger.error(f"Error in transform_dim_department: {e}")
 
 
-from src.transformation.transformation import (
+from src.transformation.transformation import (  # noqa: E402
     logger,
     s3_client,
     S3_INGESTION_BUCKET,
