@@ -117,7 +117,7 @@ class TestConnectToDb:
     @patch("src.loading.code.db_utils.Connection")
     @patch("src.loading.code.db_utils.retrieve_db_credentials")
     def test_successfully_connects_to_db(
-        self, mock_retrieve_creds, mock_pg_connect, mock_db_credentials
+        self, mock_retrieve_creds, mock_pg_connect, mock_db_credentials, caplog
     ):
         # Arrange
         secret_name = "my_db_secret"
@@ -129,6 +129,8 @@ class TestConnectToDb:
         conn = connect_to_db(secret_name, region_name)
         # Assert
         assert conn == mock_conn
+        assert "Successfully connected to the database" in caplog.text
+
         mock_retrieve_creds.assert_called_once_with(secret_name, region_name)
         mock_pg_connect.assert_called_once_with(
             user="db_user",
