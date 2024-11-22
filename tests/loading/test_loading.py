@@ -145,3 +145,27 @@ class TestLambdaHandler:
         assert result["status"] == "Success"
         assert result["message"] == "No files to process this time."
         assert "No files to process this time." in caplog.text
+
+    @patch("src.loading.code.loading.read_file_list")
+    @patch("src.loading.code.loading.process_parquet_files")
+    def test_handles_no_data_frames(
+        self,
+        mock_process_parquet,
+        mock_read_file,
+        mock_s3,
+        mock_processed_bucket,
+        caplog,
+    ):
+        # Arrange
+        mock_read_file.return_value = [
+            f"s3://{mock_processed_bucket}/table1/file1.parquet"
+        ]
+        mock_process_parquet.return_value = {}
+        # Act
+        result = lambda_handler({}, None)
+        # Assert
+        assert result["status"] == "Failure"
+        assert (
+            result["message"]
+            == "Failed to process any Parquet files. Check logs for details."
+        )
