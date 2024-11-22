@@ -128,8 +128,10 @@ class TestLambdaHandler:
         assert not result["results"]["failed_to_load"]
         assert not result["results"]["skipped_empty"]
 
-        assert "All Parquet files processed successfully" in caplog.text
-        assert "All data loaded successfully into the warehouse" in caplog.text
+        assert "All Parquet files processed successfully." in caplog.text
+        assert (
+            "All data loaded successfully into the warehouse." in caplog.text
+        )
 
     @patch("src.loading.code.loading.read_file_list")
     def test_handles_no_file_paths(
