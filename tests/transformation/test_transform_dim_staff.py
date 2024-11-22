@@ -64,14 +64,16 @@ expected_dim_staff = pd.DataFrame([
 # Test cases for different cases
 
 
-def test_empty_dim_staff_data():
+def test_transform_dim_staff_return_type():
     # Arrange
-    empty_staff_data = []
-    # Act
-    result = transform_dim_staff(empty_staff_data, [])
+    expected_staff_data = staff_data
+    expected_department_data = department_data
 
+    # Act
+    result = transform_dim_staff(expected_staff_data, expected_department_data)
     # Assert
-    assert result is None
+    assert isinstance(
+        result, pd.DataFrame), f"Expected Dataframe, got {type(result)}"
 
 
 def test_transform_dim_staff_correct_transformation():
@@ -117,25 +119,43 @@ def test_transform_dim_staff_empty_inputs():
     print("test_transform_dim_staff_empty_inputs passed")
 
 
-def test_transform_dim_staff_missing_columns():
+def test_transform_dim_staff_missing_columns_handled_gracefully():
     # Arrange
+    complete_staff_data = pd.DataFrame([
+        {
+            "staff_id": 1,
+            "first_name": "John",
+            "last_name": "Doe",
+            "department_id": 101,
+            "email_address": "john.doe@example.com",
+            "created_at": "2023-01-01",
+            "last_updated": "2023-05-01",
+        }
+    ])
     incomplete_department_data = pd.DataFrame([
         {
             "department_id": 101,
             "department_name": "Engineering",
             "location": "New York"},
-        {"department_id": 102, "department_name": "HR", "location": "London"},
+    ])
+    expected = pd.DataFrame([
+        {
+            "staff_id": 1,
+            "first_name": "John",
+            "last_name": "Doe",
+            "department_name": "Engineering",
+            "location": "New York",
+            "email_address": "john.doe@example.com",
+        }
     ])
 
     # Act
-    try:
-        transform_dim_staff(staff_data, incomplete_department_data)
-    except KeyError as e:
-        # Assert
-        expected_missing_columns = [
-            "'manager'", "'created_at'", "'last_update'"]
-        assert any(col in str(e) for col in expected_missing_columns)
-        print("test_transform_dim_staff_missing_columns passed")
+    result = transform_dim_staff(
+        complete_staff_data, incomplete_department_data)
+
+    # Assert
+    pd.testing.assert_frame_equal(result, expected)
+    print("test_transform_dim_staff_missing_columns_handled_gracefully passed")
 
 
 def test_transform_dim_staff_no_matching_departments():
