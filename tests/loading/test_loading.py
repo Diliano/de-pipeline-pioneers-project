@@ -130,3 +130,16 @@ class TestLambdaHandler:
 
         assert "All Parquet files processed successfully" in caplog.text
         assert "All data loaded successfully into the warehouse" in caplog.text
+
+    @patch("src.loading.code.loading.read_file_list")
+    def test_handles_no_file_paths(
+        self, mock_read_file, mock_s3, mock_processed_bucket, caplog
+    ):
+        # Arrange
+        mock_read_file.return_value = []
+        # Act
+        result = lambda_handler({}, None)
+        # Assert
+        assert result["status"] == "Success"
+        assert result["message"] == "No files to process this time."
+        assert "No files to process this time." in caplog.text
