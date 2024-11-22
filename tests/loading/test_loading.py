@@ -169,3 +169,50 @@ class TestLambdaHandler:
             result["message"]
             == "Failed to process any Parquet files. Check logs for details."
         )
+
+    @patch("src.loading.code.loading.read_file_list")
+    @patch("src.loading.code.loading.process_parquet_files")
+    @patch("src.loading.code.loading.connect_to_db")
+    @patch("src.loading.code.loading.load_data_into_warehouse")
+    def test_handles_partial_success(
+        self,
+        mock_load_data,
+        mock_connect,
+        mock_process_parquet,
+        mock_read_file,
+        mock_s3,
+        mock_processed_bucket,
+        caplog,
+    ):
+        # Arrange
+        mock_read_file.return_value = [
+            f"s3://{mock_processed_bucket}/dim_staff/dim_staff.parquet",
+            f"s3://{mock_processed_bucket}/dim_currency/dim_currency.parquet",
+        ]
+        mock_process_parquet.return_value = {
+            "dim_staff": pd.DataFrame({"first_name": ["North"]}),
+        }
+        mock_load_data.return_value = {
+            "successfully_loaded": ["dim_staff"],
+            "failed_to_load": ["dim_currency"],
+            "skipped_empty": [],
+        }
+        # Act
+        result = lambda_handler({}, None)
+        # Assert
+        assert result["status"] == "Partial"
+        assert (
+            result["message"]
+            == "Partial success loading data into the warehouse. Check logs for details."
+        )
+        assert result["results"]["successfully_loaded"] == ["dim_staff"]
+        assert result["results"]["failed_to_load"] == ["dim_currency"]
+        assert not result["results"]["skipped_empty"]
+        assert (
+            "Partial success: Some Parquet files could not be processed. Check logs for details."
+            in caplog.text
+        )
+        assert (
+            "Partial success in loading data into the warehouse."
+            in caplog.text
+        )
