@@ -76,8 +76,12 @@ def load_data_into_warehouse(conn, tables_data_frames):
 
             if table_name.startswith("dim_"):
                 primary_key = DIM_PRIMARY_KEYS[table_name]
-                set_clause = (", ").join(
-                    [f'"{col}" = EXCLUDED."{col}"' for col in df.columns]
+                set_clause = ", ".join(
+                    [
+                        f'"{col}" = EXCLUDED."{col}"'
+                        for col in df.columns
+                        if col != primary_key
+                    ]
                 )
                 query = f"""
                     INSERT INTO "{table_name}" ({columns})

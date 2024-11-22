@@ -175,11 +175,11 @@ class TestLoadDataIntoWarehouse:
             INSERT INTO "dim_staff" ("staff_id", "first_name", "last_name")
             VALUES (%s, %s, %s)
             ON CONFLICT ("staff_id") DO UPDATE
-            SET "staff_id" = EXCLUDED."staff_id",
-                "first_name" = EXCLUDED."first_name",
+            SET "first_name" = EXCLUDED."first_name",
                 "last_name" = EXCLUDED."last_name";
         """
         )
+
         expected_fact_query = normalise_query(
             """
             INSERT INTO "fact_sales_order" ("sales_order_id", "units_sold", "unit_price")
