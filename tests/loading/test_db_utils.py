@@ -162,7 +162,7 @@ class TestConnectToDb:
 class TestLoadDataIntoWarehouse:
     @patch("src.loading.code.db_utils.Connection")
     def test_successfully_loads_data_into_warehouse(
-        self, mock_pg_connect, mock_tables_data_frames
+        self, mock_pg_connect, mock_tables_data_frames, caplog
     ):
         # Arrange
         def normalise_query(sql):
@@ -202,6 +202,10 @@ class TestLoadDataIntoWarehouse:
         assert results["failed_to_load"] == []
         assert results["skipped_empty"] == ["dim_location"]
 
+        assert "Skipping dim_location: DataFrame is empty" in caplog.text
+        assert "Successfully loaded data into 'dim_staff" in caplog.text
+        assert "Successfully loaded data into 'fact_sales_order" in caplog.text
+
         assert (
             expected_dimension_query,
             [
@@ -220,7 +224,7 @@ class TestLoadDataIntoWarehouse:
 
     @patch("src.loading.code.db_utils.Connection")
     def test_handles_exceptions(
-        self, mock_pg_connect, mock_tables_data_frames
+        self, mock_pg_connect, mock_tables_data_frames, caplog
     ):
         # Arrange
         mock_conn = mock_pg_connect.return_value
@@ -232,3 +236,6 @@ class TestLoadDataIntoWarehouse:
         assert results["successfully_loaded"] == []
         assert results["failed_to_load"] == ["dim_staff", "fact_sales_order"]
         assert results["skipped_empty"] == ["dim_location"]
+
+        assert "Error loading data into 'dim_staff'" in caplog.text
+        assert "Error loading data into 'fact_sales_order" in caplog.text
