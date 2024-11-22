@@ -16,24 +16,8 @@ S3_INGESTION_BUCKET = os.getenv(
     "S3_INGESTION_BUCKET",
 )
 S3_PROCESSED_BUCKET = os.getenv("S3_PROCESSED_BUCKET")
-
-
-def load_data_from_s3_ingestion(key):
-    """
-    Loads data from the ingestion bucket
-    using a given key
-
-    ARGS:
-        key: s3 key file
-
-    RETURNS:
-        data from the ingestion bucket
-    """
-    response = s3_client.get_object(Bucket=S3_INGESTION_BUCKET, Key=key)
-    logger.info(f"s3 replied with response {response}")
-    if "Body" in response:
-        data = json.loads(response["Body"].read().decode("utf-8"))
-    return data
+HISTORY_FOLDER = "history"
+PROCESSED_FOLDER = "processed"
 
 
 def transform_fact_purchase_orders(transactions, dim_date):
