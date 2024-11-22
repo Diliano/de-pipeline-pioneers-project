@@ -2,7 +2,6 @@ from unittest.mock import patch
 from src.transformation.transformationutil import extract_table_name
 
 
-
 # @patch("src.transformation.transformationutil.logger")
 def test_extract_table_name_missing_table_name():
     # Input: Invalid S3 key (missing table name)
@@ -10,7 +9,7 @@ def test_extract_table_name_missing_table_name():
 
     result = extract_table_name(s3_key)
 
-    assert result == ''
+    assert result == ""
 
 
 @patch("src.transformation.transformationutil.logger")
@@ -37,7 +36,9 @@ def test_extract_table_name_empty_string(mock_logger):
     assert result is None
 
     # Verifying logger captured the error, :)
-    mock_logger.error.assert_called_once_with("Invalid S3 key format: : list index out of range")
+    mock_logger.error.assert_called_once_with(
+        "Invalid S3 key format: : list index out of range"
+    )
 
 
 @patch("src.transformation.transformationutil.logger")
@@ -50,4 +51,6 @@ def test_extract_table_name_invalid_input_type(mock_logger):
     assert result is None
 
     # Verifying logger captured the error, :-()
-    mock_logger.error.assert_called_once_with(f"Object {s3_key} has no attribute 'split'")
+    mock_logger.error.assert_called_once_with(
+        f"Object {s3_key} has no attribute 'split'"
+    )
