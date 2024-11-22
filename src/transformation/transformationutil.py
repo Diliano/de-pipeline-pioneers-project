@@ -114,8 +114,8 @@ def transform_dim_counterparty(counterparty_data, address_data):
     the merged data into dim_counterparty.
 
     Args:
-        counterparty_data (list[dict] or pd.DataFrame): Counterparty dataset.
-        address_data (list[dict] or pd.DataFrame): Address dataset.
+        counterparty_data (list[dict]): Counterparty dataset.
+        address_data (list[dict]): Address dataset.
 
     Returns:
         pd.DataFrame: Transformed dim_counterparty table.
@@ -234,7 +234,7 @@ def transform_fact_sales_order(sales_order):
     fact_sales_order with error handling and validation.
 
     Args:
-        sales_order (list[dict] or pd.DataFrame):
+        sales_order (list[dict]):
         Raw sales order data.
 
     Returns:
@@ -426,9 +426,9 @@ def transform_dim_staff(staff_data, department_data):
     required format for dim_staff.
 
     Args:
-        staff_data (list[dict] or pd.DataFrame):
+        staff_data (list[dict]):
             Raw staff data.
-        department_data (list[dict] or pd.DataFrame):
+        department_data (list[dict]):
             Raw department data.
 
     Returns:
@@ -568,7 +568,7 @@ def transform_dim_location(address_data):
     error handling and validation.
 
     Args:
-        address_data (list[dict] or pd.DataFrame):
+        address_data (list[dict]):
             Raw address data.
 
     Returns:
@@ -604,6 +604,8 @@ def transform_dim_location(address_data):
         )
         dim_address.drop_duplicates(inplace=True)
         return dim_address
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
     except Exception as err:
         logger.error(
             f"Unexpected error occurred with transform_dim_location: {err}"
@@ -616,7 +618,7 @@ def transform_dim_transaction(transaction_data):
     with error handling and validation.
 
     Args:
-        transaction_data (list[dict] or pd.DataFrame):
+        transaction_data (list[dict]):
             Raw transaction data.
 
     Returns:
@@ -647,7 +649,7 @@ def transform_dim_payment_types(
     with error handling and validation.
 
     Args:
-        payment_types_data (list[dict] or pd.DataFrame):
+        payment_types_data (list[dict]):
             Raw payment types data.
 
     Returns:
@@ -677,11 +679,11 @@ def transform_fact_payment(
     type data into fact_payment.
 
     Args:
-        payments_data (list[dict] or pd.DataFrame):
+        payments_data (list[dict]):
             Raw payments data.
-        transactions_data (list[dict] or pd.DataFrame):
+        transactions_data (list[dict]):
             Raw transactions data.
-        payment_type_data (list[dict] or pd.DataFrame):
+        payment_type_data (list[dict]):
             Raw payment type data.
 
     Returns:
@@ -806,7 +808,7 @@ def transform_dim_department(department_data):
     with error handling and validation.
 
     Args:
-        department_data (list[dict] or pd.DataFrame):
+        department_data (list[dict]):
             Raw department data.
 
     Returns:
@@ -814,19 +816,6 @@ def transform_dim_department(department_data):
             DataFrame or None if an error occurs.
     """
     try:
-        if isinstance(department_data, pd.DataFrame) and department_data.empty:
-            logger.info(
-                "Received empty DataFrame. Returning an empty DataFrame."
-            )
-            return pd.DataFrame(
-                columns=[
-                    "department_id",
-                    "department_name",
-                    "location",
-                    "manager",
-                ]
-            )
-
         if isinstance(department_data, list) and not department_data:
             logger.info("Received empty list. Returning an empty DataFrame.")
             return pd.DataFrame(
