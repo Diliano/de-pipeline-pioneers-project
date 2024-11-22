@@ -3,6 +3,23 @@ import json
 from botocore.exceptions import ClientError
 
 
+def process_table(table_name, transform_function, data):
+    """
+    Process a specific table using its transformation function.
+
+    Args:
+        table_name (str): The name of the table being processed.
+        transform_function (callable): The transformation
+            function to apply.
+        data (list[dict]): The data to transform.
+
+    Returns:
+        pd.DataFrame: The transformed data.
+    """
+    logger.info(f"Processing table: {table_name}")
+    transformed_data = transform_function(data)
+    return transformed_data
+
 
 def extract_table_name(s3_key):
     """
@@ -421,6 +438,7 @@ def transform_fact_sales_order(sales_order):
             f"Unexpected error occurred in transform_fact_sales_order: {err} "
         )
         # return None
+
 
 # Needs implementing
 def transform_fact_purchase_orders(transactions, dim_date):
