@@ -8,6 +8,15 @@ from pg8000.native import Connection
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+DIM_PRIMARY_KEYS = {
+    "dim_date": "date_id",
+    "dim_staff": "staff_id",
+    "dim_location": "location_id",
+    "dim_currency": "currency_id",
+    "dim_design": "design_id",
+    "dim_counterparty": "counterparty_id",
+}
+
 
 def retrieve_db_credentials(secret_name, region_name):
     try:
@@ -48,14 +57,6 @@ def connect_to_db(secret_name, region_name):
 
 
 def load_data_into_warehouse(conn, tables_data_frames):
-    DIM_PRIMARY_KEYS = {
-        "dim_date": "date_id",
-        "dim_staff": "staff_id",
-        "dim_location": "location_id",
-        "dim_currency": "currency_id",
-        "dim_design": "design_id",
-        "dim_counterparty": "counterparty_id",
-    }
     results = {
         "successfully_loaded": [],
         "failed_to_load": [],
