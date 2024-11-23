@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 from botocore.exceptions import ClientError
-from io import StringIO
+from io import BytesIO
 from datetime import datetime
 
 
@@ -18,6 +18,9 @@ def save_transformed_data(table_name, data):
     Parquet files to the processed S3 bucket.
     """
     try:
+        if not isinstance(data, pd.DataFrame) or data.empty:
+            raise ValueError(f"Invalid or empty DataFrame provided for table: {table_name}")
+        
         now = datetime.utcnow()
         timestamp = now.strftime("%Y%m%d%H%M%S")
 
@@ -25,8 +28,9 @@ def save_transformed_data(table_name, data):
         processed_key = f"{PROCESSED_FOLDER}/{table_name}/{timestamp}.parquet"
         history_key = f"{HISTORY_FOLDER}/{table_name}/{timestamp}.parquet"
 
-        parquet_buffer = StringIO()
+        parquet_buffer = BytesIO()
         data.to_parquet(parquet_buffer, index=False, engine="pyarrow")
+        parquet_buffer.seek(0)  # Resets the bugger pointer
 
         s3_client.put_object(
             Bucket=S3_PROCESSED_BUCKET,
@@ -37,13 +41,17 @@ def save_transformed_data(table_name, data):
 
         # If it's a fact 'sales_order' table, append to the history folder
         if table_name.startswith("fact"):
+            parquet_buffer.seek(0)
             s3_client.put_object(
                 Bucket=S3_PROCESSED_BUCKET,
                 Key=history_key,
                 Body=parquet_buffer.getvalue(),
             )
             logger.info(f"Saved historical data to: {history_key}")
-
+    except ValueError as ve:
+        logger.error(
+            f"Validation error in saving data for table:{table_name} - {ve}"
+        )
     except Exception as err:
         logger.error(
             f"Error saving transformed data for table {table_name}: {err}"
