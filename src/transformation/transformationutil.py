@@ -415,6 +415,14 @@ def transform_fact_sales_order(sales_order):
         If required columns are missing or invalid data is provided.
     """
     try:
+        if not isinstance(sales_order, list):
+            raise ValueError(
+                f"Input data has to be a list but received {type(sales_order)}"
+            )
+
+        if not sales_order:
+            raise ValueError("Empty data provided")
+
         fact_sales_order = (
             pd.DataFrame(sales_order)
             if not isinstance(sales_order, pd.DataFrame)
@@ -526,6 +534,8 @@ def transform_fact_sales_order(sales_order):
         ]
 
         return fact_sales_order
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
     except Exception as err:
         logger.error(
             f"Unexpected error occurred in transform_fact_sales_order: {err} "
