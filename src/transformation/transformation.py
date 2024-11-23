@@ -60,13 +60,19 @@ def lambda_handler(event, context):
 
                 # Save transformed data
                 if transformed_data is not None:
-                    util.save_transformed_data(table_name, transformed_data)
+                    util.save_transformed_data(
+                        table_name,
+                        transformed_data,
+                        S3_PROCESSED_BUCKET)
 
                 # Handle dim date if 'sales_order'
                 if table_name == "sales_order":
                     transformed_data = transform_function(data)
                     dim_date = util.dim_date(pd.DataFrame(data))
-                    util.save_transformed_data("dim_date", dim_date)
+                    util.save_transformed_data(
+                        "dim_date",
+                        dim_date,
+                        S3_PROCESSED_BUCKET)
 
             except Exception as record_error:
                 logger.error(f"Error parsing record {s3_key}: {record_error}")

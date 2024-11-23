@@ -54,6 +54,42 @@ def mock_s3_event():
 
 
 @pytest.fixture
+def valid_sales_order_data():
+    """Fixture providing valid sales_order data."""
+    return [
+        {
+            "sales_order_id": 1,
+            "created_at": "2023-01-01 12:34:56",
+            "last_updated": "2023-01-02 14:45:30",
+            "staff_id": 101,
+            "counterparty_id": 201,
+            "design_id": 301,
+            "units_sold": 50,
+            "unit_price": "25.75",
+            "currency_id": 1,
+            "agreed_payment_date": "2023-01-15",
+            "agreed_delivery_date": "2023-01-20",
+            "agreed_delivery_location_id": 401,
+        }
+    ]
+
+
+@pytest.fixture
+def invalid_sales_order_data():
+    """Fixture providing invalid sales_order data."""
+    return [
+        {
+            "sales_order_id": 1,
+            "created_at": "not-a-date",
+            "last_updated": "not-a-date",
+            "staff_id": "invalid",
+            "units_sold": "invalid",
+            "unit_price": "invalid",
+        }
+    ]
+
+
+@pytest.fixture
 def mock_s3_client():
     # mocking s3 client
     with mock_aws():
