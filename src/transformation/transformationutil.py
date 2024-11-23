@@ -1,9 +1,58 @@
 import pandas as pd
 import json
 from botocore.exceptions import ClientError
+from io import StringIO
+from datetime import datetime
+
+
+def save_transformed_data(table_name, data):
+    from src.transformation.transformation import (
+        PROCESSED_FOLDER,
+        HISTORY_FOLDER,
+        S3_PROCESSED_BUCKET,
+        s3_client,
+        logger
+    )
+    """
+    Save transformed DataFrames as
+    Parquet files to the processed S3 bucket.
+    """
+    try:
+        now = datetime.utcnow()
+        timestamp = now.strftime("%Y%m%d%H%M%S")
+
+        # Defining S3 paths
+        processed_key = f"{PROCESSED_FOLDER}/{table_name}/{timestamp}.parquet"
+        history_key = f"{HISTORY_FOLDER}/{table_name}/{timestamp}.parquet"
+
+        parquet_buffer = StringIO()
+        data.to_parquet(parquet_buffer, index=False, engine="pyarrow")
+
+        s3_client.put_object(
+            Bucket=S3_PROCESSED_BUCKET,
+            Key=processed_key,
+            Body=parquet_buffer.getvalue(),
+        )
+        logger.info(f"Saved latest data to: {processed_key}")
+
+        # If it's a fact 'sales_order' table, append to the history folder
+        if table_name.startswith("fact"):
+            s3_client.put_object(
+                Bucket=S3_PROCESSED_BUCKET,
+                Key=history_key,
+                Body=parquet_buffer.getvalue(),
+            )
+            logger.info(f"Saved historical data to: {history_key}")
+
+    except Exception as err:
+        logger.error(
+            f"Error saving transformed data for table {table_name}: {err}"
+        )
+
 
 
 def process_table(table_name, transform_function, data):
+    from src.transformation.transformation import logger
     """
     Process a specific table using its transformation function.
 
@@ -22,6 +71,7 @@ def process_table(table_name, transform_function, data):
 
 
 def extract_table_name(s3_key):
+    from src.transformation.transformation import logger
     """
     Extract the table name from the S3 key.
 
@@ -40,6 +90,10 @@ def extract_table_name(s3_key):
 
 # Transformation helper functions
 def load_data_from_s3_ingestion(key):
+    from src.transformation.transformation import (
+        logger,
+        S3_INGESTION_BUCKET,
+        s3_client)
     """
     Loads data from the ingestion bucket
     using a given key
@@ -83,6 +137,7 @@ def load_data_from_s3_ingestion(key):
 
 
 def dim_date(*datasets):
+    from src.transformation.transformation import logger
     """
     Create a comprehensive dim_date table with
     a date_id column from multiple datasets.
@@ -187,6 +242,7 @@ def dim_date(*datasets):
 
 
 def transform_dim_counterparty(counterparty_data, address_data):
+    from src.transformation.transformation import logger
     """
     Merges counterparty data and address data and transforms
     the merged data into dim_counterparty.
@@ -307,6 +363,7 @@ def transform_dim_counterparty(counterparty_data, address_data):
 
 
 def transform_fact_sales_order(sales_order):
+    from src.transformation.transformation import logger
     """
     Transforms sales transactions into
     fact_sales_order with error handling and validation.
@@ -449,6 +506,7 @@ def transform_fact_purchase_orders(transactions, dim_date):
 
 
 def transform_dim_design(design_data):
+    from src.transformation.transformation import logger
     """
     Transforms design data into dim_design with error handling and logging.
 
@@ -507,6 +565,7 @@ def transform_dim_design(design_data):
 
 
 def transform_dim_staff(staff_data, department_data):
+    from src.transformation.transformation import logger
     """
     Transforms staff and department records into the
     required format for dim_staff.
@@ -579,6 +638,7 @@ def transform_dim_staff(staff_data, department_data):
 
 
 def transform_dim_currency(currency_data):
+    from src.transformation.transformation import logger
     """
     Transforms raw currency data into dim_currency.
 
@@ -649,6 +709,7 @@ def transform_dim_currency(currency_data):
 
 
 def transform_dim_location(address_data):
+    from src.transformation.transformation import logger
     """
     Transforms address data into dim_location with
     error handling and validation.
@@ -702,6 +763,7 @@ def transform_dim_location(address_data):
 
 
 def transform_dim_transaction(transaction_data):
+    from src.transformation.transformation import logger
     """
     Transforms raw transaction data into dim_transaction
     with error handling and validation.
@@ -742,6 +804,7 @@ def transform_dim_transaction(transaction_data):
 def transform_dim_payment_types(
     payment_types_data,
 ):
+    from src.transformation.transformation import logger
     """
     Transforms raw payment types data into dim_payment_type
     with error handling and validation.
@@ -772,6 +835,7 @@ def transform_dim_payment_types(
 def transform_fact_payment(
     payments_data, transactions_data, payment_type_data
 ):
+    from src.transformation.transformation import logger
     """
     Transforms raw payments, transactions, and payment
     type data into fact_payment.
@@ -901,6 +965,7 @@ def transform_fact_payment(
 
 
 def transform_dim_department(department_data):
+    from src.transformation.transformation import logger
     """
     Transforms raw department data into dim_department
     with error handling and validation.
@@ -956,8 +1021,8 @@ def transform_dim_department(department_data):
         logger.error(f"Error in transform_dim_department: {e}")
 
 
-from src.transformation.transformation import (  # noqa: E402
-    logger,
-    s3_client,
-    S3_INGESTION_BUCKET,
-)
+# from src.transformation.transformation import (  # noqa: E402
+#     logger,
+#     s3_client,
+#     S3_INGESTION_BUCKET,
+# )
