@@ -1,5 +1,3 @@
-from datetime import datetime
-from io import StringIO
 import logging
 import boto3
 import src.transformation.transformationutil as util
@@ -18,44 +16,6 @@ S3_INGESTION_BUCKET = os.getenv(
 S3_PROCESSED_BUCKET = os.getenv("S3_PROCESSED_BUCKET")
 HISTORY_FOLDER = "history"
 PROCESSED_FOLDER = "processed"
-
-
-def save_transformed_data(table_name, data):
-    """
-    Save transformed DataFrames as
-    Parquet files to the processed S3 bucket.
-    """
-    try:
-        now = datetime.utcnow()
-        timestamp = now.strftime("%Y%m%d%H%M%S")
-
-        # Defining S3 paths
-        processed_key = f"{PROCESSED_FOLDER}/{table_name}/{timestamp}.parquet"
-        history_key = f"{HISTORY_FOLDER}/{table_name}/{timestamp}.parquet"
-
-        parquet_buffer = StringIO()
-        data.to_parquet(parquet_buffer, index=False, engine="pyarrow")
-
-        s3_client.put_object(
-            Bucket=S3_PROCESSED_BUCKET,
-            Key=processed_key,
-            Body=parquet_buffer.getvalue(),
-        )
-        logger.info(f"Saved latest data to: {processed_key}")
-
-        # If it's a fact 'sales_order' table, append to the history folder
-        if table_name.startswith("fact"):
-            s3_client.put_object(
-                Bucket=S3_PROCESSED_BUCKET,
-                Key=history_key,
-                Body=parquet_buffer.getvalue(),
-            )
-            logger.info(f"Saved historical data to: {history_key}")
-
-    except Exception as err:
-        logger.error(
-            f"Error saving transformed data for table {table_name}: {err}"
-        )
 
 
 # Predefined functions for ease of lookup
@@ -100,13 +60,13 @@ def lambda_handler(event, context):
 
                 # Save transformed data
                 if transformed_data is not None:
-                    save_transformed_data(table_name, transformed_data)
+                    util.save_transformed_data(table_name, transformed_data)
 
                 # Handle dim date if 'sales_order'
                 if table_name == "sales_order":
                     transformed_data = transform_function(data)
                     dim_date = util.dim_date(pd.DataFrame(data))
-                    save_transformed_data("dim_date", dim_date)
+                    util.save_transformed_data("dim_date", dim_date)
 
             except Exception as record_error:
                 logger.error(f"Error parsing record {s3_key}: {record_error}")
