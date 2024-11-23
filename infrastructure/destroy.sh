@@ -6,14 +6,18 @@ set -e
 # Variables
 PROJECT_NAME="de-pipeline-pioneers"
 TERRAFORM_DIR="./terraform"
-S3_INGESTION_BUCKET="not-sure-yet"
-S3_PROCESSED_BUCKET="not-sure-yet"
 
 
 # 
 echo "========================================="
 echo "🚀 Starting Infrastructure Cleanup Process"
 echo "========================================="
+
+
+# Fetching S3 Bucket Name Dynamically
+echo "👉 Fetching S3 Bucket name from Terraform..."
+S3_INGESTION_BUCKET=$(terraform -chdir=./terraform output -raw S3_INGESTION_BUCKET)
+S3_PROCESSED_BUCKET=$(terraform -chdir=./terraform output -raw S3_PROCESSED_BUCKET)
 
 
 # Checking Terraform Dependency
@@ -27,6 +31,9 @@ echo "👉 Terraform available!"
 # Navigating to Terraform Dir
 echo "👉 Initialising Terraform!"
 cd $TERRAFORM_DIR
+
+# Initialising
+terraform init -input=false
 
 
 # Removing objects from S3 Buckets
