@@ -1,4 +1,4 @@
-name: CI/CD Pioneer Pipeline
+name: CI/CD Pioneer Pipeline Deploy Workflow
 
 on:
     push:
@@ -12,10 +12,10 @@ jobs:
   test-list-deploy:
     runs-on: ubuntu-latest
 
-    env:
-      S3_INGESTION_BUCKET: "test_bucket"
-      TIMESTAMP_FILE_KEY: "metadata/last_ingestion_timestamp.json"
-      AWS_REGION: "eu-west-2"
+    # env:
+    #   S3_INGESTION_BUCKET: "test_bucket"
+    #   TIMESTAMP_FILE_KEY: "metadata/last_ingestion_timestamp.json"
+    #   AWS_REGION: "eu-west-2"
 
     steps:
         - name: Checkout
@@ -64,4 +64,11 @@ jobs:
         #   run: make check-coverage
         
         # if we need to deploy to AWS, insert here
-        #- name: Deploy to aws lambda
+        # - name: Make deployment bash file executable
+        #   run: chmod +x ./infrastructure/deploy.sh
+
+        # - name: Deploy Infrastructure
+        #   run: |
+        #     ./infrastructure/deploy.sh
+
+      
