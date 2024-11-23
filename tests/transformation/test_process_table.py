@@ -3,7 +3,7 @@ from src.transformation.transformationutil import process_table
 import pandas as pd
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_process_table_valid_input(mock_logger):
     # Mock transformation function
     mock_transform_function = Mock()
@@ -29,7 +29,7 @@ def test_process_table_valid_input(mock_logger):
     mock_logger.info.assert_called_once_with(f"Processing table: {table_name}")
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_process_table_empty_data(mock_logger):
     # Mock transformation function
     mock_transform_function = Mock()
@@ -50,7 +50,7 @@ def test_process_table_empty_data(mock_logger):
     mock_logger.info.assert_called_once_with(f"Processing table: {table_name}")
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_process_table_invalid_table_name(mock_logger):
     # Mock transformation function
     mock_transform_function = Mock()

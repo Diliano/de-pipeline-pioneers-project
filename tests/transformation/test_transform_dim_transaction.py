@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pandas as pd
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_transaction_valid_list(mock_logger):
     # Input: List of dictionaries
     transaction_data = [
@@ -41,7 +41,7 @@ def test_transform_dim_transaction_valid_list(mock_logger):
     mock_logger.error.assert_not_called()
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_transaction_empty_list(mock_logger):
     # Input: Empty list
     transaction_data = []
@@ -55,7 +55,7 @@ def test_transform_dim_transaction_empty_list(mock_logger):
     )
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_transaction_invalid_input_type(mock_logger):
     # Input: Invalid type (string)
     transaction_data = "invalid_data"
@@ -69,7 +69,7 @@ def test_transform_dim_transaction_invalid_input_type(mock_logger):
     )
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_transaction_duplicates(mock_logger):
     # Input: List with duplicate rows
     transaction_data = [

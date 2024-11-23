@@ -3,7 +3,7 @@ from unittest.mock import patch
 from src.transformation.transformationutil import transform_dim_department
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_department_valid_list(mock_logger):
     # Input: List of dictionaries
     input_data = [
@@ -41,7 +41,7 @@ def test_transform_dim_department_valid_list(mock_logger):
     mock_logger.error.assert_not_called()
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_department_valid_dataframe(mock_logger):
     # Input: DataFrame
     input_data = pd.DataFrame(
@@ -71,7 +71,7 @@ def test_transform_dim_department_valid_dataframe(mock_logger):
     mock_logger.error.assert_not_called()
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_department_missing_columns(mock_logger):
     # Input: Missing required columns
     input_data = [
@@ -90,7 +90,7 @@ def test_transform_dim_department_missing_columns(mock_logger):
     mock_logger.error.assert_called_once()
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_department_empty_input(mock_logger):
     # Input: Empty data
     input_data = []
@@ -106,7 +106,7 @@ def test_transform_dim_department_empty_input(mock_logger):
     mock_logger.error.assert_not_called()
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_department_invalid_input_type(mock_logger):
     # Input: Invalid data type
     input_data = "invalid_data"

@@ -12,7 +12,7 @@ def test_extract_table_name_missing_table_name():
     assert result == ""
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_extract_table_name_valid_key(mock_logger):
     # Input: Valid S3 key
     s3_key = "ingestion/table_name/file_235235235235.json"
@@ -26,7 +26,7 @@ def test_extract_table_name_valid_key(mock_logger):
     mock_logger.error.assert_not_called()
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_extract_table_name_empty_string(mock_logger):
     # Input: Empty string
     s3_key = ""
@@ -41,7 +41,7 @@ def test_extract_table_name_empty_string(mock_logger):
     )
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_extract_table_name_invalid_input_type(mock_logger):
     # Input: Invalid input type (None)
     s3_key = None

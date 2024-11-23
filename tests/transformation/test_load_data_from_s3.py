@@ -10,7 +10,7 @@ MISSING_BODY_KEY = "missing-body.json"
 
 
 @patch(
-    "src.transformation.transformationutil.S3_INGESTION_BUCKET", "test_bucket"
+    "src.transformation.transformation.S3_INGESTION_BUCKET", "test_bucket"
 )
 def test_load_data_from_s3_ingestion_empty_key(mock_s3_client, caplog):
     # Input: Empty String
@@ -20,7 +20,7 @@ def test_load_data_from_s3_ingestion_empty_key(mock_s3_client, caplog):
 
 
 @patch(
-    "src.transformation.transformationutil.S3_INGESTION_BUCKET", "test_bucket"
+    "src.transformation.transformation.S3_INGESTION_BUCKET", "test_bucket"
 )
 def test_load_data_from_s3_ingestion_non_string_key(mock_s3_client, caplog):
     # Input: Non String Key
@@ -30,7 +30,7 @@ def test_load_data_from_s3_ingestion_non_string_key(mock_s3_client, caplog):
 
 
 @patch(
-    "src.transformation.transformationutil.S3_INGESTION_BUCKET", "test_bucket"
+    "src.transformation.transformation.S3_INGESTION_BUCKET", "test_bucket"
 )
 def test_load_data_from_s3_ingestion_valid_key(mock_s3_client, caplog):
     # Input: Valid Key
@@ -54,7 +54,7 @@ def test_load_data_from_s3_ingestion_valid_key(mock_s3_client, caplog):
 
 
 @patch(
-    "src.transformation.transformationutil.S3_INGESTION_BUCKET", "test_bucket"
+    "src.transformation.transformation.S3_INGESTION_BUCKET", "test_bucket"
 )
 def test_load_data_from_s3_ingestion_invalid_json(mock_s3_client, caplog):
     # Input: Invalid JSON Data
@@ -76,7 +76,7 @@ def test_load_data_from_s3_ingestion_invalid_json(mock_s3_client, caplog):
 
 
 @patch(
-    "src.transformation.transformationutil.S3_INGESTION_BUCKET", "test_bucket"
+    "src.transformation.transformation.S3_INGESTION_BUCKET", "test_bucket"
 )
 def test_load_data_from_s3_ingestion_missing_body(mock_s3_client, caplog):
     # Simulate missing body
@@ -95,7 +95,7 @@ def test_load_data_from_s3_ingestion_missing_body(mock_s3_client, caplog):
 
 
 @patch(
-    "src.transformation.transformationutil.S3_INGESTION_BUCKET", "test_bucket"
+    "src.transformation.transformation.S3_INGESTION_BUCKET", "test_bucket"
 )
 def test_load_data_from_s3_ingestion_no_such_key(mock_s3_client, caplog):
     # Non existent key
