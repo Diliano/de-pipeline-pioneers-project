@@ -67,7 +67,7 @@ def save_transformed_data(table_name, data, S3_PROCESSED_BUCKET):
                 logger.info(f"Saved historical data to s3: {history_key}")
             except Exception as err:
                 logger.error(
-                    f"Error saving historical data for table: {table_name}, {err}"
+                    f"Error saving historical data: {table_name}, {err}"
                 )
 
     except ValueError as ve:
