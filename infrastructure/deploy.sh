@@ -29,7 +29,7 @@ echo "✅ Intialised Terraform!"
 
 # Applying Terraform Configuration
 echo "👉 Applying Terraform Configuration..."
-terraform apply
+terraform apply -auto-approve
 
 
 echo "✅ Infrastructure Deployment Complete!"
