@@ -6,6 +6,7 @@ import json
 #
 from src.ingestion.utils import SECRET_NAME
 
+TEST_BUCKET = "test_ingestion_bucket"
 
 # Defining a fixture
 @pytest.fixture
@@ -30,6 +31,23 @@ def mock_secrets_manager():
         )
 
         yield secrets_client
+
+
+@pytest.fixture
+def mock_s3_event():
+    """Generates a mock S3 event."""
+    def _event(key):
+        return {
+            "Records": [
+                {
+                    "s3": {
+                        "bucket": {"name": TEST_BUCKET},
+                        "object": {"key": key},
+                    }
+                }
+            ]
+        }
+    return _event
 
 
 @pytest.fixture
