@@ -594,16 +594,19 @@ def transform_dim_staff(staff_data, department_data):
         )
         # Dropping unnecessary columns
         department.drop(
-            columns=["manager", "created_at", "last_updated"], inplace=True
+            columns=["manager", "created_at", "last_updated"],
+            inplace=True, errors="ignore"
         )
-        staff.drop(columns=["created_at", "last_updated"], inplace=True)
+        staff.drop(columns=["created_at", "last_updated"],
+                   inplace=True, errors="ignore")
 
         dim_staff = pd.merge(
             staff, department, on="department_id", how="inner"
         )
         # Why is department_id twice here?
         dim_staff.drop(
-            columns=["department_id", "department_id"], inplace=True
+            columns=["department_id", "department_id"],
+            inplace=True, errors="ignore"
         )
 
         # Converting datatypes, not sure if its necessary
