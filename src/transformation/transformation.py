@@ -1,9 +1,7 @@
-from datetime import datetime
-from io import BytesIO
 import logging
 import boto3
-
-# import pandas as pd
+import src.transformation.transformationutil as util
+import pandas as pd
 import json
 import os
 
@@ -16,101 +14,65 @@ S3_INGESTION_BUCKET = os.getenv(
     "S3_INGESTION_BUCKET",
 )
 S3_PROCESSED_BUCKET = os.getenv("S3_PROCESSED_BUCKET")
+HISTORY_FOLDER = "history"
+PROCESSED_FOLDER = "processed"
 
 
-def load_data_from_s3_ingestion(key):
-    """
-    Loads data from the ingestion bucket
-    using a given key
-
-    ARGS:
-        key: s3 key file
-
-    RETURNS:
-        data from the ingestion bucket
-    """
-    response = s3_client.get_object(Bucket=S3_INGESTION_BUCKET, Key=key)
-    logger.info(f"s3 replied with response {response}")
-    if "Body" in response:
-        data = json.loads(response["Body"].read().decode("utf-8"))
-    return data
-
-
-def transform_fact_purchase_orders(transactions, dim_date):
-    """
-    Transforms purchase transactions into fact_purchase_orders.
-    """
-    pass
-
-
-def transform_data(data):
-    """ """
-
-    # return {
-    #     "fact_sales_order": fact_sales_order,
-    #     "dim_date": dim_date,
-    #     "dim_counterparty": dim_counterparty,
-    #     "dim_staff": dim_staff,
-    #     "dim_location": dim_location,
-    #     "dim_design": dim_design,
-    #     "dim_currency": dim_currency
-    # }
-    pass
-
-
-def save_transformed_data(dataframes):
-    """
-    Save transformed DataFrames as
-    Parquet files to the processed S3 bucket.
-    """
-    for table_name, df in dataframes.items():
-        if not df.empty:
-            buffer = BytesIO()
-            df.to_parquet(buffer, index=False)
-            buffer.seek(0)
-            file_path = f"processed/{table_name}/{table_name}"
-            s3_key = (
-                file_path
-                + f"_{datetime.now().strftime('%Y%m%d%H%M%S')}.parquet"
-            )
-            s3_client.put_object(
-                Bucket=S3_PROCESSED_BUCKET,
-                Key=s3_key,
-                Body=buffer.getvalue(),
-            )
-            logger.info(
-                f"Saved {table_name} to s3://{S3_PROCESSED_BUCKET}/{s3_key}"
-            )
-
-
-# Commented for now
-# TRANSFORMATION_FUNCTIONS = {
-#     "counterparty": transform_dim_counterparty,
-#     "currency": transform_dim_currency,
-#     "department": transform_dim_department,
-#     "design": transform_dim_design,
-#     "staff": transform_dim_staff,
-#     "payment": transform_dim_payment_type,
-#     "transaction": transform_dim_transaction,
-# }
+# Predefined functions for ease of lookup
+TRANSFORMATION_FUNCTIONS = {
+    "sales_order": util.transform_fact_sales_order,
+    "staff": util.transform_dim_staff,
+    "address": util.transform_dim_location,
+    "design": util.transform_dim_design,
+    "currency": util.transform_dim_currency,
+    "counterparty": util.transform_dim_counterparty,
+}
 
 
 def lambda_handler(event, context):
     """Lambda handler function."""
     logger.info("Received event: %s", json.dumps(event))
 
-    # table_data = {}
+    try:
+        # event contains the S3 object key of the ingested data
+        # from being invoked by s3 ingestion bucket
+        for record in event["Records"]:
+            s3_key = record["s3"]["object"]["key"]
+            logger.info(f"Processing file: {s3_key}")
+            try:
+                # Fetching data from key
+                table_name = util.extract_table_name(s3_key=s3_key)
+                transform_function = TRANSFORMATION_FUNCTIONS.get(
+                    table_name, None
+                )
 
-    # Assuming event contains the S3 object key of the ingested data
-    for record in event["Records"]:
-        s3_key = record["s3"]["object"]["key"]
-        logger.info(f"Processing file: {s3_key}")
+                if not transform_function:
+                    logger.warning(
+                        f"No transformation logic exists, table: {table_name}"
+                    )
+                    continue
 
-        # table_name = s3_key.split("/")[1]
-        # if table_name in TRANSFORMATION_FUNCTIONS:
-        #     # print(TRANSFORMATION_FUNCTIONS[table_name])
-        #     logger.warning(f"Skipping file with invalid format: {s3_key}")
-        #     continue
+                # Load data from s3
+                data = util.load_data_from_s3_ingestion(key=s3_key)
+                transformed_data = util.process_table(
+                    table_name, transform_function, data
+                )
 
-    logger.info("Transformation process completed")
-    return {"statusCode": 200, "body": "Transformation complete"}
+                # Save transformed data
+                if transformed_data is not None:
+                    util.save_transformed_data(table_name, transformed_data)
+
+                # Handle dim date if 'sales_order'
+                if table_name == "sales_order":
+                    transformed_data = transform_function(data)
+                    dim_date = util.dim_date(pd.DataFrame(data))
+                    util.save_transformed_data("dim_date", dim_date)
+
+            except Exception as record_error:
+                logger.error(f"Error parsing record {s3_key}: {record_error}")
+                continue
+
+        logger.info("Transformation process completed")
+        return {"statusCode": 200, "body": "Transformation complete"}
+    except Exception as err:
+        logger.error(f"Error in transformation lambda: {err}")

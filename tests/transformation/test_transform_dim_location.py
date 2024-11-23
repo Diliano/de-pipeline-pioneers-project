@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pandas as pd
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_location_valid_list(mock_logger):
     # Input: List of dictionaries
     address_data = [
@@ -41,7 +41,7 @@ def test_transform_dim_location_valid_list(mock_logger):
     mock_logger.error.assert_not_called()
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_location_empty_list(mock_logger):
     # Input: Empty list
     address_data = []
@@ -54,7 +54,7 @@ def test_transform_dim_location_empty_list(mock_logger):
     )
 
 
-@patch("src.transformation.transformationutil.logger")
+@patch("src.transformation.transformation.logger")
 def test_transform_dim_location_invalid_input_type(mock_logger):
     # Input: Invalid type
     address_data = "invalid_data"

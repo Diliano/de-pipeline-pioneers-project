@@ -1,7 +1,5 @@
 import pandas as pd
-from src.transformation.transformationutil import (
-    transform_dim_design
-)
+from src.transformation.transformationutil import transform_dim_design
 
 
 def test_transform_dim_design_empty_data(caplog):
@@ -38,10 +36,7 @@ def test_transform_dim_design_valid_data():
             "design_id": [1, 2],
             "design_name": ["Wooden", "Metallic"],
             "file_location": ["/usr", "/opt"],
-            "file_name": [
-                "wooden-20220717.json",
-                "metallic-20220717.json"
-            ],
+            "file_name": ["wooden-20220717.json", "metallic-20220717.json"],
         }
     )
 
