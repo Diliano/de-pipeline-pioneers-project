@@ -1,4 +1,4 @@
-name: Cleanup Workflow
+name: CI/CD Pioneer Pipeline Cleanup Workflow
 
 on:
     workflow_run:
