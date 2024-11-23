@@ -36,7 +36,7 @@ def save_transformed_data(table_name, data, S3_PROCESSED_BUCKET):
             data.to_parquet(parquet_buffer, index=False, engine="pyarrow")
         except Exception as err:
             logger.error(
-                f"Error converting data to parquet format for table: {table_name}, {err}"
+                f"Error converting data to parquet: {table_name}, {err}"
             )
 
         parquet_buffer.seek(0)  # Resets the bugger pointer
