@@ -1,6 +1,7 @@
 name: CI/CD Pioneer Pipeline Cleanup Workflow
 
 on:
+    workflow_dispatch:
     workflow_run:
         workflows:
             - CI/CD Pioneer Pipeline Deploy Workflow
