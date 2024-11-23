@@ -7,12 +7,17 @@ PROJECT_NAME="de-pipeline-pioneers"
 TERRAFORM_DIR="./terraform"
 
 
-# Checking terraform dependency
+echo "============================================="
+echo "🚀 Starting Infrastructure Deployment Process"
+echo "============================================="
+
+
+# Checking Terraform Dependency
 if ! [ -x "$(command -v terraform )" ]; then
     echo "❌ Terraform not installed. Install it first." >&2
     exit 1
 fi
-echo "👉 Terraform available"
+echo "👉 Terraform available!"
 
 # Initialise Terraform
 echo "👉 Initialising Terraform!"
