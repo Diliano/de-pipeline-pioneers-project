@@ -50,7 +50,6 @@ def save_transformed_data(table_name, data):
         )
 
 
-
 def process_table(table_name, transform_function, data):
     from src.transformation.transformation import logger
     """
