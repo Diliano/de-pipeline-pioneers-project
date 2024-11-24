@@ -17,19 +17,22 @@ if ! [ -x "$(command -v terraform )" ]; then
     echo "❌ Terraform not installed. Install it first." >&2
     exit 1
 fi
-echo "👉 Terraform available!"
+echo -e "👉 Terraform available!\n"
 
 # Initialise Terraform
-echo "👉 Initialising Terraform!"
+echo -e "👉 Initialising Terraform!\n"
 cd $TERRAFORM_DIR
 terraform init
 
-echo "✅ Intialised Terraform!"
+echo -e "✅ Intialised Terraform!\n"
 
+
+# Planning Terraform Configuration for TESTING
+echo -e "👉 Planning Terraform Configuration..."
+terraform plan 
 
 # Applying Terraform Configuration
-echo "👉 Applying Terraform Configuration..."
-terraform apply -auto-approve
+# terraform apply -auto-approve # needs to be uncommented after tests fully pass
 
 
 echo "✅ Infrastructure Deployment Complete!"
