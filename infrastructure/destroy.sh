@@ -16,8 +16,8 @@ echo "========================================="
 
 # Fetching S3 Bucket Name Dynamically
 echo "👉 Fetching S3 Bucket name from Terraform..."
-S3_INGESTION_BUCKET=$(terraform -chdir=./terraform output -raw S3_INGESTION_BUCKET)
-S3_PROCESSED_BUCKET=$(terraform -chdir=./terraform output -raw S3_PROCESSED_BUCKET)
+# S3_INGESTION_BUCKET=$(terraform -chdir=./terraform output -raw S3_INGESTION_BUCKET)
+# S3_PROCESSED_BUCKET=$(terraform -chdir=./terraform output -raw S3_PROCESSED_BUCKET)
 
 
 # Checking Terraform Dependency
@@ -38,12 +38,12 @@ terraform init -input=false
 
 # Removing objects from S3 Buckets
 echo "👉 Cleaning up S3 Bucket: $S3_INGESTION_BUCKET..."
-aws s3 rm s3://$S3_INGESTION_BUCKET --recursive
-aws s3 rb s3://$S3_INGESTION_BUCKET 
+# aws s3 rm s3://$S3_INGESTION_BUCKET --recursive
+# aws s3 rb s3://$S3_INGESTION_BUCKET 
 
 echo "👉 Cleaning up S3 Bucket: $S3_PROCESSED_BUCKET..."
-aws s3 rm s3://$S3_PROCESSED_BUCKET --recursive
-aws s3 rb s3://$S3_PROCESSED_BUCKET
+# aws s3 rm s3://$S3_PROCESSED_BUCKET --recursive
+# aws s3 rb s3://$S3_PROCESSED_BUCKET
 
 echo "✅ Bucket Cleanup Complete!"
 
