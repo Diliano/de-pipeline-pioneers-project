@@ -6,3 +6,6 @@ venv
 **/*.tfstate*
 **/.terraform
 **/.terraform*
+.DS_Store
+packages/
+dependencies/
