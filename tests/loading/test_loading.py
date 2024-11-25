@@ -216,3 +216,39 @@ class TestLambdaHandler:
             "Partial success in loading data into the warehouse."
             in caplog.text
         )
+
+    @patch("src.loading.code.loading.read_file_list")
+    @patch("src.loading.code.loading.process_parquet_files")
+    @patch("src.loading.code.loading.connect_to_db")
+    @patch("src.loading.code.loading.load_data_into_warehouse")
+    def test_handles_full_failure_in_warehouse_loading(
+        self,
+        mock_load_data,
+        mock_connect,
+        mock_process_parquet,
+        mock_read_file,
+        mock_s3,
+        mock_processed_bucket,
+        caplog,
+    ):
+        # Arrange
+        mock_read_file.return_value = [
+            f"s3://{mock_processed_bucket}/dim_staff/dim_staff.parquet",
+        ]
+        mock_process_parquet.return_value = {
+            "dim_staff": pd.DataFrame({"first_name": ["North"]}),
+        }
+        mock_load_data.return_value = {
+            "successfully_loaded": [],
+            "failed_to_load": ["dim_staff"],
+            "skipped_empty": [],
+        }
+        # Act
+        result = lambda_handler({}, None)
+        # Assert
+        assert result["status"] == "Failure"
+        assert (
+            result["message"]
+            == "Failed to load any data into the warehouse. Check logs for details."
+        )
+        assert "Failure in loading data into the warehouse." in caplog.text
