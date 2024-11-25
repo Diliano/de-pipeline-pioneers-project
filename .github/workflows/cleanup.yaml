@@ -1,12 +1,14 @@
 name: CI/CD Pioneer Pipeline Cleanup Workflow
 
 on:
+    # Removed workflow run since
+    # we need it to be tested
     workflow_dispatch:
-    workflow_run:
-        workflows:
-            - CI/CD Pioneer Pipeline Deploy Workflow
-        types:
-            - completed
+    # workflow_run:
+    #     workflows:
+    #         - CI/CD Pioneer Pipeline Deploy Workflow
+    #     types:
+    #         - completed
 
 jobs:
     cleanup:
