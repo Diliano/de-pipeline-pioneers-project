@@ -2,7 +2,7 @@
 venv
 **/__pycache__
 *.json
-*.txt
+# *.txt
 **/*.tfstate*
 **/.terraform
 **/.terraform*
