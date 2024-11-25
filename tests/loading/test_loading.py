@@ -206,6 +206,7 @@ class TestLambdaHandler:
         assert result["results"]["successfully_loaded"] == ["dim_staff"]
         assert result["results"]["failed_to_load"] == ["dim_currency"]
         assert not result["results"]["skipped_empty"]
+
         assert (
             "Partial success: Some Parquet files could not be processed. "
             "Check logs for details."
