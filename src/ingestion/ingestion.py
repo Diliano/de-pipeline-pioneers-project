@@ -13,7 +13,7 @@ REGION_NAME = os.getenv("AWS_REGION", "eu-west-2")
 TIMESTAMP_FILE_KEY = "metadata/last_ingestion_timestamp.json"
 
 S3_INGESTION_BUCKET = os.getenv(
-    "S3_BUCKET_NAME"
+    "S3_INGESTION_BUCKET"
 )  # MAKE SURE THIS IS DEFINED IN THE LAMBDA CODE FOR TF
 
 # For testing
