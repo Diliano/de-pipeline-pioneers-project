@@ -32,12 +32,16 @@ def lambda_handler(event, context):
         if not tables_data_frames:
             return {
                 "status": "Failure",
-                "message": "Failed to process any Parquet files. Check logs for details.",
+                "message": (
+                    "Failed to process any Parquet files. "
+                    "Check logs for details."
+                ),
             }
 
         if len(tables_data_frames) < len(file_paths):
             logger.warning(
-                "Partial success: Some Parquet files could not be processed. Check logs for details."
+                "Partial success: Some Parquet files could not be processed. "
+                "Check logs for details."
             )
         else:
             logger.info("All Parquet files processed successfully.")
@@ -49,7 +53,10 @@ def lambda_handler(event, context):
             logger.error("Failure in loading data into the warehouse.")
             return {
                 "status": "Failure",
-                "message": "Failed to load any data into the warehouse. Check logs for details.",
+                "message": (
+                    "Failed to load any data into the warehouse. "
+                    "Check logs for details."
+                ),
                 "results": results,
             }
 
@@ -59,7 +66,10 @@ def lambda_handler(event, context):
             )
             return {
                 "status": "Partial",
-                "message": "Partial success loading data into the warehouse. Check logs for details.",
+                "message": (
+                    "Partial success loading data into the warehouse. "
+                    "Check logs for details."
+                ),
                 "results": results,
             }
 
