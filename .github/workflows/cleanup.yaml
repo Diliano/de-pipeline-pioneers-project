@@ -1,37 +1,46 @@
 name: CI/CD Pioneer Pipeline Cleanup Workflow
 
 on:
-    workflow_dispatch:
-    workflow_run:
-        workflows:
-            - CI/CD Pioneer Pipeline Deploy Workflow
-        types:
-            - completed
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - CI/CD Pioneer Pipeline Deploy Workflow
+    types:
+      - completed
 
 jobs:
-    cleanup:
-        runs-on: ubuntu-latest
+  cleanup:
+    name: Cleanup Resources
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-            
-            - name: Configure AWS Credentials
-              uses: aws-actions/configure-aws-credentials@v2
-              with:
-                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                aws-region: ${{ secrets.AWS_REGION }}
-                run:
-                    echo "AWS Credentials set"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-            # setting it to be an executable
-            # - name: Make destroy bash file executable
-            #   run: |
-            #     chmod +x ./infrastructure/deploy.sh
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-            # - name: Destroy Infrastructure
-            #   run: |
-            #     ./infrastructure/destroy.sh
+      - name: Make Destroy Script Executable
+        run: chmod +x ./infrastructure/destroy.sh
 
-    
+      # - name: Destroy Infrastructure
+        # id: destroy
+        # run: |
+        #   ./infrastructure/destroy.sh
+      #   continue-on-error: false
+
+      # - name: Validate Destroy Script Success
+      #   if: ${{ success() }}
+      #   run: |
+      #     echo "Destroy script ran successfully."
+
+      # - name: Log Destroy Failure
+      #   if: ${{ failure() }}
+      #   # Although not necessary, just for the sake of keeping myself occupied :-D
+      #   run: |
+      #     echo "Destroy script failed. Checking logs..."
+      #     cat ./infrastructure/destroy.log || echo "No log file found"

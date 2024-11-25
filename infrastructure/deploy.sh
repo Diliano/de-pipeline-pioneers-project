@@ -32,7 +32,7 @@ echo -e "👉 Planning Terraform Configuration..."
 terraform plan 
 
 # Applying Terraform Configuration
-# terraform apply -auto-approve # needs to be uncommented after tests fully pass
+terraform apply -auto-approve # needs to be uncommented after tests fully pass
 
 
 echo "✅ Infrastructure Deployment Complete!"

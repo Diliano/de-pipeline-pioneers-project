@@ -210,3 +210,70 @@ resource "aws_iam_role_policy_attachment" "transformation_cw_policy_attachment" 
   role       = aws_iam_role.transformation_lambda_role.name
   policy_arn = aws_iam_policy.transformation_cw_policy.arn
 }
+
+
+# Loading
+data "aws_iam_policy_document" "loading_trust_policy" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type = "Service"
+      identifiers = [ "lambda.amazonaws.com" ]
+    }
+    actions = [ "sts:AssumeRole" ]
+  }
+}
+
+data "aws_iam_policy_document" "s3_loading_policy_doc" {
+  statement {
+    effect = "Allow"
+    actions = [ "s3:PutObject" ]
+    resources = [ "${aws_s3_bucket.processed_bucket.arn}/*" ]
+  }
+}
+
+data "aws_iam_policy_document" "loading_cw_document" {
+  statement {
+    effect = "Allow"
+    actions = [ "logs:CreateLogGroup" ]
+    resources = [ "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*" ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [ "logs:CreateLogStream", "log:PutLogEvents" ]
+    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.lambda_load}:*"]
+  }
+}
+
+resource "aws_iam_role" "loading_lambda_role" {
+  name_prefix = "role-${var.lambda_load}"
+  assume_role_policy = data.aws_iam_policy_document.loading_trust_policy.json
+  
+}
+
+resource "aws_iam_policy" "loading_s3_write_policy" {
+  name_prefix = "s3-policy-${var.lambda_load}-write"
+  policy = data.aws_iam_policy_document.s3_loading_policy_doc.json
+  
+}
+
+resource "aws_iam_policy" "loading_cw_policy" {
+  name_prefix = "cw-policy-${var.lambda_load}"
+  policy = data.aws_iam_policy_document.loading_cw_document.json
+}
+
+resource "aws_cloudwatch_log_group" "loading_log_group" {
+  name = "/aws/lambda/${var.lambda_load}"
+}
+
+resource "aws_iam_role_policy_attachment" "loading_s3_write_policy_attach" {
+  role = aws_iam_role.loading_lambda_role.name
+  policy_arn = aws_iam_policy.loading_s3_write_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "loading_cw_policy_attach" {
+  role = aws_iam_role.loading_lambda_role.name
+  policy_arn = aws_iam_policy.loading_cw_policy.arn
+}

@@ -11,7 +11,7 @@ variable "ingestion_bucket_prefix" {
   default = "pipeline-pioneers-ingestion"
 }
 
-variable "ingestion_code_bucket_prefix" {
+variable "code_bucket_prefix" {
   type    = string
   default = "pipeline-pioneers-code"
 }
@@ -21,10 +21,10 @@ variable "processed_bucket_prefix" {
   default = "pipeline-pioneers-processed"
 }
 
-variable "transformation_code_bucket_prefix" {
-  type    = string
-  default = "pipeline-pioneers-transformation-code"
-}
+# variable "transformation_code_bucket_prefix" {
+#   type    = string
+#   default = "pipeline-pioneers-transform-code"
+# }
 
 # ========
 # Lambdas
@@ -32,17 +32,17 @@ variable "transformation_code_bucket_prefix" {
 
 variable "lambda_ingestion" {
   type    = string
-  default = "ingestion_lambda"
+  default = "ingestion"
 }
 
 variable "lambda_transform" {
   type    = string
-  default = "transform_lambda"
+  default = "transform"
 }
 
 variable "lambda_load" {
   type    = string
-  default = "load_lambda"
+  default = "load"
 }
 
 variable "python_runtime" {
