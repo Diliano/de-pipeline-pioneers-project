@@ -182,7 +182,8 @@ class TestLoadDataIntoWarehouse:
 
         expected_fact_query = normalise_query(
             """
-            INSERT INTO "fact_sales_order" ("sales_order_id", "units_sold", "unit_price")
+            INSERT INTO "fact_sales_order"
+                ("sales_order_id", "units_sold", "unit_price")
             VALUES (%s, %s, %s);
         """
         )
