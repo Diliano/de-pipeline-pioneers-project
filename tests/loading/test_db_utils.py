@@ -214,7 +214,6 @@ class TestLoadDataIntoWarehouse:
                 (2, "Pipeline", "Pioneer"),
             ],
         ) in executed_queries
-
         assert (
             expected_fact_query,
             [
