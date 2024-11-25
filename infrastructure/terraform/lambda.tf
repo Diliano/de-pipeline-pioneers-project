@@ -10,7 +10,7 @@
 data "archive_file" "ingestion_lambda" {
   type             = "zip"
   output_file_mode = "0666"
-  source_file      = "${path.module}/../../src/ingestion.py"
+  source_file      = "${path.module}/../../src/ingestion/ingestion.py"
   output_path      = "${path.module}/../../packages/ingestion/ingestion.zip"
 }
 
@@ -47,6 +47,11 @@ resource "aws_lambda_function" "ingestion_lambda" {
   timeout          = 60
   source_code_hash = data.archive_file.ingestion_lambda.output_base64sha256
 
+  # might need depends_on
+  # depends_on = [ 
+  #   aws_s3_object.ingestion_lambda_code,
+  #   aws_s3_object.ingestion_layer_code 
+  # ]
   environment {
     variables = {
       "S3_BUCKET_NAME" = aws_s3_bucket.ingestion_bucket.bucket
@@ -66,7 +71,7 @@ resource "aws_lambda_function" "ingestion_lambda" {
 data "archive_file" "transformation_lambda" {
   type             = "zip"
   output_file_mode = "0666"
-  source_file      = "${path.module}/../../src/transformation.py"
+  source_file      = "${path.module}/../../src/transformation/transformation.py"
   output_path      = "${path.module}/../../packages/transformation/transformation.zip"
 }
 
@@ -101,6 +106,12 @@ resource "aws_lambda_function" "transformation_lambda" {
   runtime          = var.python_runtime
   layers           = [aws_lambda_layer_version.transformation_layer.arn]
   source_code_hash = data.archive_file.transformation_lambda.output_base64sha256
+
+  # might need depends_on
+  # depends_on = [ 
+  #   aws_s3_bucket.transformation_code_bucket,
+  #   aws_s3_object.transformation_layer_code
+  # ]
 
   environment {
     variables = {
