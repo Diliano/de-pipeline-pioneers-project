@@ -27,20 +27,20 @@ jobs:
       - name: Make Destroy Script Executable
         run: chmod +x ./infrastructure/destroy.sh
 
-      - name: Destroy Infrastructure
-        id: destroy
-        run: |
-          ./infrastructure/destroy.sh
-        continue-on-error: false
+      # - name: Destroy Infrastructure
+        # id: destroy
+        # run: |
+        #   ./infrastructure/destroy.sh
+      #   continue-on-error: false
 
-      - name: Validate Destroy Script Success
-        if: ${{ success() }}
-        run: |
-          echo "Destroy script ran successfully."
+      # - name: Validate Destroy Script Success
+      #   if: ${{ success() }}
+      #   run: |
+      #     echo "Destroy script ran successfully."
 
-      - name: Log Destroy Failure
-        if: ${{ failure() }}
-        # Although not necessary, just for the sake of keeping myself occupied :-D
-        run: |
-          echo "Destroy script failed. Checking logs..."
-          cat ./infrastructure/destroy.log || echo "No log file found"
+      # - name: Log Destroy Failure
+      #   if: ${{ failure() }}
+      #   # Although not necessary, just for the sake of keeping myself occupied :-D
+      #   run: |
+      #     echo "Destroy script failed. Checking logs..."
+      #     cat ./infrastructure/destroy.log || echo "No log file found"
