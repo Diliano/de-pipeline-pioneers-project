@@ -1,6 +1,4 @@
 from src.loading.code.loading import lambda_handler
-from src.loading.code.s3_utils import read_file_list, process_parquet_files
-from src.loading.code.db_utils import connect_to_db, load_data_into_warehouse
 import pytest
 from moto import mock_aws
 import boto3
@@ -201,17 +199,17 @@ class TestLambdaHandler:
         result = lambda_handler({}, None)
         # Assert
         assert result["status"] == "Partial"
-        assert (
-            result["message"]
-            == "Partial success loading data into the warehouse. Check logs for details."
+        assert result["message"] == (
+            "Partial success loading data into the warehouse. "
+            "Check logs for details."
         )
         assert result["results"]["successfully_loaded"] == ["dim_staff"]
         assert result["results"]["failed_to_load"] == ["dim_currency"]
         assert not result["results"]["skipped_empty"]
         assert (
-            "Partial success: Some Parquet files could not be processed. Check logs for details."
-            in caplog.text
-        )
+            "Partial success: Some Parquet files could not be processed. "
+            "Check logs for details."
+        ) in caplog.text
         assert (
             "Partial success in loading data into the warehouse."
             in caplog.text
@@ -247,9 +245,9 @@ class TestLambdaHandler:
         result = lambda_handler({}, None)
         # Assert
         assert result["status"] == "Failure"
-        assert (
-            result["message"]
-            == "Failed to load any data into the warehouse. Check logs for details."
+        assert result["message"] == (
+            "Failed to load any data into the warehouse. "
+            "Check logs for details."
         )
         assert "Failure in loading data into the warehouse." in caplog.text
 
