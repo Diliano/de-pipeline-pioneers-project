@@ -7,7 +7,7 @@ terraform {
   }
   backend "s3" {
     bucket = "nc-de-pipeline-pioneers-backend-tf-state"
-    key    = "nc-de-pipeline-pioneers/de-pipeline-tf-state/terraform.tfstate"
+    key    = "de-pipeline-tf-state/terraform.tfstate"
     region = "eu-west-2"
   }
 }
