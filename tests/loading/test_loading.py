@@ -252,3 +252,17 @@ class TestLambdaHandler:
             == "Failed to load any data into the warehouse. Check logs for details."
         )
         assert "Failure in loading data into the warehouse." in caplog.text
+
+    @patch("src.loading.code.loading.read_file_list")
+    def test_lambda_handler_general_exception(self, mock_read_file, caplog):
+        # Arrange
+        mock_read_file.side_effect = Exception("Unexpected Error")
+        # Act
+        result = lambda_handler({}, None)
+        # Assert
+        assert result["status"] == "Failure"
+        assert (
+            result["message"]
+            == "Lambda execution failed. Check logs for details."
+        )
+        assert "Lambda execution failed" in caplog.text
