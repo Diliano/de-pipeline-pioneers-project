@@ -23,7 +23,7 @@ variable "processed_bucket_prefix" {
 
 variable "transformation_code_bucket_prefix" {
   type    = string
-  default = "pipeline-pioneers-transformation-code"
+  default = "pipeline-pioneers-transform-code"
 }
 
 # ========
