@@ -27,13 +27,13 @@
 # ========
 
 # Ingestion layer dependencies
-resource "aws_lambda_layer_version" "ingestion_layer" {
-  layer_name          = "ingestion_layer"
-  compatible_runtimes = [var.python_runtime]
-  s3_bucket           = aws_s3_bucket.ingestion_code_bucket.bucket
-  s3_key              = aws_s3_object.ingestion_layer_code.key
-  source_code_hash    = data.archive_file.ingestion_layer.output_base64sha256
-}
+# resource "aws_lambda_layer_version" "ingestion_layer" {
+#   layer_name          = "ingestion_layer"
+#   compatible_runtimes = [var.python_runtime]
+#   s3_bucket           = aws_s3_bucket.ingestion_code_bucket.bucket
+#   s3_key              = aws_s3_object.ingestion_layer_code.key
+#   source_code_hash    = data.archive_file.ingestion_layer.output_base64sha256
+# }
 
 # Ingestion lambda
 # resource "aws_lambda_function" "ingestion_lambda" {
