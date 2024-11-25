@@ -120,3 +120,7 @@ resource "aws_lambda_function" "transformation_lambda" {
     }
   }
 }
+
+
+
+# Need to implement the loading lambda 
