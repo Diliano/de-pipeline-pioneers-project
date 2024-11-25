@@ -9,10 +9,23 @@
 resource "aws_s3_bucket" "ingestion_bucket" {
   # S3 bucket for the data. 
   bucket_prefix = "nc-${var.ingestion_bucket_prefix}"
+
+  # Cant use versioning, reason deprecated
+  # use aws_s3_bucket_versioning instead if need be
+  # also recommended to wait 15 mins after enabling versioning
+
   tags = {
     Name = "IngestionBucket"
   }
 }
+
+# resource "aws_s3_bucket_versioning" "ingestion_versioning" {
+#   bucket = aws_s3_bucket.ingestion_bucket.id
+#   versioning_configuration {
+#     status = "Enabled"
+#   }
+  
+# }
 
 resource "aws_s3_bucket" "processed_bucket" {
   # S3 bucket for the transformed data. 
