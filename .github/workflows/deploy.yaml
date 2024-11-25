@@ -29,11 +29,6 @@ jobs:
       - name: Install Make # Already present but might as well
         run: sudo apt-get install -y make
 
-      - name: Set PYTHONPATH
-        run: |
-          echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
-          echo "PYTHONPATH=$PYTHONPATH:$(pwd)/test" >> $GITHUB_ENV
-
   dependencies:
     name: Install Dependencies
     runs-on: ubuntu-latest
@@ -47,13 +42,6 @@ jobs:
       #     python -m pip install --upgrade pip
       #     pip install -r requirements.txt
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
       - name: Install Project Requirements
         run: make requirements
 
@@ -64,6 +52,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+      
+      - name: Set PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
+          echo "PYTHONPATH=$PYTHONPATH:$(pwd)/test" >> $GITHUB_ENV
 
       - name: Run Bandit Checks (Security Linter)
         run: make run-bandit
@@ -84,11 +77,18 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Make Deployment Script Executable
         run: |
           chmod +x ./infrastructure/deploy.sh
 
-      - name: Deploy Infrastructure
-        run: |
-          ./infrastructure/deploy.sh
+      # - name: Deploy Infrastructure
+      #   run: |
+      #     ./infrastructure/deploy.sh
