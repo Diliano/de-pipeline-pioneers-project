@@ -32,6 +32,7 @@ for lambda_dir in ingestion loading transformation; do
 
     cp -r ./*.py ./build/
 
+    mkdir -p "${OUTPUT_DIR}/${lambda_dir}"
     cd build
     # echo "current dir: $(pwd)"
     zip -r "${OUTPUT_DIR}/${lambda_dir}/${lambda_dir}.zip" .
