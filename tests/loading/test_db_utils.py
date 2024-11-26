@@ -170,6 +170,14 @@ class TestLoadDataIntoWarehouse:
 
         mock_conn = mock_pg_connect.return_value
 
+        mock_conn.run.side_effect = [
+            None,
+            [
+                (100, 10, 15.25),
+            ],
+            None,
+        ]
+
         expected_dimension_query = normalise_query(
             """
             INSERT INTO "dim_staff" ("staff_id", "first_name", "last_name")
@@ -192,7 +200,10 @@ class TestLoadDataIntoWarehouse:
 
         calls = mock_conn.run.call_args_list
         executed_queries = [
-            (normalise_query(call.kwargs["sql"]), call.kwargs["params"])
+            (
+                normalise_query(call.kwargs["sql"]),
+                call.kwargs.get("params", []),
+            )
             for call in calls
         ]
         # Assert
@@ -203,9 +214,12 @@ class TestLoadDataIntoWarehouse:
         assert results["failed_to_load"] == []
         assert results["skipped_empty"] == ["dim_location"]
 
-        assert "Skipping dim_location: DataFrame is empty" in caplog.text
         assert "Successfully loaded data into 'dim_staff" in caplog.text
-        assert "Successfully loaded data into 'fact_sales_order" in caplog.text
+        assert (
+            "Successfully loaded 1 row(s) into 'fact_sales_order"
+            in caplog.text
+        )
+        assert "Skipping dim_location: DataFrame is empty" in caplog.text
 
         assert (
             expected_dimension_query,
@@ -214,10 +228,10 @@ class TestLoadDataIntoWarehouse:
                 (2, "Pipeline", "Pioneer"),
             ],
         ) in executed_queries
+
         assert (
             expected_fact_query,
             [
-                (100, 10, 15.25),
                 (101, 30, 42.30),
             ],
         ) in executed_queries

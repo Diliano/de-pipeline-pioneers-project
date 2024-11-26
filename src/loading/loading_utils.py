@@ -142,14 +142,35 @@ def load_data_into_warehouse(conn, tables_data_frames):
                     ON CONFLICT ("{primary_key}") DO UPDATE
                     SET {set_clause};
                 """
+                conn.run(sql=query, params=records)
+                logger.info(f"Successfully loaded data into '{table_name}'.")
             else:
-                query = f"""
-                    INSERT INTO "{table_name}" ({columns})
-                    VALUES ({placeholders});
+                fact_query = f"""
+                    SELECT {columns} 
+                    FROM "{table_name}";
                 """
+                existing_rows = conn.run(sql=fact_query)
 
-            conn.run(sql=query, params=records)
-            logger.info(f"Successfully loaded data into '{table_name}'.")
+                existing_records = set(existing_rows)
+
+                new_records = [
+                    record
+                    for record in records
+                    if tuple(record) not in existing_records
+                ]
+
+                if new_records:
+                    query = f"""
+                        INSERT INTO "{table_name}" ({columns})
+                        VALUES ({placeholders});
+                    """
+                    conn.run(sql=query, params=new_records)
+                    logger.info(
+                        f"Successfully loaded {len(new_records)} row(s) into '{table_name}'."
+                    )
+                else:
+                    logger.info(f"No new rows to insert into '{table_name}'.")
+
             results["successfully_loaded"].append(table_name)
 
         except Exception as e:
