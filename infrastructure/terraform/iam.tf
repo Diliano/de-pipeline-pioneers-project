@@ -212,7 +212,14 @@ resource "aws_iam_role_policy_attachment" "transformation_cw_policy_attachment" 
 }
 
 
-# Loading
+# ==========================================
+# Loading Lambda
+# ==========================================
+
+# ========
+# DEFINE
+# ========
+
 data "aws_iam_policy_document" "loading_trust_policy" {
   statement {
     effect = "Allow"
@@ -265,6 +272,10 @@ resource "aws_iam_policy" "loading_cw_policy" {
 resource "aws_cloudwatch_log_group" "loading_log_group" {
   name = "/aws/lambda/${var.lambda_load}"
 }
+
+# ========
+# ATTACH
+# ========
 
 resource "aws_iam_role_policy_attachment" "loading_s3_get_policy_attach" {
   role = aws_iam_role.loading_lambda_role.name
