@@ -2,11 +2,6 @@ name: CI/CD Pioneer Pipeline Cleanup Workflow
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - CI/CD Pioneer Pipeline Deploy Workflow
-    types:
-      - completed
 
 jobs:
   cleanup:
@@ -16,6 +11,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.9.4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
