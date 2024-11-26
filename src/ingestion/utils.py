@@ -1,4 +1,4 @@
-from src.ingestion import (
+from src.ingestion.ingestion import (
     logger,
 )
 from botocore.exceptions import ClientError
@@ -7,7 +7,7 @@ from pg8000.native import Connection
 from datetime import datetime
 import json
 
-from src.ingestion import (
+from src.ingestion.ingestion import (
     s3_client,
     secrets_manager_client,
     SECRET_NAME,
@@ -18,6 +18,17 @@ from src.ingestion import (
 
 
 def retrieve_db_credentials(secrets_manager_client):
+    """
+    Retrieve database credentials from AWS Secrets Manager.
+    Args:
+        secrets_manager_client (boto3.client): A boto3 Secrets Manager client.
+    Returns:
+        dict: A dictionary containing database credentials with keys:
+            "USER", "PASSWORD", "DATABASE", "HOST", and "PORT".
+    Logs:
+        Exception: If there is an issue retrieving the secret from Secrets
+        Manager.
+    """
     try:
         secret = secrets_manager_client.get_secret_value(SecretId=SECRET_NAME)
         secret = json.loads(secret["SecretString"])
@@ -28,6 +39,14 @@ def retrieve_db_credentials(secrets_manager_client):
 
 
 def connect_to_db():
+    """
+    Establish a connection to the database using credentials from AWS Secrets
+    Manager.
+    Returns:
+        pg8000.native.Connection: An active database connection object.
+    Logs:
+        Exception: If the database connection fails.
+    """
     try:
         creds = retrieve_db_credentials(secrets_manager_client)
         USER = creds["USER"]
@@ -50,6 +69,19 @@ def connect_to_db():
 
 
 def get_last_ingestion_timestamp():
+    """
+    Retrieve the last ingestion timestamp from an S3 bucket.
+    This function reads a JSON object stored in an S3 bucket at a specified
+    key.
+    It extracts the `timestamp` field and converts it into a `datetime`
+    object.
+    Returns:
+        datetime.datetime: The timestamp of the last ingestion if available.
+        str: The default timestamp string "1970-01-01 00:00:00" if no
+            timestamp is found or there is a botocore ClientError.
+    Logs:
+        Exception: For any unexpected errors during the process.
+    """
     try:
         response = s3_client.get_object(
             Bucket=S3_INGESTION_BUCKET, Key=TIMESTAMP_FILE_KEY
@@ -76,6 +108,15 @@ def get_last_ingestion_timestamp():
 
 
 def update_last_ingestion_timestamp():
+    """
+    Update the last ingestion timestamp in an S3 bucket.
+    This function generates the current timestamp in ISO 8601 format
+    and uploads it as a JSON object to the specified S3 bucket and key.
+    The S3 object will have the structure:
+        {
+            "timestamp": "<current ISO 8601 timestamp>"
+        }
+    """
     current_timestamp = datetime.now().isoformat()
     print(S3_INGESTION_BUCKET)
     s3_client.put_object(
@@ -86,6 +127,20 @@ def update_last_ingestion_timestamp():
 
 
 def fetch_tables(tables: list = TABLES):
+    """
+    Fetch data from specified tables in the database
+    updated since last ingestion.
+    Args:
+        tables (list): List of table names to fetch data from.
+        Defaults to the
+            `TABLES` constant.
+    Returns:
+        dict: A dictionary where keys are table names and values are lists of
+            row data as dictionaries.
+    Logs:
+        Info: Every time a table is fetched succesfully.
+        Exception: If database connection or query execution fails.
+    """
     tables_data = {}
     try:
         last_ingestion_timestamp = get_last_ingestion_timestamp()

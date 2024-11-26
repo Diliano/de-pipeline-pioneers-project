@@ -1,16 +1,16 @@
 from unittest.mock import patch
 from datetime import datetime
-from src.ingestion import (
+from src.ingestion.ingestion import (
     lambda_handler,
 )
 # import pytest
 
 
 # @pytest.mark.xfail
-@patch("src.utils.utils.fetch_tables")
-@patch("src.ingestion.s3_client.put_object")
-@patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
-@patch("src.ingestion.datetime")
+@patch("src.ingestion.utils.fetch_tables")
+@patch("src.ingestion.ingestion.s3_client.put_object")
+@patch("src.ingestion.ingestion.S3_INGESTION_BUCKET", "test_bucket")
+@patch("src.ingestion.ingestion.datetime")
 def test_lambda_handler_success(
     mock_datetime,
     mock_put_object,
@@ -48,9 +48,9 @@ def test_lambda_handler_success(
 
 
 # @pytest.mark.xfail
-@patch("src.utils.utils.fetch_tables")
-@patch("src.ingestion.s3_client.put_object")
-@patch("src.ingestion.datetime")
+@patch("src.ingestion.utils.fetch_tables")
+@patch("src.ingestion.ingestion.s3_client.put_object")
+@patch("src.ingestion.ingestion.datetime")
 def test_lambda_handler_partial_failure(
     mock_datetime,
     mock_put_object,
@@ -84,10 +84,10 @@ def test_lambda_handler_partial_failure(
 
 
 # @pytest.mark.xfail
-@patch("src.utils.utils.fetch_tables")
-@patch("src.ingestion.s3_client.put_object")
-@patch("src.ingestion.S3_INGESTION_BUCKET", "test_bucket")
-@patch("src.ingestion.datetime")
+@patch("src.ingestion.utils.fetch_tables")
+@patch("src.ingestion.ingestion.s3_client.put_object")
+@patch("src.ingestion.ingestion.S3_INGESTION_BUCKET", "test_bucket")
+@patch("src.ingestion.ingestion.datetime")
 def test_lambda_handler_empty_table(
     mock_datetime, mock_put_object, mock_fetch_tables, caplog
 ):

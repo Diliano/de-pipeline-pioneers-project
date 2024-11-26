@@ -1,5 +1,12 @@
 .env
 venv
-**/__pycache__/
-# */*/__pycache__/
-.coverage
+**/__pycache__
+*.json
+# *.txt
+**/*.tfstate*
+**/.terraform
+**/.terraform*
+.DS_Store
+packages/
+dependencies/
+data/
