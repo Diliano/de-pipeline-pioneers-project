@@ -62,6 +62,15 @@ jobs:
         
         # - name: Run coverage
         #   run: make check-coverage
+
+        - name: Making packaging bash file executable
+          run: chmod +x packaging.sh
+        
+        - name: Packaging lambda functions and its utils
+          run: ./packaging.sh
+          
+        # - name: Listing files
+        #   run: ls -R
         
         - name: Make deployment bash file executable
           run: chmod +x ./infrastructure/deploy.sh
