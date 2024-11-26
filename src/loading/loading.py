@@ -11,10 +11,10 @@ import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-SECRET_NAME = "test_db_secret"
+SECRET_NAME = "test_db_secret"  # to be updated
 AWS_REGION = "eu-west-2"
-S3_PROCESSED_BUCKET = "test-processed-bucket"
-FILE_LIST_KEY = "test-processed/file_list.json"
+S3_PROCESSED_BUCKET = "test-processed-bucket"  # to be updated
+FILE_LIST_KEY = "test-processed/file_list.json"  # to be updated
 
 s3_client = boto3.client("s3", region_name=AWS_REGION)
 
