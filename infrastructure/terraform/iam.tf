@@ -57,6 +57,15 @@ resource "aws_iam_policy" "ingestion_secrets_access_policy" {
   })
 }
 
+data "aws_iam_policy_document" "ingestion_s3_read_policy_doc" {
+  statement {
+    effect = "Allow"
+    actions = [ "s3:GetObject" ]
+    resources = [ "${aws_s3_bucket.ingestion_bucket.arn}/*" ]
+  }
+  
+}
+
 # Ingestion lambda cloudwatch policy doc
 data "aws_iam_policy_document" "ingestion_cw_document" {
   statement {
@@ -92,6 +101,10 @@ resource "aws_iam_policy" "ingestion_s3_write_policy" {
   policy      = data.aws_iam_policy_document.s3_ingestion_policy_doc.json
 }
 
+resource "aws_iam_policy" "ingestion_s3_read_policy" {
+  name_prefix = "s3-policy-${var.lambda_ingestion}-get"
+  policy = data.aws_iam_policy_document.ingestion_s3_read_policy_doc.json
+}
 # Ingestion lambda cloudwatch policy
 resource "aws_iam_policy" "ingestion_cw_policy" {
   name_prefix = "cw-policy-${var.lambda_ingestion}"
@@ -113,6 +126,10 @@ resource "aws_iam_role_policy_attachment" "ingestion_s3_write_policy_attachment"
   policy_arn = aws_iam_policy.ingestion_s3_write_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "ingestion_s3_read_policy_attach" {
+  role = aws_iam_role.ingestion_lambda_role.name
+  policy_arn = aws_iam_policy.ingestion_s3_read_policy.arn
+}
 # Ingestion lambda - secrets access policy
 resource "aws_iam_role_policy_attachment" "name" {
   role = aws_iam_role.ingestion_lambda_role.name
