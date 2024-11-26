@@ -31,6 +31,32 @@ data "aws_iam_policy_document" "s3_ingestion_policy_doc" {
   }
 }
 
+# Ingestion lambda - secrets access policy
+
+# data "aws_iam_policy_document" "ingestion_secrets_access_doc" {
+#   statement {
+#     effect = "Allow"
+#     actions = "sts:AssumeRole"
+#     resources = [  ]
+#   }
+# }
+resource "aws_iam_policy" "ingestion_secrets_access_policy" {
+  name = "SecretsManagerAccess"
+  description = "Allow Ingestion Lambda to access specific secret"
+  policy = jsondecode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.secret_name}-*"
+      }
+    ]
+  })
+}
+
 # Ingestion lambda cloudwatch policy doc
 data "aws_iam_policy_document" "ingestion_cw_document" {
   statement {
@@ -85,6 +111,12 @@ resource "aws_cloudwatch_log_group" "ingestion_log_group" {
 resource "aws_iam_role_policy_attachment" "ingestion_s3_write_policy_attachment" {
   role       = aws_iam_role.ingestion_lambda_role.name
   policy_arn = aws_iam_policy.ingestion_s3_write_policy.arn
+}
+
+# Ingestion lambda - secrets access policy
+resource "aws_iam_role_policy_attachment" "name" {
+  role = aws_iam_role.ingestion_lambda_role.name
+  policy_arn = aws_iam_policy.ingestion_secrets_access_policy.arn
 }
 
 # Attach ingestion cloudwatch policy to the ingestion role
