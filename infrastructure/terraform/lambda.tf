@@ -121,17 +121,23 @@
 #   }
 # }
 
+# ==========================================
+# Ingestion Lambda
+# ==========================================
 
+# ========
+# DEFINE
+# ========
 
-# Need to implement the loading lambda 
-
-# Ingestion
 resource "aws_s3_object" "ingestion_lambda_zip" {
   bucket = aws_s3_bucket.code_bucket.id
   key = "${var.lambda_ingestion}/ingestion.zip"
   source = "${path.module}/../../packages/ingestion/ingestion.zip"
 }
 
+# ========
+# CREATE
+# ========
 
 resource "aws_lambda_function" "ingestion_lambda" {
   function_name = "ingestion-lambda"
@@ -151,8 +157,14 @@ resource "aws_lambda_function" "ingestion_lambda" {
   }
 }
 
+# ==========================================
+# Transformation Lambda
+# ==========================================
 
-# Transformation
+# ========
+# DEFINE
+# ========
+
 
 resource "aws_s3_object" "transformation_lambda_zip" {
   bucket = aws_s3_bucket.code_bucket.id
@@ -179,7 +191,13 @@ resource "aws_lambda_function" "transformation_lambda" {
   }
 }
 
-# Loading
+# ==========================================
+# Loading Lambda
+# ==========================================
+
+# ========
+# DEFINE
+# ========
 
 resource "aws_s3_object" "loading_lambda_zip" {
   bucket = aws_s3_bucket.code_bucket.id
