@@ -228,7 +228,7 @@ data "aws_iam_policy_document" "loading_trust_policy" {
 data "aws_iam_policy_document" "s3_loading_policy_doc" {
   statement {
     effect = "Allow"
-    actions = [ "s3:PutObject" ]
+    actions = [ "s3:ReadObject" ]
     resources = [ "${aws_s3_bucket.processed_bucket.arn}/*" ]
   }
 }
