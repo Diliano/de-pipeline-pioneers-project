@@ -43,7 +43,7 @@ data "aws_iam_policy_document" "s3_ingestion_policy_doc" {
 resource "aws_iam_policy" "ingestion_secrets_access_policy" {
   name = "SecretsManagerAccess"
   description = "Allow Ingestion Lambda to access specific secret"
-  policy = jsondecode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
