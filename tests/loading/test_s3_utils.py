@@ -1,4 +1,4 @@
-from src.loading.code.s3_utils import read_file_list, process_parquet_files
+from src.loading.loading_utils import read_file_list, process_parquet_files
 import pytest
 from moto import mock_aws
 import boto3

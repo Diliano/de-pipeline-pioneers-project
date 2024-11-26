@@ -1,4 +1,4 @@
-from src.loading.code.db_utils import (
+from src.loading.loading_utils import (
     retrieve_db_credentials,
     connect_to_db,
     load_data_into_warehouse,
@@ -114,8 +114,8 @@ class TestRetrieveDbCredentials:
 
 
 class TestConnectToDb:
-    @patch("src.loading.code.db_utils.Connection")
-    @patch("src.loading.code.db_utils.retrieve_db_credentials")
+    @patch("src.loading.loading_utils.Connection")
+    @patch("src.loading.loading_utils.retrieve_db_credentials")
     def test_successfully_connects_to_db(
         self, mock_retrieve_creds, mock_pg_connect, mock_db_credentials, caplog
     ):
@@ -140,8 +140,8 @@ class TestConnectToDb:
             port=5432,
         )
 
-    @patch("src.loading.code.db_utils.Connection")
-    @patch("src.loading.code.db_utils.retrieve_db_credentials")
+    @patch("src.loading.loading_utils.Connection")
+    @patch("src.loading.loading_utils.retrieve_db_credentials")
     def test_connect_to_db_handles_exceptions(
         self, mock_retrieve_creds, mock_pg_connect, mock_db_credentials, caplog
     ):
@@ -160,7 +160,7 @@ class TestConnectToDb:
 
 
 class TestLoadDataIntoWarehouse:
-    @patch("src.loading.code.db_utils.Connection")
+    @patch("src.loading.loading_utils.Connection")
     def test_successfully_loads_data_into_warehouse(
         self, mock_pg_connect, mock_tables_data_frames, caplog
     ):
@@ -222,7 +222,7 @@ class TestLoadDataIntoWarehouse:
             ],
         ) in executed_queries
 
-    @patch("src.loading.code.db_utils.Connection")
+    @patch("src.loading.loading_utils.Connection")
     def test_handles_exceptions(
         self, mock_pg_connect, mock_tables_data_frames, caplog
     ):
