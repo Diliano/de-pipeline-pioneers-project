@@ -10,3 +10,4 @@ venv
 packages/
 dependencies/
 data/
+.coverage
