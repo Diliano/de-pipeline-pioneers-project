@@ -1,4 +1,4 @@
-from src.loading.code.loading import lambda_handler
+from src.loading.loading import lambda_handler
 import pytest
 from moto import mock_aws
 import boto3
@@ -77,10 +77,10 @@ def mock_tables_data_frames():
 
 
 class TestLambdaHandler:
-    @patch("src.loading.code.loading.read_file_list")
-    @patch("src.loading.code.loading.process_parquet_files")
-    @patch("src.loading.code.loading.connect_to_db")
-    @patch("src.loading.code.loading.load_data_into_warehouse")
+    @patch("src.loading.loading.read_file_list")
+    @patch("src.loading.loading.process_parquet_files")
+    @patch("src.loading.loading.connect_to_db")
+    @patch("src.loading.loading.load_data_into_warehouse")
     def test_lambda_handler_loads_all_data_successfully(
         self,
         mock_load_data,
@@ -131,7 +131,7 @@ class TestLambdaHandler:
             "All data loaded successfully into the warehouse." in caplog.text
         )
 
-    @patch("src.loading.code.loading.read_file_list")
+    @patch("src.loading.loading.read_file_list")
     def test_handles_no_file_paths(
         self, mock_read_file, mock_s3, mock_processed_bucket, caplog
     ):
@@ -144,8 +144,8 @@ class TestLambdaHandler:
         assert result["message"] == "No files to process this time."
         assert "No files to process this time." in caplog.text
 
-    @patch("src.loading.code.loading.read_file_list")
-    @patch("src.loading.code.loading.process_parquet_files")
+    @patch("src.loading.loading.read_file_list")
+    @patch("src.loading.loading.process_parquet_files")
     def test_handles_no_data_frames(
         self,
         mock_process_parquet,
@@ -168,10 +168,10 @@ class TestLambdaHandler:
             == "Failed to process any Parquet files. Check logs for details."
         )
 
-    @patch("src.loading.code.loading.read_file_list")
-    @patch("src.loading.code.loading.process_parquet_files")
-    @patch("src.loading.code.loading.connect_to_db")
-    @patch("src.loading.code.loading.load_data_into_warehouse")
+    @patch("src.loading.loading.read_file_list")
+    @patch("src.loading.loading.process_parquet_files")
+    @patch("src.loading.loading.connect_to_db")
+    @patch("src.loading.loading.load_data_into_warehouse")
     def test_handles_partial_success(
         self,
         mock_load_data,
@@ -216,10 +216,10 @@ class TestLambdaHandler:
             in caplog.text
         )
 
-    @patch("src.loading.code.loading.read_file_list")
-    @patch("src.loading.code.loading.process_parquet_files")
-    @patch("src.loading.code.loading.connect_to_db")
-    @patch("src.loading.code.loading.load_data_into_warehouse")
+    @patch("src.loading.loading.read_file_list")
+    @patch("src.loading.loading.process_parquet_files")
+    @patch("src.loading.loading.connect_to_db")
+    @patch("src.loading.loading.load_data_into_warehouse")
     def test_handles_full_failure_in_warehouse_loading(
         self,
         mock_load_data,
@@ -252,7 +252,7 @@ class TestLambdaHandler:
         )
         assert "Failure in loading data into the warehouse." in caplog.text
 
-    @patch("src.loading.code.loading.read_file_list")
+    @patch("src.loading.loading.read_file_list")
     def test_handles_general_exceptions(self, mock_read_file, caplog):
         # Arrange
         mock_read_file.side_effect = Exception("Unexpected Error")

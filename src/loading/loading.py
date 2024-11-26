@@ -1,5 +1,9 @@
-from src.loading.code.s3_utils import read_file_list, process_parquet_files
-from src.loading.code.db_utils import connect_to_db, load_data_into_warehouse
+from src.loading.loading_utils import (
+    read_file_list,
+    process_parquet_files,
+    connect_to_db,
+    load_data_into_warehouse,
+)
 import boto3
 import logging
 
