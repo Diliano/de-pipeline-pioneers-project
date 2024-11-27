@@ -146,7 +146,7 @@ def load_data_into_warehouse(conn, tables_data_frames):
                 logger.info(f"Successfully loaded data into '{table_name}'.")
             else:
                 fact_query = f"""
-                    SELECT {columns} 
+                    SELECT {columns}
                     FROM "{table_name}";
                 """
                 existing_rows = conn.run(sql=fact_query)
@@ -166,7 +166,8 @@ def load_data_into_warehouse(conn, tables_data_frames):
                     """
                     conn.run(sql=query, params=new_records)
                     logger.info(
-                        f"Successfully loaded {len(new_records)} row(s) into '{table_name}'."
+                        f"Successfully loaded {len(new_records)} "
+                        f"row(s) into '{table_name}'."
                     )
                 else:
                     logger.info(f"No new rows to insert into '{table_name}'.")
