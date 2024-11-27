@@ -50,4 +50,8 @@ variable "python_runtime" {
   default = "python3.12"
 }
 
+variable "secret_name" {
+  type = string
+  default = "nc-totesys-db-credentials"
+}
 
