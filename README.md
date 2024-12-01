@@ -1,92 +1,41 @@
-# Pipeline Pioneers DE Project 
-Using ToteSys data
+# Data Engineering Bootcamp - Group Project
 
-##
+## About This Project
 
-This project implements a data engineering pipeline to extract, transform, and load data from the ToteSys database into an AWS-hosted data lake and data warehouse. It showcases skills in Python, AWS, database modeling, and ETL processes, with a focus on automation, monitoring, and secure credential management.
+This project was created as part of our Data Engineering Bootcamp. It reflects our collective efforts to design and implement a data pipeline with ingestion, transformation, and loading stages, along with a visualisation component.
 
-## Table of Contents
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Project Setup](#project-setup)
-- [Using the Makefile](#using-the-makefile)
-- [Directory Structure](#directory-structure)
-- [Components](#components)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Monitoring and Alerts](#monitoring-and-alerts)
-- [Security and Secrets Management](#security-and-secrets-management)
-- [Future Improvements](#future-improvements)
-- [Contributing](#contributing)
+## Learning
 
-## Overview
+The goal of the project was to journey as a collective, providing everyone an opportunity to take our learnings from the bootcamp and apply them to a group project.
 
-Key features:
-- Automated ETL Pipeline from ToteSys to a data warehouse
-- CloudWatch monitoring and alerting
-- Modular Lambda functions for ingestion, transformation, and loading
+Although we were a few steps away from reaching our base goal, I learned an incredible amount in a short space of time. 
 
-## Architecture
+**Technical Takeaways:**
 
-Core components:
-- Ingestion 
-- Processed 
-- Date warehouse 
-- ?
+- I explored Infrastructure as Code, building Terraform resources for our data pipeline.
+- I created multiple diagrams, including: 
+    - A project overview for our first planning meeting.
+    - A detailed transformation diagram to highlight tasks such as column renaming, data type conversions and table joins.
+- I planned and implemented the loading stage using a Test-Driven approach, achieving 100% test coverage across unit and integration tests.
 
+**Collaboration Takeaways:**
 
-## Prerequisites 
-Tools used
-- **Python 3.11.x**
-- **Terraform**
-- **AWS**
-- **boto3 (Python AWS SDK)**
+- Participated in Agile operations such as daily stand-ups (including leading them!), Kanban boards, sprint planning, sprint delivery and retrospectives.
+- Conducted collaborative code reviews.
+- Leveraged Git and Github effectively:
+    - Developed a branching strategy.
+    - Created and worked on separate branches, merging at regular checkpoints.
+- Embraced the journey as much as the destination, valuing the opportunity to collaborate with a larger group for the first time in the Bootcamp. This experience helped me build essential skills to contribute effectively in future teams.
 
-AWS Account
+## Final State of the Project
 
-## Project Setup
-To setup the project, follow these steps
-```sh
-# Clone the repo 
-git clone https://github.com/Nimmo-san/De-pipeline-pioneers-project.git
-cd De-pipeline-pioneers-project
-```
-## Using the makefile 
+This version represents the final state of the project as a team effort. It preserves the work completed up to the project deadline and reflects the collaborative contributions of all team members. 
 
-### Makefile Commands
+## Next Steps
 
-- **Environment Setup**
-  - `make create-environment`: Creates a virtual environment.
-  - `make requirements`: Installs project dependencies from requirements.txt
+As I have preserved the final state of the group project, this repository will not be actively developed further. If we had more time to continue development as a team, our priorities would have included:
 
-- **Development Setup**
-  - `make dev-setup`: Installs bandit, black, flake8, and coverage tools.
-  
-- **Testing & Code Quality**
-  - `make run-bandit`: Run Bandit for security checks.
-  - `make run-black`: Formats code with Black.
-  - `make run-flake8`: Lints code with Flake8.
-  - `make run-test`: Runs all tests using pytest.
-  - `make check-coverage`: Runs tests with coverage reporting.
-  - `make run-checks`: Executes all checks: formatting, linting, tests, and coverage.
-
-- **Clean Up**
-  - `make clean`: Removes the virtual environment, .coverage, .pytest_cache and Python bytecode (pycache)
-
-## Directory Structure
-
-
-## Components
-
-## Testing 
-
-## Deployment
-
-## Monitoring and Alerts
-
-## Security and Secrets Management 
-
-## Future Improvements
-
-## Contributing
+- Finalising the data pipeline and completing the remaining connections.
+- Expanding the data warehouse to include additional fact and dimension tables.
+- Improving the robustness of the pipeline by implementing retry mechanisms.
+- Incorporating new data points and data sources to enhance the ingestion stage (e.g. currency API data).
