@@ -1,23 +1,57 @@
-variable "data_bucket_prefix" {
-  type    = string
-  default = "pipeline-pioneers-data"
-}
+# ==========================================
+# VARIABLES
+# ==========================================
 
+# ========
+# Buckets
+# ========
+
+variable "ingestion_bucket_prefix" {
+  type    = string
+  default = "pipeline-pioneers-ingestion"
+}
 
 variable "code_bucket_prefix" {
   type    = string
   default = "pipeline-pioneers-code"
 }
 
-variable "lambda_ingestion" {
+variable "processed_bucket_prefix" {
   type    = string
-  default = "ingestion_lambda"
+  default = "pipeline-pioneers-processed"
 }
 
-# lambda_transformation
-# lambda_loading
+# variable "transformation_code_bucket_prefix" {
+#   type    = string
+#   default = "pipeline-pioneers-transform-code"
+# }
+
+# ========
+# Lambdas
+# ========
+
+variable "lambda_ingestion" {
+  type    = string
+  default = "ingestion"
+}
+
+variable "lambda_transform" {
+  type    = string
+  default = "transform"
+}
+
+variable "lambda_load" {
+  type    = string
+  default = "load"
+}
 
 variable "python_runtime" {
   type    = string
   default = "python3.12"
 }
+
+variable "secret_name" {
+  type = string
+  default = "nc-totesys-db-credentials"
+}
+

@@ -54,6 +54,25 @@ cd De-pipeline-pioneers-project
 ```
 ## Using the makefile 
 
+### Makefile Commands
+
+- **Environment Setup**
+  - `make create-environment`: Creates a virtual environment.
+  - `make requirements`: Installs project dependencies from requirements.txt
+
+- **Development Setup**
+  - `make dev-setup`: Installs bandit, black, flake8, and coverage tools.
+  
+- **Testing & Code Quality**
+  - `make run-bandit`: Run Bandit for security checks.
+  - `make run-black`: Formats code with Black.
+  - `make run-flake8`: Lints code with Flake8.
+  - `make run-test`: Runs all tests using pytest.
+  - `make check-coverage`: Runs tests with coverage reporting.
+  - `make run-checks`: Executes all checks: formatting, linting, tests, and coverage.
+
+- **Clean Up**
+  - `make clean`: Removes the virtual environment, .coverage, .pytest_cache and Python bytecode (pycache)
 
 ## Directory Structure
 

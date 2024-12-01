@@ -1,1 +1,13 @@
 .env
+venv
+**/__pycache__
+*.json
+# *.txt
+**/*.tfstate*
+**/.terraform
+**/.terraform*
+.DS_Store
+packages/
+dependencies/
+data/
+.coverage

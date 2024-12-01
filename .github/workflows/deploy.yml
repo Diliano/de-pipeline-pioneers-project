@@ -1,0 +1,80 @@
+name: CI/CD Pioneer Pipeline Deploy Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  test-list-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v4 
+
+        - name: Set up python
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.x'
+            
+        - name: Install Terraform
+          uses: hashicorp/setup-terraform@v2
+          with:
+            terraform_version: 1.9.4
+        
+        # - name: Install dependencies
+        #   run: |
+        #     python -m pip install --upgrade pip
+        #     pip install -r requirements.txt
+        
+        - name: Set PYTHONPATH
+          run: |
+            echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
+            echo "PYTHONPATH=$PYTHONPATH:$(pwd)/test" >> $GITHUB_ENV
+        
+        - name: Install make
+          run: sudo apt-get install make
+          
+        - name: Configure AWS Credentials 
+          uses: aws-actions/configure-aws-credentials@v2
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ${{ secrets.AWS_REGION }}
+            run:
+              echo "AWS Credentials set"
+
+        - name: Setting up environment and installing requirements
+          run: make requirements
+          
+        - name: Run bandit checks
+          run: make run-bandit
+        
+        - name: Run flake8 checks
+          run: make run-flake8
+        
+        - name: Run tests
+          run: make run-test
+        
+        # - name: Run coverage
+        #   run: make check-coverage
+
+        - name: Making packaging bash file executable
+          run: chmod +x packaging.sh
+        
+        - name: Packaging lambda functions and its utils
+          run: ./packaging.sh
+          
+        # - name: Listing files
+        #   run: ls -R
+        
+        - name: Make deployment bash file executable
+          run: chmod +x ./infrastructure/deploy.sh
+
+        # - name: Deploy Infrastructure
+        #   run: |
+        #     ./infrastructure/deploy.sh
